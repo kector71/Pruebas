@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let currentPage = 1;
     const itemsPerPage = 24;
     let filteredDataCache = [];
-    let brandColorMap = {}; // Para etiquetas
+    let brandColorMap = {}; // Para etiquetas de marca (si las usas)
 
     const els = {
         body: document.body, headerX: document.querySelector('.header-x'), darkBtn: document.getElementById('darkBtn'),
@@ -49,16 +49,17 @@ document.addEventListener('DOMContentLoaded', () => {
         guideModalCloseBtn: document.querySelector('#guide-modal .modal-close-btn')
     };
 
-    // ===== INICIO CAMBIO: Mapeo de Marcas a Variables CSS =====
+    // ===== Mapeo de Marcas a Variables CSS =====
     const brandColorVariables = {
+        // Asegúrate que los nombres (claves) coincidan EXACTAMENTE
+        // con cómo aparecen en data.json (pero en minúsculas)
         'incolbest': 'var(--brand-color-incolbest)',
-        'bex usa': 'var(--brand-color-bexusa)',
+        'bex usa': 'var(--brand-color-bexusa)', // Ejemplo si tiene espacio
         'ktc': 'var(--brand-color-ktc)',
         // Añade tus otras marcas aquí
+        // 'nombre marca': 'var(--brand-color-nombremarca)',
         'default': 'var(--brand-color-default)' // Fallback
     };
-    // ===== FIN CAMBIO =====
-
 
     // --- FUNCIONES ---
     const debounce = (func, delay) => { let timeout; return (...args) => { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), delay); }; };
@@ -182,14 +183,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 appSummaryHTML = `<div class="card-app-summary">${appSummaryItems.join(', ')}${item.aplicaciones.length > 3 ? ', ...' : ''}</div>`;
             }
 
-            // ===== INICIO CAMBIO: Determinar y aplicar color de marca =====
+            // ===== Determinar y aplicar color de marca =====
             const apps = item.aplicaciones || [];
             let primaryBrandKey = 'default';
             if (apps.length > 0 && apps[0].marca) {
                 primaryBrandKey = apps[0].marca.toLowerCase().trim();
             }
             const borderColorVar = brandColorVariables[primaryBrandKey] || brandColorVariables['default'];
-            // ===== FIN CAMBIO =====
 
             return `
                 <div class="result-card"
