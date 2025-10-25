@@ -503,13 +503,13 @@ document.addEventListener('DOMContentLoaded', () => {
             if (els.clearBtn.disabled) return; 
             els.clearBtn.disabled = true; 
             // El ripple se añade desde el listener general
-            // els.clearBtn.classList.add('animate-button'); // <-- ELIMINADO
+            // els.clearBtn.classList.add('animate-button'); // <-- LÍNEA ELIMINADA
             if (trashLid) trashLid.classList.add('animate-lid'); 
             if (trashBody) trashBody.classList.add('animate-body'); 
             createSparks(els.clearBtn); 
             clearAllFilters(); 
             setTimeout(() => { 
-                // els.clearBtn.classList.remove('animate-button'); // <-- ELIMINADO
+                // els.clearBtn.classList.remove('animate-button'); // <-- LÍNEA ELIMINADA
                 if (trashLid) trashLid.classList.remove('animate-lid'); 
                 if (trashBody) trashBody.classList.remove('animate-body'); 
                 els.clearBtn.disabled = false; 
