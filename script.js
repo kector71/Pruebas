@@ -1,16 +1,15 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // console.log("DOM Cargado. Iniciando script (Versión SIN color de marca)..."); // <-- Mensaje versión
 
     let brakePadsData = [];
     let currentPage = 1;
     const itemsPerPage = 24;
     let filteredDataCache = [];
-    let brandColorMap = {}; // Para etiquetas de marca (si las usas)
+    let brandColorMap = {};
 
-    const els = { // Asegúrate que todos estos IDs existen en tu HTML
+    const els = {
         body: document.body, headerX: document.querySelector('.header-x'), darkBtn: document.getElementById('darkBtn'),
         sunIcon: document.querySelector('.lp-icon-sun'), moonIcon: document.querySelector('.lp-icon-moon'),
-        netlifyBtn: document.getElementById('netlifyBtn'),
+        orbitalBtn: document.getElementById('orbitalBtn'),
         upBtn: document.getElementById('upBtn'),
         menuBtn: document.getElementById('menuBtn'),
         sideMenu: document.getElementById('side-menu'),
@@ -38,7 +37,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modalContent: document.querySelector('#card-modal .modal-content'),
         modalCloseBtn: document.querySelector('#card-modal .modal-close-btn'),
         modalCarousel: document.querySelector('#card-modal .modal-image-carousel'),
-        modalRef: document.querySelector('#card-modal .modal-ref'),
+        modalRef: document.querySelector('#card-modal .modal-ref'), // Este es el H2 para el header
         modalPosition: document.querySelector('#card-modal .modal-position'),
         searchContainer: document.getElementById('searchContainer'),
         modalAppsSpecs: document.querySelector('#card-modal .modal-apps-specs'),
@@ -49,109 +48,135 @@ document.addEventListener('DOMContentLoaded', () => {
         guideModalContent: document.querySelector('#guide-modal .modal-content'),
         guideModalCloseBtn: document.querySelector('#guide-modal .modal-close-btn')
     };
-    // console.log("Elementos del DOM seleccionados:", els);
 
-    // --- FUNCIONES ---
+    // --- FUNCIONES COMPLETAS ---
     const debounce = (func, delay) => { let timeout; return (...args) => { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), delay); }; };
-    const fillDatalist = (datalist, values) => { if(datalist) datalist.innerHTML = values.map(v => `<option value="${v}">`).join(''); };
-    const getPositionFilter = () => { const activePositions = []; if (els.posDel?.classList.contains('active')) activePositions.push('Delantera'); if (els.posTras?.classList.contains('active')) activePositions.push('Trasera'); return activePositions; };
-    const getAllApplicationValues = (key) => { /* ... (Definición completa de esta función) ... */
-        const allValues = new Set();
-        if (!brakePadsData || brakePadsData.length === 0) return [];
-        brakePadsData.forEach(item => {
-            const prop = (key === 'modelo') ? 'serie' : key;
-            if (item.aplicaciones && Array.isArray(item.aplicaciones)) {
-                item.aplicaciones.forEach(app => {
-                    if (app && app.hasOwnProperty(prop) && app[prop]) {
-                        allValues.add(app[prop]);
-                    }
-                });
-            }
-        });
-        return [...allValues].sort();
+    const fillDatalist = (datalist, values) => { datalist.innerHTML = values.map(v => `<option value="${v}">`).join(''); };
+    const getPositionFilter = () => { const activePositions = []; if (els.posDel.classList.contains('active')) activePositions.push('Delantera'); if (els.posTras.classList.contains('active')) activePositions.push('Trasera'); return activePositions; };
+    const hasVehicleFilters = () => { return els.busqueda.value.trim() !== '' || els.marca.value.trim() !== '' || els.modelo.value.trim() !== '' || els.anio.value.trim() !== '' || getPositionFilter().length > 0 || els.oem.value.trim() !== '' || els.fmsi.value.trim() !== '' || els.medidasAncho.value.trim() !== '' || els.medidasAlto.value.trim() !== ''; };
+
+     // --- Función para obtener la clase CSS de la referencia ---
+    const getRefBadgeClass = (ref) => {
+        if (typeof ref !== 'string') {
+            return 'ref-default';
+        }
+        const upperRef = ref.toUpperCase();
+        if (upperRef.endsWith('INC')) return 'ref-inc';
+        if (upperRef.endsWith('BP')) return 'ref-bp';
+        if (upperRef.startsWith('K')) return 'ref-k';
+        if (upperRef.endsWith('BEX')) return 'ref-bex';
+        return 'ref-default'; // Verde menta
     };
-    const hasVehicleFilters = () => { /* ... (sin cambios) ... */ };
 
     const filterData = () => {
-        // console.log("Filtrando datos...");
-        if (!brakePadsData || brakePadsData.length === 0) return;
-        try {
-            const fbusq = (val) => (val || '').toLowerCase().trim();
-            const activePos = getPositionFilter();
-            const filters = {
-                busqueda: fbusq(els.busqueda?.value),
-                marca: fbusq(els.marca?.value),
-                modelo: fbusq(els.modelo?.value),
-                anio: fbusq(els.anio?.value),
-                oem: fbusq(els.oem?.value),
-                fmsi: fbusq(els.fmsi?.value),
-                ancho: parseFloat(els.medidasAncho?.value) || null,
-                alto: parseFloat(els.medidasAlto?.value) || null,
-                pos: activePos
-            };
+        if (!brakePadsData.length) return;
+        const fbusq = (val) => val.toLowerCase().trim(); const activePos = getPositionFilter();
+        const filters = { busqueda: fbusq(els.busqueda.value), marca: fbusq(els.marca.value), modelo: fbusq(els.modelo.value), anio: fbusq(els.anio.value), oem: fbusq(els.oem.value), fmsi: fbusq(els.fmsi.value), ancho: parseFloat(els.medidasAncho.value), alto: parseFloat(els.medidasAlto.value), pos: activePos };
 
-            filteredDataCache = brakePadsData.filter(item => {
-                const aplicaciones = item.aplicaciones || [];
-                const itemVehicles = aplicaciones.map(app => `${app.marca || ''} ${app.serie || ''} ${app.litros || ''} ${app.año || ''} ${app.especificacion || ''}`).join(' ').toLowerCase();
-                const itemPosicion = item.posición || '';
-                const itemRefs = item.ref || [];
-                const itemOems = item.oem || [];
-                const itemFmsis = item.fmsi || [];
+        const filtered = brakePadsData.filter(item => {
+            const itemVehicles = item.aplicaciones.map(app => `${app.marca} ${app.serie} ${app.litros} ${app.año} ${app.especificacion}`).join(' ').toLowerCase();
+            const itemPosicion = item.posición;
+            
+            // --- Lógica de Búsqueda Actualizada (busca en partes de la ref) ---
+            const busqMatch = !filters.busqueda ||
+                (Array.isArray(item.ref) && item.ref.some(rString => typeof rString === 'string' && rString.toLowerCase().includes(filters.busqueda))) || // Busca en el string completo
+                (Array.isArray(item.oem) && item.oem.some(o => typeof o === 'string' && o.toLowerCase().includes(filters.busqueda))) ||
+                (Array.isArray(item.fmsi) && item.fmsi.some(f => typeof f === 'string' && f.toLowerCase().includes(filters.busqueda))) ||
+                itemVehicles.includes(filters.busqueda);
+            // --- Fin Lógica de Búsqueda ---
 
-                const busqMatch = !filters.busqueda ||
-                    itemRefs.some(r => r && typeof r === 'string' && r.toLowerCase().includes(filters.busqueda)) ||
-                    itemOems.some(o => o && typeof o === 'string' && o.toLowerCase().includes(filters.busqueda)) ||
-                    itemFmsis.some(f => f && typeof f === 'string' && f.toLowerCase().includes(filters.busqueda)) ||
-                    itemVehicles.includes(filters.busqueda);
+            const appMatch = !filters.marca && !filters.modelo && !filters.anio || item.aplicaciones.some(app => (!filters.marca || (app.marca && app.marca.toLowerCase().includes(filters.marca))) && (!filters.modelo || (app.serie && app.serie.toLowerCase().includes(filters.modelo))) && (!filters.anio || (app.año && String(app.año).toLowerCase().includes(filters.anio))));
+            const oemMatch = !filters.oem || (Array.isArray(item.oem) && item.oem.some(o => typeof o === 'string' && o.toLowerCase().includes(filters.oem)));
+            const fmsiMatch = !filters.fmsi || (Array.isArray(item.fmsi) && item.fmsi.some(f => typeof f === 'string' && f.toLowerCase().includes(filters.fmsi)));
+            let posMatch = true; if (filters.pos.length > 0) { posMatch = filters.pos.includes(itemPosicion); }
+            const TOLERANCIA = 1.0;
+            const anchoMatchTolerancia = !filters.ancho || (item.anchoNum >= (filters.ancho - TOLERANCIA) && item.anchoNum <= (filters.ancho + TOLERANCIA));
+            const altoMatchTolerancia = !filters.alto || (item.altoNum >= (filters.alto - TOLERANCIA) && item.altoNum <= (filters.alto + TOLERANCIA));
+            return busqMatch && appMatch && oemMatch && fmsiMatch && posMatch && anchoMatchTolerancia && altoMatchTolerancia;
+        });
 
-                const appMatch = !filters.marca && !filters.modelo && !filters.anio || aplicaciones.some(app =>
-                    (!filters.marca || (app.marca && typeof app.marca === 'string' && app.marca.toLowerCase().includes(filters.marca))) &&
-                    (!filters.modelo || (app.serie && typeof app.serie === 'string' && app.serie.toLowerCase().includes(filters.modelo))) &&
-                    (!filters.anio || (app.año && typeof app.año === 'string' && app.año.toLowerCase().includes(filters.anio)))
-                );
-
-                const oemMatch = !filters.oem || itemOems.some(o => o && typeof o === 'string' && o.toLowerCase().includes(filters.oem));
-                const fmsiMatch = !filters.fmsi || itemFmsis.some(f => f && typeof f === 'string' && f.toLowerCase().includes(filters.fmsi));
-
-                let posMatch = true;
-                if (filters.pos.length > 0) {
-                    posMatch = filters.pos.includes(itemPosicion);
-                }
-
-                const TOLERANCIA = 1.0;
-                const anchoNum = item.anchoNum || 0;
-                const altoNum = item.altoNum || 0;
-                const filterAncho = filters.ancho;
-                const filterAlto = filters.alto;
-
-                const anchoMatchTolerancia = !filterAncho || (anchoNum >= (filterAncho - TOLERANCIA) && anchoNum <= (filterAncho + TOLERANCIA));
-                const altoMatchTolerancia = !filterAlto || (altoNum >= (filterAlto - TOLERANCIA) && altoNum <= (filterAlto + TOLERANCIA));
-
-                return busqMatch && appMatch && oemMatch && fmsiMatch && posMatch && anchoMatchTolerancia && altoMatchTolerancia;
-            });
-
-            // console.log(`Filtrado completado. Resultados: ${filteredDataCache.length}`);
-            currentPage = 1;
-            renderCurrentPage();
-            updateURLWithFilters();
-        } catch (error) {
-            console.error("Error durante el filtrado:", error);
-            if(els.results) els.results.innerHTML = `<div class="no-results-container"><p>Error al filtrar datos.</p></div>`;
-            if(els.paginationContainer) els.paginationContainer.innerHTML = '';
-        }
+        filteredDataCache = filtered;
+        currentPage = 1;
+        renderCurrentPage();
+        updateURLWithFilters();
     };
 
-    function navigateCarousel(carouselContainer, direction) { /* ... */ }
-    const renderApplicationsList = (aplicaciones) => { /* ... */ };
-    const renderSpecs = (item) => { /* ... */ };
-    const showSkeletonLoader = (count = 6) => { /* ... */ };
-    function setupPagination(totalItems) { /* ... */ }
+    function navigateCarousel(carouselContainer, direction) {
+        const track = carouselContainer.querySelector('.image-track');
+        const images = carouselContainer.querySelectorAll('.result-image');
+        const counter = els.modalCounterWrapper.querySelector('.carousel-counter');
+        if (!track || images.length <= 1) return;
+        let currentIndex = parseInt(track.dataset.currentIndex) || 0;
+        const totalImages = images.length;
+        let newIndex = currentIndex + direction;
+        if (newIndex >= totalImages) { newIndex = 0; } else if (newIndex < 0) { newIndex = totalImages - 1; }
+        track.style.transform = `translateX(-${newIndex * 100}%)`;
+        track.dataset.currentIndex = newIndex;
+        if (counter) counter.textContent = `${newIndex + 1}/${totalImages}`;
+    }
 
+    const renderApplicationsList = (aplicaciones) => { const groupedApps = aplicaciones.reduce((acc, app) => { const marca = app.marca || 'N/A'; if (!acc[marca]) { acc[marca] = []; } acc[marca].push(app); return acc; }, {}); Object.keys(groupedApps).forEach(marca => { groupedApps[marca].sort((a, b) => { const serieA = a.serie || ''; const serieB = b.serie || ''; if (serieA < serieB) return -1; if (serieA > serieB) return 1; const anioA = a.año || ''; const anioB = b.año || ''; if (anioA < anioB) return -1; if (anioA > anioB) return 1; return 0; }); }); let appListHTML = ''; for (const marca in groupedApps) { appListHTML += `<div class="app-brand-header">${marca.toUpperCase()}</div>`; groupedApps[marca].forEach(app => { appListHTML += `<div class="app-detail-row"><div>${app.serie || ''}</div><div>${app.litros || ''}</div><div>${app.año || ''}</div></div>`; }); } return appListHTML; };
+
+    // --- Función renderSpecs ACTUALIZADA (Corregida V2) ---
+    const renderSpecs = (item) => {
+        let specsHTML = `<div class="app-brand-header">ESPECIFICACIONES</div>`; // Encabezado de sección
+
+        // Contenedor general para todas las filas de especificaciones
+        specsHTML += `<div class="spec-details-grid">`;
+
+        // --- Generar HTML para las referencias DENTRO de la sección Specs ---
+        const refsSpecsHTML = (Array.isArray(item.ref) && item.ref.length > 0)
+            ? item.ref.flatMap(refString => String(refString).split(' ')) // Divide el string "005INC 7261BP" en ["005INC", "7261BP"]
+                  .map(part => `<span class="ref-badge spec-ref-badge ${getRefBadgeClass(part)}">${part}</span>`)
+                  .join('')
+            : '<span class="ref-badge ref-badge-na spec-ref-badge">N/A</span>';
+
+        // Fila para Referencias (Label + Contenedor de Badges)
+        specsHTML += `<div class="spec-label"><strong>Referencias</strong></div>
+                      <div class="spec-value modal-ref-container">${refsSpecsHTML}</div>`; // Contenedor con clase
+
+        // --- Resto de las especificaciones (OEM, FMSI, Medidas) - Estructura Label + Value ---
+        const oemText = (Array.isArray(item.oem) && item.oem.length > 0 ? item.oem.join(', ') : 'N/A');
+        specsHTML += `<div class="spec-label"><strong>OEM</strong></div><div class="spec-value">${oemText}</div>`;
+
+        const fmsiText = (Array.isArray(item.fmsi) && item.fmsi.length > 0 ? item.fmsi.join(', ') : 'N/A');
+        specsHTML += `<div class="spec-label"><strong>Platina FMSI</strong></div><div class="spec-value">${fmsiText}</div>`;
+
+        specsHTML += `<div class="spec-label"><strong>Ancho</strong></div><div class="spec-value">${item.anchoNum || 'N/A'} mm</div>`;
+        specsHTML += `<div class="spec-label"><strong>Alto</strong></div><div class="spec-value">${item.altoNum || 'N/A'} mm</div>`;
+
+        specsHTML += `</div>`; // Cierre de spec-details-grid
+
+        return specsHTML;
+    };
+
+
+    const showSkeletonLoader = (count = 6) => {
+        let skeletonHTML = '';
+        for (let i = 0; i < count; i++) {
+            skeletonHTML += `<div class="skeleton-card"><div class="skeleton-line long"></div><div class="skeleton-line short"></div><div class="skeleton-box"></div><div class="skeleton-line"></div><div class="skeleton-line"></div></div>`;
+        }
+        els.results.innerHTML = skeletonHTML;
+        els.paginationContainer.innerHTML = '';
+    };
+
+    function setupPagination(totalItems) {
+        els.paginationContainer.innerHTML = '';
+        const totalPages = Math.ceil(totalItems / itemsPerPage);
+        if (totalPages <= 1) return;
+        let paginationHTML = '';
+        paginationHTML += `<button class="page-btn" data-page="${currentPage - 1}" ${currentPage === 1 ? 'disabled' : ''}>Anterior</button>`;
+        const maxPagesToShow = 5; const halfPages = Math.floor(maxPagesToShow / 2); let startPage, endPage;
+        if (totalPages <= maxPagesToShow) { startPage = 1; endPage = totalPages; } else if (currentPage <= halfPages + 1) { startPage = 1; endPage = maxPagesToShow; } else if (currentPage >= totalPages - halfPages) { startPage = totalPages - maxPagesToShow + 1; endPage = totalPages; } else { startPage = currentPage - halfPages; endPage = currentPage + halfPages; }
+        if (startPage > 1) { paginationHTML += `<button class="page-btn" data-page="1">1</button>`; if (startPage > 2) { paginationHTML += `<button class="page-btn" disabled>...</button>`; } }
+        for (let i = startPage; i <= endPage; i++) { paginationHTML += `<button class="page-btn ${i === currentPage ? 'active' : ''}" data-page="${i}">${i}</button>`; }
+        if (endPage < totalPages) { if (endPage < totalPages - 1) { paginationHTML += `<button class="page-btn" disabled>...</button>`; } paginationHTML += `<button class="page-btn" data-page="${totalPages}">${totalPages}</button>`; }
+        paginationHTML += `<button class="page-btn" data-page="${currentPage + 1}" ${currentPage === totalPages ? 'disabled' : ''}>Siguiente</button>`;
+        els.paginationContainer.innerHTML = paginationHTML;
+    }
+
+     // --- Función renderCurrentPage ACTUALIZADA ---
     const renderCurrentPage = () => {
-        // console.log(`Renderizando página ${currentPage}...`);
-        if (!els.results || !els.countContainer || !els.paginationContainer) return;
-        if (!filteredDataCache) filteredDataCache = [];
-
         const totalResults = filteredDataCache.length;
         const startIndex = (currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
@@ -162,242 +187,385 @@ document.addEventListener('DOMContentLoaded', () => {
         els.countContainer.innerHTML = `Mostrando <strong>${startNum}–${endNum}</strong> de <strong>${totalResults}</strong> resultados`;
 
         if (totalResults === 0) {
-            els.results.innerHTML = `<div class="no-results-container">...</div>`; // Mensaje no resultados
+            els.results.innerHTML = `<div class="no-results-container"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z"></path><path d="M21 21L16.65 16.65"></path><path d="M11 8V11L13 13"></path></svg><p>No se encontraron pastillas</p><span>Intenta ajustar tus filtros de búsqueda.</span></div>`;
             els.paginationContainer.innerHTML = '';
             return;
         }
 
-        try {
-            els.results.innerHTML = paginatedData.map((item, index) => {
-                const posBadgeClass = (item.posición === 'Delantera') ? 'delantera' : 'trasera';
-                const posBadge = `<span class="position-badge ${posBadgeClass}">${item.posición || ''}</span>`;
-                const references = item.ref || [];
-                const primaryRef = references.length > 0 ? references[0] : 'N/A';
+        els.results.innerHTML = paginatedData.map((item, index) => {
+            const posBadgeClass = item.posición === 'Delantera' ? 'delantera' : 'trasera';
+            const posBadge = `<span class="position-badge ${posBadgeClass}">${item.posición}</span>`;
 
-                let firstImageSrc = 'https://via.placeholder.com/300x200.png?text=No+Img';
-                const images = item.imagenes || [];
-                 if (images.length > 0) { firstImageSrc = images[0]; }
-                 else if (item.imagen) { firstImageSrc = item.imagen.replace("text=", `text=Vista+1+`); }
+            // --- Generar HTML para las referencias en la tarjeta ---
+             const refsHTML = (Array.isArray(item.ref) && item.ref.length > 0)
+                ? item.ref.flatMap(refString => String(refString).split(' '))
+                      .map(part => `<span class="ref-badge ${getRefBadgeClass(part)}">${part}</span>`)
+                      .join('')
+                : '<span class="ref-badge ref-badge-na">N/A</span>';
 
-                const aplicaciones = item.aplicaciones || [];
-                const appSummaryItems = aplicaciones.slice(0, 3).map(app => `${app.marca || ''} ${app.serie || ''}`).filter((value, index, self) => self.indexOf(value) === index && value.trim() !== '');
-                let appSummaryHTML = '';
-                if (appSummaryItems.length > 0) {
-                    appSummaryHTML = `<div class="card-app-summary">${appSummaryItems.join(', ')}${aplicaciones.length > 3 ? ', ...' : ''}</div>`;
-                }
+            let firstImageSrc = 'https://via.placeholder.com/300x200.png?text=No+Img';
+            if (item.imagenes && item.imagenes.length > 0) {
+                firstImageSrc = item.imagenes[0];
+            } else if (item.imagen) {
+                firstImageSrc = item.imagen.replace("text=", `text=Vista+1+`);
+            }
 
-                // ===== SIN LÓGICA DE COLOR AQUÍ =====
-                // const textColorVar = 'var(--text-color)'; // <-- Simplemente usa el color de texto normal
+            const appSummaryItems = item.aplicaciones.slice(0, 3).map(app => `${app.marca} ${app.serie}`).filter((value, index, self) => self.indexOf(value) === index);
+            let appSummaryHTML = '';
+            if (appSummaryItems.length > 0) {
+                appSummaryHTML = `<div class="card-app-summary">${appSummaryItems.join(', ')}${item.aplicaciones.length > 3 ? ', ...' : ''}</div>`;
+            }
 
-                return `
-                    <div class="result-card"
-                         data-ref="${primaryRef}"
-                         style="animation-delay: ${index * 50}ms;" {/* <-- SIN border-left-color */}
-                         tabindex="0" role="button" aria-haspopup="dialog">
-                        <div class="card-thumbnail"><img src="${firstImageSrc}" alt="Referencia ${primaryRef}" class="result-image" loading="lazy"></div>
-                        <div class="card-content-wrapper">
-                            <div class="card-details">
-                                {/* Usamos el color de texto normal, sin style="color:..." */}
-                                <div class="card-ref">${primaryRef}</div>
-                                ${posBadge}
-                            </div>
-                            ${appSummaryHTML}
+            // Usar la primera referencia (si existe) para data-ref y alt text
+             const primaryRefForData = (Array.isArray(item.ref) && item.ref.length > 0) ? String(item.ref[0]).split(' ')[0] : 'N/A';
+
+            return `
+                <div class="result-card" data-ref="${primaryRefForData}" style="animation-delay: ${index * 50}ms" tabindex="0" role="button" aria-haspopup="dialog">
+                    <div class="card-thumbnail"><img src="${firstImageSrc}" alt="Referencia ${primaryRefForData}" class="result-image" loading="lazy"></div>
+                    <div class="card-content-wrapper">
+                        <div class="card-details">
+                             <div class="card-ref-container">${refsHTML}</div>
+                             ${posBadge}
                         </div>
-                    </div>`;
-            }).join('');
+                        ${appSummaryHTML}
+                    </div>
+                </div>`;
+        }).join('');
 
-            els.results.removeEventListener('click', handleCardClick);
-            els.results.addEventListener('click', handleCardClick); // Asegurar que el listener está
-            setupPagination(totalResults);
-            // console.log("Renderizado completado (versión sin color marca).");
-
-        } catch (error) {
-            console.error("Error durante renderizado (versión sin color marca):", error);
-            els.results.innerHTML = `<div class="no-results-container"><p>Error al mostrar resultados.</p></div>`;
-            els.paginationContainer.innerHTML = '';
-        }
+        els.results.removeEventListener('click', handleCardClick);
+        els.results.addEventListener('click', handleCardClick);
+        setupPagination(totalResults);
     };
 
+    // --- Función handleCardClick ACTUALIZADA ---
     function handleCardClick(event) {
-        // console.log('Handling card click...');
-        const card = event.target.closest('.result-card');
-        if (card) {
-            // console.log('Card found:', card);
-            const primaryRef = card.dataset.ref;
-            // console.log('Data ref:', primaryRef);
-            if (primaryRef && primaryRef !== 'N/A') {
-                const itemData = brakePadsData.find(item =>
-                    item.ref && Array.isArray(item.ref) && item.ref.includes(primaryRef)
-                );
-                // console.log('Item data found:', itemData);
-                if (itemData) {
-                    // console.log("Abriendo modal para:", primaryRef);
-                    openModal(itemData);
-                } else {
-                    console.warn('No matching data found for ref:', primaryRef);
-                }
-            } else {
-                 console.warn('Card clicked but data-ref is missing or N/A');
-            }
-        }
-    }
-    const updateScrollIndicator = () => { /* ... */ };
-    function openModal(item) { /* ... (Sin cambios aquí) ... */ }
-    function closeModal() { /* ... (Sin cambios aquí) ... */ }
-    function openGuideModal() { /* ... (Sin cambios aquí) ... */ }
-    function closeGuideModal() { /* ... (Sin cambios aquí) ... */ }
-    function openSideMenu() { /* ... (Sin cambios aquí) ... */ }
-    function closeSideMenu() { /* ... (Sin cambios aquí) ... */ }
-    function setupSwipe(carouselElement) { /* ... (Sin cambios aquí) ... */ }
-    const clearAllFilters = () => { /* ... (Sin cambios aquí) ... */ };
-    const createRippleEffect = (event) => { /* ... (Sin cambios aquí) ... */ };
-    const updateURLWithFilters = () => { /* ... (Sin cambios aquí) ... */ };
-    const applyFiltersFromURL = () => { /* ... (Sin cambios aquí) ... */ };
+         const card = event.target.closest('.result-card');
+         if (card) {
+             const primaryRef = card.dataset.ref;
+             // Buscar usando la primera parte de la primera ref
+             const itemData = brakePadsData.find(item => 
+                 Array.isArray(item.ref) && 
+                 item.ref.length > 0 && 
+                 String(item.ref[0]).split(' ')[0] === primaryRef
+             );
+             if (itemData) {
+                 openModal(itemData);
+             } else {
+                 console.warn("No item data found for ref:", primaryRef);
+             }
+         }
+     }
 
-    // --- SETUP EVENT LISTENERS ---
+    const updateScrollIndicator = () => { const wrapper = els.modalDetailsWrapper; const content = els.modalDetailsContent; if (wrapper && content) { const isScrollable = content.scrollHeight > content.clientHeight; const isAtBottom = content.scrollTop + content.clientHeight >= content.scrollHeight - 5; if (isScrollable && !isAtBottom) { wrapper.classList.add('scrollable'); } else { wrapper.classList.remove('scrollable'); } } };
+
+    // --- Función openModal ACTUALIZADA ---
+    function openModal(item) {
+        // --- Generar HTML para las etiquetas en el ENCABEZADO del modal ---
+        const refsHeaderHTML = (Array.isArray(item.ref) && item.ref.length > 0)
+            ? item.ref.flatMap(refString => String(refString).split(' '))
+                  .map(part => `<span class="ref-badge header-ref-badge ${getRefBadgeClass(part)}">${part}</span>`)
+                  .join('')
+            : '<span class="ref-badge ref-badge-na header-ref-badge">N/A</span>';
+
+        els.modalRef.innerHTML = `<div class="modal-header-ref-container">${refsHeaderHTML}</div>`;
+
+        // --- Resto del código de openModal ---
+        const posBadgeClass = item.posición === 'Delantera' ? 'delantera' : 'trasera';
+        els.modalPosition.innerHTML = `<span class="position-badge ${posBadgeClass}">${item.posición}</span>`;
+
+        let images = [];
+        if (item.imagenes && item.imagenes.length > 0) {
+            images = item.imagenes;
+        } else if (item.imagen) {
+            images = [
+                item.imagen.replace("text=", `text=Vista+1+`),
+                item.imagen.replace("text=", `text=Vista+2+`),
+                item.imagen.replace("text=", `text=Vista+3+`)
+            ];
+        } else {
+            images = ['https://via.placeholder.com/300x200.png?text=No+Img'];
+        }
+
+        const imageCount = images.length;
+        let imageTrackHTML = '';
+        const altRef = (Array.isArray(item.ref) && item.ref.length > 0) ? String(item.ref[0]).split(' ')[0] : 'N/A';
+
+        images.forEach((imgSrc, i) => {
+            imageTrackHTML += `<img src="${imgSrc}" alt="Referencia ${altRef} Vista ${i + 1}" class="result-image">`;
+        });
+
+        els.modalCarousel.innerHTML = `<div class="image-track" style="display:flex;" data-current-index="0">${imageTrackHTML}</div> ${imageCount > 1 ? `<button class="carousel-nav-btn" data-direction="-1" aria-label="Imagen anterior">‹</button><button class="carousel-nav-btn" data-direction="1" aria-label="Siguiente imagen">›</button>` : ''}`;
+
+        els.modalCarousel.querySelectorAll('.carousel-nav-btn').forEach(btn => { btn.onclick = (e) => { e.stopPropagation(); const direction = parseInt(e.currentTarget.dataset.direction); navigateCarousel(els.modalCarousel, direction); }; });
+        if ('ontouchstart' in window || navigator.maxTouchPoints > 0) { setupSwipe(els.modalCarousel); }
+        if (imageCount > 1) { els.modalCounterWrapper.innerHTML = `<span class="carousel-counter">1/${imageCount}</span>`; } else { els.modalCounterWrapper.innerHTML = ''; }
+
+        els.modalAppsSpecs.innerHTML = `<div class="applications-list-container">${renderApplicationsList(item.aplicaciones)}${renderSpecs(item)}</div>`;
+
+        els.modalContent.classList.remove('closing');
+        els.modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+        requestAnimationFrame(() => { setTimeout(() => { updateScrollIndicator(); els.modalDetailsContent.addEventListener('scroll', updateScrollIndicator); }, 100); });
+    }
+
+
+    function closeModal() { els.modalContent.classList.add('closing'); els.modalDetailsContent.removeEventListener('scroll', updateScrollIndicator); els.modalDetailsWrapper.classList.remove('scrollable'); setTimeout(() => { els.modal.style.display = 'none'; document.body.style.overflow = ''; els.modalCarousel.innerHTML = ''; els.modalRef.innerHTML = ''; /* Limpiar innerHTML */ els.modalPosition.innerHTML = ''; els.modalAppsSpecs.innerHTML = ''; els.modalCounterWrapper.innerHTML = ''; els.modalContent.classList.remove('closing'); }, 220); }
+    function openGuideModal() { els.guideModalContent.classList.remove('closing'); els.guideModal.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
+    function closeGuideModal() { els.guideModalContent.classList.add('closing'); setTimeout(() => { els.guideModal.style.display = 'none'; document.body.style.overflow = ''; els.guideModalContent.classList.remove('closing'); }, 220); }
+    function openSideMenu() { els.sideMenu.classList.add('open'); els.sideMenu.setAttribute('aria-hidden', 'false'); els.sideMenuOverlay.style.display = 'block'; requestAnimationFrame(() => { els.sideMenuOverlay.classList.add('visible'); }); els.menuBtn.setAttribute('aria-expanded', 'true'); els.menuCloseBtn.focus(); }
+    function closeSideMenu() { els.sideMenu.classList.remove('open'); els.sideMenu.setAttribute('aria-hidden', 'true'); els.sideMenuOverlay.classList.remove('visible'); els.menuBtn.setAttribute('aria-expanded', 'false'); els.menuBtn.focus(); els.sideMenuOverlay.addEventListener('transitionend', () => { if (!els.sideMenuOverlay.classList.contains('visible')) { els.sideMenuOverlay.style.display = 'none'; } }, { once: true }); }
+    function setupSwipe(carouselElement) { let startX, startY, endX, endY; const threshold = 50; carouselElement.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; }, { passive: true }); carouselElement.addEventListener('touchmove', (e) => { if (Math.abs(e.touches[0].clientX - startX) > Math.abs(e.touches[0].clientY - startY)) { e.preventDefault(); } }, { passive: false }); carouselElement.addEventListener('touchend', (e) => { endX = e.changedTouches[0].clientX; endY = e.changedTouches[0].clientY; const diffX = endX - startX; const diffY = endY - startY; if (Math.abs(diffX) > threshold && Math.abs(diffX) > Math.abs(diffY)) { if (diffX > 0) { navigateCarousel(carouselElement, -1); } else { navigateCarousel(carouselElement, 1); } } }); }
+    const clearAllFilters = () => { const inputsToClear = [els.busqueda, els.marca, els.modelo, els.anio, els.oem, els.fmsi, els.medidasAncho, els.medidasAlto]; inputsToClear.forEach(input => input.value = ''); els.posDel.classList.remove('active'); els.posTras.classList.remove('active'); if (els.brandTagsContainer) { els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => { activeTag.classList.remove('active'); activeTag.style.borderColor = ''; activeTag.style.color = ''; }); } filterData(); };
+    const createRippleEffect = (event) => { const button = event.currentTarget; const circle = document.createElement('span'); const diameter = Math.max(button.clientWidth, button.clientHeight); const radius = diameter / 2; const rect = button.getBoundingClientRect(); circle.style.width = circle.style.height = `${diameter}px`; circle.style.left = `${event.clientX - (rect.left + radius)}px`; circle.style.top = `${event.clientY - (rect.top + radius)}px`; circle.classList.add('ripple'); const ripple = button.getElementsByClassName('ripple')[0]; if (ripple) { ripple.remove(); } button.appendChild(circle); };
+    const updateURLWithFilters = () => { const params = new URLSearchParams(); const filters = { busqueda: els.busqueda.value.trim(), marca: els.marca.value.trim(), modelo: els.modelo.value.trim(), anio: els.anio.value.trim(), oem: els.oem.value.trim(), fmsi: els.fmsi.value.trim(), ancho: els.medidasAncho.value.trim(), alto: els.medidasAlto.value.trim(), }; for (const key in filters) { if (filters[key]) { params.set(key, filters[key]); } } const activePositions = getPositionFilter(); if (activePositions.length > 0) { params.set('pos', activePositions.join(',')); } const newUrl = `${window.location.pathname}?${params.toString()}`; history.pushState({}, '', newUrl); };
+    const applyFiltersFromURL = () => { const params = new URLSearchParams(window.location.search); els.busqueda.value = params.get('busqueda') || ''; const brandFromURL = params.get('marca'); els.marca.value = brandFromURL || ''; els.modelo.value = params.get('modelo') || ''; els.anio.value = params.get('anio') || ''; els.oem.value = params.get('oem') || ''; els.fmsi.value = params.get('fmsi') || ''; els.medidasAncho.value = params.get('ancho') || ''; els.medidasAlto.value = params.get('alto') || ''; const posParam = params.get('pos'); if (posParam) { if (posParam.includes('Delantera')) els.posDel.classList.add('active'); if (posParam.includes('Trasera')) els.posTras.classList.add('active'); } if (els.brandTagsContainer) { els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => { activeTag.classList.remove('active'); activeTag.style.borderColor = ''; activeTag.style.color = ''; }); } if (brandFromURL && els.brandTagsContainer) { const tagToActivate = els.brandTagsContainer.querySelector(`.brand-tag[data-brand="${brandFromURL}"]`); if (tagToActivate) { tagToActivate.classList.add('active'); const colorVar = brandColorMap[brandFromURL]; if (colorVar) { const activeColor = getComputedStyle(document.documentElement).getPropertyValue(colorVar).trim(); tagToActivate.style.borderColor = activeColor; tagToActivate.style.color = activeColor; } } } };
+
+    // --- SETUP EVENT LISTENERS (CON LÓGICA DE 3 TEMAS: Claro, AMOLED Dark, Orbital) ---
     function setupEventListeners() {
-        // console.log("Configurando event listeners...");
-        try {
-            [els.darkBtn, els.upBtn, els.menuBtn, els.netlifyBtn].forEach(btn => {
-                if (btn) { btn.addEventListener('click', createRippleEffect); }
-                else { /* console.warn("...") */ }
-            });
+        // Aplicar ripple a todos los botones aplicables
+        [els.darkBtn, els.upBtn, els.menuBtn, els.orbitalBtn, els.clearBtn].forEach(btn => btn?.addEventListener('click', createRippleEffect));
 
-            const iconAnimation = (iconToShow, iconToHide) => {
-                if (!iconToShow) return;
-                const showKeyframes = [ { opacity: 0, transform: 'translate(-50%, -50%) scale(0.6) rotate(-90deg)' }, { opacity: 1, transform: 'translate(-50%, -50%) scale(1) rotate(0deg)' } ];
-                const hideKeyframes = [ { opacity: 1, transform: 'translate(-50%, -50%) scale(1) rotate(0deg)' }, { opacity: 0, transform: 'translate(-50%, -50%) scale(0.6) rotate(90deg)' } ];
-                const options = { duration: 400, fill: 'forwards', easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)' };
-                iconToShow.animate(showKeyframes, options);
-                if (iconToHide) { iconToHide.animate(hideKeyframes, options); }
-            };
-            const applyOriginalTheme = (theme) => {
-                els.body.classList.remove('lp-dark', 'netlify-dark');
-                if (theme === 'dark') {
-                    els.body.classList.add('lp-dark');
-                    iconAnimation(els.moonIcon, els.sunIcon);
-                    els.darkBtn.setAttribute('aria-pressed', 'true');
-                    els.darkBtn.setAttribute('aria-label', 'Cambiar a modo claro');
+        // --- Lógica Animación Iconos Sol/Luna ---
+        const iconAnimation = (iconToShow, iconToHide) => {
+            if (!iconToShow) return;
+            const showKeyframes = [ { opacity: 0, transform: 'translate(-50%, -50%) scale(0.6) rotate(-90deg)' }, { opacity: 1, transform: 'translate(-50%, -50%) scale(1) rotate(0deg)' } ];
+            const hideKeyframes = [ { opacity: 1, transform: 'translate(-50%, -50%) scale(1) rotate(0deg)' }, { opacity: 0, transform: 'translate(-50%, -50%) scale(0.6) rotate(90deg)' } ];
+            const options = { duration: 400, fill: 'forwards', easing: 'cubic-bezier(0.175, 0.885, 0.32, 1.275)' };
+            iconToShow.animate(showKeyframes, options);
+            if (iconToHide) { iconToHide.animate(hideKeyframes, options); }
+        };
+
+        // --- Funciones para Aplicar Temas ---
+        const applyLightTheme = () => {
+            els.body.classList.remove('lp-dark', 'modo-orbital'); // Solo quitar lp-dark y modo-orbital
+            iconAnimation(els.sunIcon, els.moonIcon);
+            els.darkBtn.setAttribute('aria-pressed', 'false');
+            els.darkBtn.setAttribute('aria-label', 'Activar modo oscuro');
+            if (els.orbitalBtn) {
+                els.orbitalBtn.classList.remove('active');
+                els.orbitalBtn.setAttribute('aria-pressed', 'false');
+            }
+            localStorage.setItem('themePreference', 'light');
+            console.log("Applied Light Theme");
+        };
+
+         const applyAmoledDarkTheme = () => {
+            els.body.classList.remove('modo-orbital'); // Solo quitar modo-orbital si estaba activo
+            els.body.classList.add('lp-dark'); // Añadir lp-dark (AMOLED)
+            iconAnimation(els.moonIcon, els.sunIcon);
+            els.darkBtn.setAttribute('aria-pressed', 'true');
+            els.darkBtn.setAttribute('aria-label', 'Activar modo claro');
+             if (els.orbitalBtn) {
+                els.orbitalBtn.classList.remove('active');
+                els.orbitalBtn.setAttribute('aria-pressed', 'false');
+            }
+            // Usaremos 'dark' en localStorage para representar AMOLED
+            localStorage.setItem('themePreference', 'dark');
+             console.log("Applied AMOLED Dark Theme (lp-dark)");
+        };
+
+        const applyOrbitalTheme = () => {
+            els.body.classList.remove('lp-dark'); // Quitar lp-dark si estaba activo
+            els.body.classList.add('modo-orbital');
+             if (els.orbitalBtn) {
+                els.orbitalBtn.classList.add('active');
+                els.orbitalBtn.setAttribute('aria-pressed', 'true');
+            }
+            // Resetear el botón darkBtn
+            iconAnimation(els.sunIcon, els.moonIcon); // Mostrar sol en Orbital
+            els.darkBtn.setAttribute('aria-pressed', 'false');
+            els.darkBtn.setAttribute('aria-label', 'Activar modo claro'); // Salir de Orbital va a Claro
+            localStorage.setItem('themePreference', 'orbital');
+            console.log("Applied Orbital Theme");
+        };
+
+
+        // --- Event Listener Botón Sol/Luna (Ciclo simple Claro <-> AMOLED) ---
+        els.darkBtn.addEventListener('click', () => {
+            els.headerX.style.animation = 'bounceHeader 0.6s cubic-bezier(0.68,-0.55,0.27,1.55)';
+            setTimeout(() => { els.headerX.style.animation = ''; }, 600);
+
+            // Si está activo Orbital O AMOLED, el siguiente es Claro. Si no, es AMOLED.
+            if (els.body.classList.contains('modo-orbital') || els.body.classList.contains('lp-dark')) {
+                 applyLightTheme();
+            } else {
+                applyAmoledDarkTheme();
+            }
+        });
+
+        // --- Event Listener Botón Orbital ---
+        if (els.orbitalBtn) {
+            els.orbitalBtn.addEventListener('click', () => {
+                els.headerX.style.animation = 'bounceHeader 0.6s cubic-bezier(0.68,-0.55,0.27,1.55)';
+                setTimeout(() => { els.headerX.style.animation = ''; }, 600);
+
+                const themeIcon = els.orbitalBtn.querySelector('.lp-icon-palette');
+                 if (themeIcon) {
+                     themeIcon.animate([
+                         { transform: 'translate(-50%, -50%) scale(0.8) rotate(0deg)', opacity: 0.7 },
+                         { transform: 'translate(-50%, -50%) scale(1.2) rotate(30deg)', opacity: 1 },
+                         { transform: 'translate(-50%, -50%) scale(1) rotate(0deg)', opacity: 1 }
+                     ], { duration: 400, easing: 'ease-out' });
+                 }
+
+                if (els.body.classList.contains('modo-orbital')) {
+                    applyLightTheme(); // Desactivar Orbital va a Claro
                 } else {
-                    iconAnimation(els.sunIcon, els.moonIcon);
-                    els.darkBtn.setAttribute('aria-pressed', 'false');
-                    els.darkBtn.setAttribute('aria-label', 'Cambiar a modo oscuro');
+                    applyOrbitalTheme(); // Activar Orbital
                 }
-                if(els.netlifyBtn) {
-                    els.netlifyBtn.classList.remove('active');
-                    els.netlifyBtn.setAttribute('aria-pressed', 'false');
-                }
-                localStorage.setItem('themePreference', theme);
-            };
-
-            if (els.darkBtn) {
-                els.darkBtn.addEventListener('click', () => {
-                    const isCurrentlyDark = els.body.classList.contains('lp-dark');
-                    applyOriginalTheme(isCurrentlyDark ? 'light' : 'dark');
-                    if(els.headerX) els.headerX.style.animation = 'bounceHeader 0.6s cubic-bezier(0.68,-0.55,0.27,1.55)';
-                    setTimeout(() => { if(els.headerX) els.headerX.style.animation = ''; }, 600);
-                });
-            } else { /* console.warn("darkBtn no encontrado."); */ }
-
-            const applyNetlifyTheme = () => {
-                 els.body.classList.remove('lp-dark');
-                 els.body.classList.add('netlify-dark');
-                 els.netlifyBtn.classList.add('active');
-                 els.netlifyBtn.setAttribute('aria-pressed', 'true');
-                 iconAnimation(els.sunIcon, els.moonIcon);
-                 els.darkBtn.setAttribute('aria-pressed', 'false');
-                 localStorage.setItem('themePreference', 'netlify');
-            };
-
-            if(els.netlifyBtn) {
-                els.netlifyBtn.addEventListener('click', () => {
-                    const isCurrentlyNetlify = els.body.classList.contains('netlify-dark');
-                    if (isCurrentlyNetlify) { applyOriginalTheme('light'); }
-                    else { applyNetlifyTheme(); }
-                    if(els.headerX) els.headerX.style.animation = 'bounceHeader 0.6s cubic-bezier(0.68,-0.55,0.27,1.55)';
-                    setTimeout(() => { if(els.headerX) els.headerX.style.animation = ''; }, 600);
-                    const themeIcon = els.netlifyBtn.querySelector('.lp-icon-palette');
-                    if (themeIcon) { themeIcon.animate([/*...*/], { duration: 400, easing: 'ease-out' }); }
-                });
-            } else { /* console.warn("netlifyBtn no encontrado."); */ }
-
-            const savedTheme = localStorage.getItem('themePreference');
-            if (savedTheme === 'netlify' && els.netlifyBtn) { applyNetlifyTheme(); iconAnimation(els.sunIcon, null); }
-            else if (savedTheme === 'dark') { applyOriginalTheme('dark'); }
-            else { applyOriginalTheme('light'); }
-
-            if(els.upBtn) els.upBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-            window.addEventListener('scroll', () => { if(els.upBtn) els.upBtn.classList.toggle('show', window.scrollY > 300); });
-            if(els.menuBtn) els.menuBtn.addEventListener('click', openSideMenu);
-            if(els.menuCloseBtn) els.menuCloseBtn.addEventListener('click', closeSideMenu);
-            if(els.sideMenuOverlay) els.sideMenuOverlay.addEventListener('click', closeSideMenu);
-            if(els.openGuideLink) els.openGuideLink.addEventListener('click', () => { closeSideMenu(); setTimeout(openGuideModal, 50); });
-            window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && els.sideMenu?.classList.contains('open')) { closeSideMenu(); } });
-
-            const debouncedFilter = debounce(filterData, 300);
-
-            const savedView = localStorage.getItem('viewMode');
-             if(els.results && els.viewGridBtn && els.viewListBtn) { /* ... (sin cambios) ... */ }
-
-            const restartSearchIconAnimation = () => { /* ... */ };
-            if(els.busqueda && els.searchContainer) { /* ... (sin cambios) ... */ }
-
-            const otherFilterInputs = [els.marca, els.modelo, els.anio, els.oem, els.fmsi, els.medidasAncho, els.medidasAlto];
-            otherFilterInputs.forEach(input => { if(input) input.addEventListener('input', debouncedFilter); });
-
-            [els.posDel, els.posTras].forEach(btn => {
-                if(btn) {
-                    btn.addEventListener('click', (e) => {
-                        e.currentTarget.classList.toggle('active');
-                        filterData(); // Asegurar que filterData se llama
-                    });
-                } else { /* console.warn("posDel o posTras no encontrado."); */ }
             });
-
-
-            const trashLid = els.clearBtn?.querySelector('.trash-lid'); const trashBody = els.clearBtn?.querySelector('.trash-body'); /* ... */
-            function createSparks(button) { /* ... */ }
-             if(els.clearBtn) { els.clearBtn.addEventListener('click', (e) => { /* ... */ }); }
-             else { /* console.warn("clearBtn no encontrado."); */ }
-
-             if (els.brandTagsContainer) { els.brandTagsContainer.addEventListener('click', (e) => { /* ... */ }); }
-
-             if (els.paginationContainer) { els.paginationContainer.addEventListener('click', (e) => { /* ... */ }); }
-             else { /* console.warn("paginationContainer no encontrado."); */ }
-
-             if(els.modalCloseBtn) els.modalCloseBtn.addEventListener('click', closeModal);
-             if(els.modal) els.modal.addEventListener('click', (event) => { if (event.target === els.modal) { closeModal(); } });
-
-             if(els.guideModalCloseBtn) els.guideModalCloseBtn.addEventListener('click', closeGuideModal);
-             if(els.guideModal) els.guideModal.addEventListener('click', (event) => { if (event.target === els.guideModal) { closeGuideModal(); } });
-             window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && els.guideModal?.style.display === 'flex') { closeGuideModal(); } });
-
-            // console.log("Event listeners configurados.");
-
-        } catch (error) {
-            console.error("Error configurando event listeners:", error);
         }
-    }
 
+        // --- Aplicar Tema Guardado al Cargar ---
+        const savedTheme = localStorage.getItem('themePreference');
+        console.log("Saved theme:", savedTheme);
+        switch (savedTheme) {
+            case 'orbital':
+                if (els.orbitalBtn) applyOrbitalTheme();
+                else applyLightTheme(); // Fallback
+                break;
+            case 'dark': // 'dark' ahora representa AMOLED (lp-dark)
+                 applyAmoledDarkTheme();
+                break;
+             case 'light':
+                 applyLightTheme();
+                 break;
+            default: // Claro por defecto
+                applyLightTheme();
+                break;
+        }
+
+
+        // --- Resto de Event Listeners ---
+        els.upBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+        window.addEventListener('scroll', () => { els.upBtn.classList.toggle('show', window.scrollY > 300); });
+        els.menuBtn.addEventListener('click', openSideMenu);
+        els.menuCloseBtn.addEventListener('click', closeSideMenu);
+        els.sideMenuOverlay.addEventListener('click', closeSideMenu);
+        els.openGuideLink.addEventListener('click', () => { closeSideMenu(); setTimeout(openGuideModal, 50); });
+        window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && els.sideMenu.classList.contains('open')) { closeSideMenu(); } });
+
+        const debouncedFilter = debounce(filterData, 300);
+
+        const savedView = localStorage.getItem('viewMode');
+        if (savedView === 'list') {
+            els.results.classList.add('list-view');
+            els.viewGridBtn.classList.remove('active'); els.viewGridBtn.setAttribute('aria-checked', 'false');
+            els.viewListBtn.classList.add('active'); els.viewListBtn.setAttribute('aria-checked', 'true');
+        } else {
+            els.results.classList.remove('list-view');
+            els.viewGridBtn.classList.add('active'); els.viewGridBtn.setAttribute('aria-checked', 'true');
+            els.viewListBtn.classList.remove('active'); els.viewListBtn.setAttribute('aria-checked', 'false');
+        }
+
+        els.viewGridBtn.addEventListener('click', () => {
+            if (els.results.classList.contains('list-view')) {
+                els.results.classList.remove('list-view');
+                els.viewGridBtn.classList.add('active'); els.viewGridBtn.setAttribute('aria-checked', 'true');
+                els.viewListBtn.classList.remove('active'); els.viewListBtn.setAttribute('aria-checked', 'false');
+                localStorage.setItem('viewMode', 'grid');
+            }
+        });
+        els.viewListBtn.addEventListener('click', () => {
+            if (!els.results.classList.contains('list-view')) {
+                els.results.classList.add('list-view');
+                els.viewGridBtn.classList.remove('active'); els.viewGridBtn.setAttribute('aria-checked', 'false');
+                els.viewListBtn.classList.add('active'); els.viewListBtn.setAttribute('aria-checked', 'true');
+                localStorage.setItem('viewMode', 'list');
+            }
+        });
+
+        const restartSearchIconAnimation = () => {
+            const oldIcon = els.searchContainer.querySelector('.search-icon');
+            if (oldIcon) {
+                const newIcon = oldIcon.cloneNode(true);
+                oldIcon.parentNode.replaceChild(newIcon, oldIcon);
+                if (els.busqueda.value.trim() !== '') {
+                    newIcon.style.animation = 'none'; void newIcon.offsetWidth; newIcon.style.animation = '';
+                }
+            }
+        };
+
+        els.busqueda.addEventListener('input', (e) => { if (e.target.value.trim() !== '') { els.searchContainer.classList.add('active'); restartSearchIconAnimation(); } else { els.searchContainer.classList.remove('active'); } debouncedFilter(); });
+        els.busqueda.addEventListener('blur', () => { if (els.busqueda.value.trim() === '') { els.searchContainer.classList.remove('active'); } });
+        els.busqueda.addEventListener('focus', () => { if (els.busqueda.value.trim() !== '') { els.searchContainer.classList.add('active'); restartSearchIconAnimation(); } });
+
+        const otherFilterInputs = [els.marca, els.modelo, els.anio, els.oem, els.fmsi, els.medidasAncho, els.medidasAlto];
+        otherFilterInputs.forEach(input => input.addEventListener('input', debouncedFilter));
+
+        [els.posDel, els.posTras].forEach(btn => btn.addEventListener('click', (e) => { e.currentTarget.classList.toggle('active'); filterData(); }));
+
+        const trashLid = els.clearBtn.querySelector('.trash-lid'); const trashBody = els.clearBtn.querySelector('.trash-body'); const NUM_SPARKS = 10; const SPARK_COLORS = ['#00ffff', '#ff00ff', '#00ff7f', '#ffc700', '#ff5722'];
+        function createSparks(button) { for (let i = 0; i < NUM_SPARKS; i++) { const spark = document.createElement('div'); spark.classList.add('spark'); const size = Math.random() * 4 + 3; spark.style.width = `${size}px`; spark.style.height = `${size}px`; spark.style.backgroundColor = SPARK_COLORS[Math.floor(Math.random() * SPARK_COLORS.length)]; spark.style.left = `calc(50% + ${Math.random() * 20 - 10}px)`; spark.style.top = `calc(50% + ${Math.random() * 20 - 10}px)`; const angle = Math.random() * Math.PI * 2; const distance = Math.random() * 25 + 20; const sparkX = Math.cos(angle) * distance; const sparkY = Math.sin(angle) * distance; spark.style.setProperty('--spark-x', `${sparkX}px`); spark.style.setProperty('--spark-y', `${sparkY}px`); button.appendChild(spark); spark.addEventListener('animationend', () => spark.remove(), { once: true }); } }
+
+        // --- CORRECCIÓN BOTÓN BORRAR ---
+        els.clearBtn.addEventListener('click', (e) => { 
+            if (els.clearBtn.disabled) return; 
+            els.clearBtn.disabled = true; 
+            // El ripple se añade desde el listener general
+            // els.clearBtn.classList.add('animate-button'); // <-- ELIMINADO
+            if (trashLid) trashLid.classList.add('animate-lid'); 
+            if (trashBody) trashBody.classList.add('animate-body'); 
+            createSparks(els.clearBtn); 
+            clearAllFilters(); 
+            setTimeout(() => { 
+                // els.clearBtn.classList.remove('animate-button'); // <-- ELIMINADO
+                if (trashLid) trashLid.classList.remove('animate-lid'); 
+                if (trashBody) trashBody.classList.remove('animate-body'); 
+                els.clearBtn.disabled = false; 
+            }, 900); 
+        });
+        // --- FIN CORRECCIÓN BOTÓN BORRAR ---
+
+        if (els.brandTagsContainer) { els.brandTagsContainer.addEventListener('click', (e) => { const tag = e.target.closest('.brand-tag'); if (!tag) return; const brand = tag.dataset.brand; const isActive = tag.classList.contains('active'); els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => { if (activeTag !== tag) { activeTag.classList.remove('active'); activeTag.style.borderColor = ''; activeTag.style.color = ''; } }); if (isActive) { tag.classList.remove('active'); tag.style.borderColor = ''; tag.style.color = ''; els.marca.value = ''; } else { tag.classList.add('active'); const colorVar = brandColorMap[brand]; if (colorVar) { const activeColor = getComputedStyle(document.documentElement).getPropertyValue(colorVar).trim(); tagToActivate.style.borderColor = activeColor; tagToActivate.style.color = activeColor; } els.marca.value = brand; } filterData(); }); }
+
+        els.paginationContainer.addEventListener('click', (e) => { const btn = e.target.closest('.page-btn'); if (!btn || btn.disabled || btn.classList.contains('active')) { return; } const newPage = parseInt(btn.dataset.page); if (newPage) { currentPage = newPage; renderCurrentPage(); els.resultsHeaderCard.scrollIntoView({ behavior: 'smooth', block: 'start' }); } });
+
+        els.modalCloseBtn.addEventListener('click', closeModal);
+        els.modal.addEventListener('click', (event) => { if (event.target === els.modal) { closeModal(); } });
+
+        els.guideModalCloseBtn.addEventListener('click', closeGuideModal);
+        els.guideModal.addEventListener('click', (event) => { if (event.target === els.guideModal) { closeGuideModal(); } });
+        window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && els.guideModal.style.display === 'flex') { closeGuideModal(); } });
+
+    } // --- Fin de setupEventListeners ---
 
     async function inicializarApp() {
-        // console.log("Inicializando aplicación...");
         showSkeletonLoader();
+
         try {
-            // console.log("Cargando data.json...");
             const response = await fetch('data.json');
-            if (!response.ok) { throw new Error(`Error HTTP! estado: ${response.status}`); }
+            if (!response.ok) {
+                throw new Error(`Error HTTP! estado: ${response.status}`);
+            }
             let data = await response.json();
-            // console.log(`data.json cargado. ${data.length} items.`);
+
             data = data.map(item => {
-                 if (item.imagen && (!item.imagenes || item.imagenes.length === 0)) {
-                    item.imagenes = [ /*...*/ ];
-                 }
-                 const partes = item.medidas ? item.medidas.split('x').map(s => parseFloat(s.trim())) : [0,0];
-                 return { ...item, anchoNum: partes[0] || 0, altoNum: partes[1] || 0 };
+                if (item.imagen && (!item.imagenes || item.imagenes.length === 0)) {
+                    item.imagenes = [
+                        item.imagen.replace("text=", `text=Vista+1+`),
+                        item.imagen.replace("text=", `text=Vista+2+`),
+                        item.imagen.replace("text=", `text=Vista+3+`)
+                    ];
+                }
+                const partes = item.medidas ? item.medidas.split('x').map(s => parseFloat(s.trim())) : [0,0];
+                
+                // --- CAMBIO: Asegurar que ref, oem, fmsi sean arrays de strings ---
+                 const safeRefs = Array.isArray(item.ref) ? item.ref.map(String) : [];
+                 const safeOems = Array.isArray(item.oem) ? item.oem.map(String) : [];
+                 const safeFmsis = Array.isArray(item.fmsi) ? item.fmsi.map(String) : [];
+
+                return { ...item,
+                         ref: safeRefs,
+                         oem: safeOems,
+                         fmsi: safeFmsis,
+                         anchoNum: partes[0] || 0,
+                         altoNum: partes[1] || 0 };
             });
+
             brakePadsData = data;
-            // console.log("Datos procesados. Llenando datalists...");
+
+            const getAllApplicationValues = (key) => { const allValues = new Set(); brakePadsData.forEach(item => { item.aplicaciones.forEach(app => { const prop = (key === 'modelo') ? 'serie' : key; if (app[prop]) allValues.add(String(app[prop])); }); }); return [...allValues].sort(); }; // Ensure string conversion
             fillDatalist(els.datalistMarca, getAllApplicationValues('marca'));
             fillDatalist(els.datalistModelo, getAllApplicationValues('modelo'));
             fillDatalist(els.datalistAnio, getAllApplicationValues('año'));
@@ -405,35 +573,27 @@ document.addEventListener('DOMContentLoaded', () => {
             const allFmsis = [...new Set(brakePadsData.flatMap(i => i.fmsi || []))].filter(Boolean).sort();
             fillDatalist(els.datalistOem, allOems);
             fillDatalist(els.datalistFmsi, allFmsis);
-            // ... (lógica brandColorMap) ...
-             const allBrandsList = brakePadsData.flatMap(item => item.aplicaciones?.map(app => app.marca) || []).filter(Boolean); // Añadir chequeo aplicaciones
+            const allBrandsList = brakePadsData.flatMap(item => item.aplicaciones.map(app => app.marca)).filter(Boolean);
             const brandFrequencies = allBrandsList.reduce((counts, brand) => { counts[brand] = (counts[brand] || 0) + 1; return counts; }, {});
             const sortedBrands = Object.entries(brandFrequencies).sort(([, countA], [, countB]) => countB - countA).slice(0, 10).map(([brand]) => brand);
-            const brandColorsCSS = [ '--brand-color-1', '--brand-color-2', '--brand-color-3', '--brand-color-4', '--brand-color-5', '--brand-color-6', '--brand-color-7', '--brand-color-8', '--brand-color-9', '--brand-color-10' ];
-            brandColorMap = {}; // Reset for tag colors
-            sortedBrands.forEach((brand, index) => { brandColorMap[brand] = brandColorsCSS[index % brandColorsCSS.length]; });
+            const brandColors = [ '--brand-color-1', '--brand-color-2', '--brand-color-3', '--brand-color-4', '--brand-color-5', '--brand-color-6', '--brand-color-7', '--brand-color-8', '--brand-color-9', '--brand-color-10' ];
+            brandColorMap = {};
+            sortedBrands.forEach((brand, index) => { brandColorMap[brand] = brandColors[index % brandColors.length]; });
             if (els.brandTagsContainer) { els.brandTagsContainer.innerHTML = sortedBrands.map(brand => `<button class="brand-tag" data-brand="${brand}">${brand}</button>`).join(''); }
-
-            // console.log("Aplicando filtros desde URL y filtrando...");
             applyFiltersFromURL();
-            filterData();
-            // console.log("Inicialización completada.");
+            // El tema se aplica ANTES en setupEventListeners
+            filterData(); // Filtrar después de aplicar tema y filtros URL
         } catch (error) {
-            console.error("Error fatal durante la inicialización:", error);
-            if (els.results) els.results.innerHTML = `<div class="no-results-container"><p>Error al cargar datos</p><span>No se pudo conectar o procesar la base de datos (data.json). Revisa la consola (F12).</span></div>`;
-            if (els.countContainer) els.countContainer.innerHTML = "Error";
-            if (els.paginationContainer) els.paginationContainer.innerHTML = '';
+            console.error("Error al cargar los datos:", error);
+            els.results.innerHTML = `<div class="no-results-container"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line><line x1="12" y1="22" x2="12" y2="22"></line></svg><p>Error al cargar datos</p><span>No se pudo conectar con la base de datos (data.json). Asegúrate que el archivo exista.</span></div>`;
+            els.countContainer.innerHTML = "Error";
+            els.paginationContainer.innerHTML = '';
         }
     }
 
+    // Inicializar listeners PRIMERO para que el tema se aplique ANTES de renderizar
     setupEventListeners();
+    // Luego cargar datos y renderizar
     inicializarApp();
 
-} catch (e) { // <-- CATCH general
-    console.error("Error inesperado en el script principal:", e);
-    const resultsContainer = document.getElementById('results-container'); // Intenta seleccionar de nuevo
-    if (resultsContainer) {
-         resultsContainer.innerHTML = "<p style='color:red; text-align:center; margin-top: 2rem;'>Ocurrió un error grave al cargar la página. Por favor, recarga.</p>";
-    }
-}
-});
+}); // Fin DOMContentLoaded
