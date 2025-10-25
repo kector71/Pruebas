@@ -564,6 +564,7 @@ body.modo-orbital { --material-surface-light-rgb: 30, 41, 59; }
     margin-bottom: 0; /* Quitar margen default */
     padding-bottom: 0;
 }
+/* ===== INICIO CORRECCIÓN ETIQUETAS MODAL ===== */
 .modal-header-ref-container { /* Contenedor DIV DENTRO del H2 */
     display: flex;
     flex-wrap: wrap;
@@ -581,6 +582,7 @@ body.modo-orbital { --material-surface-light-rgb: 30, 41, 59; }
 .modal-ref .header-ref-badge.ref-badge-na { /* Ajuste padding N/A en header */
      padding: 0.2rem 0.6rem;
 }
+/* ===== FIN CORRECCIÓN ETIQUETAS MODAL ===== */
 
 body.lp-dark .modal-ref, body.modo-orbital .modal-ref { color: var(--text-color); }
 .modal-position { margin-top: 0.5rem; margin-bottom: 0.5rem; } /* Añadir margen inferior */
@@ -662,17 +664,6 @@ body.lp-dark #guide-modal .usage-guide-content strong, body.modo-orbital #guide-
 body:not(.lp-dark):not(.modo-orbital) .ripple { background-color: var(--material-ripple-light); }
 /* Ripple oscuro para los temas oscuros restantes */
 body.lp-dark .ripple, body.modo-orbital .ripple { background-color: var(--material-ripple-dark); }
-
-/* ===== INICIO CORRECCIÓN RIPPLE ===== */
-.ripple {
-    position: absolute;
-    border-radius: 50%;
-    transform: scale(0);
-    animation: ripple-effect 0.6s linear;
-    pointer-events: none; /* Impide que el ripple interfiera con el clic */
-}
-/* ===== FIN CORRECCIÓN RIPPLE ===== */
-
 @keyframes ripple-effect { to { transform: scale(4); opacity: 0; } }
 
 .lp-icon-sun { stroke: var(--icon-sun-stroke); }
@@ -814,7 +805,6 @@ body.modo-orbital .ref-default, body.modo-orbital .ref-badge-na {
     justify-content: flex-start; /* Alinea a la izquierda */
     text-align: left;
 }
-
 
 /* Badges dentro de Specs */
 .modal-apps-specs .spec-ref-badge {
