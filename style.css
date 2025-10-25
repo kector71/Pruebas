@@ -662,6 +662,17 @@ body.lp-dark #guide-modal .usage-guide-content strong, body.modo-orbital #guide-
 body:not(.lp-dark):not(.modo-orbital) .ripple { background-color: var(--material-ripple-light); }
 /* Ripple oscuro para los temas oscuros restantes */
 body.lp-dark .ripple, body.modo-orbital .ripple { background-color: var(--material-ripple-dark); }
+
+/* ===== INICIO CORRECCIÓN RIPPLE ===== */
+.ripple {
+    position: absolute;
+    border-radius: 50%;
+    transform: scale(0);
+    animation: ripple-effect 0.6s linear;
+    pointer-events: none; /* Impide que el ripple interfiera con el clic */
+}
+/* ===== FIN CORRECCIÓN RIPPLE ===== */
+
 @keyframes ripple-effect { to { transform: scale(4); opacity: 0; } }
 
 .lp-icon-sun { stroke: var(--icon-sun-stroke); }
@@ -803,6 +814,7 @@ body.modo-orbital .ref-default, body.modo-orbital .ref-badge-na {
     justify-content: flex-start; /* Alinea a la izquierda */
     text-align: left;
 }
+
 
 /* Badges dentro de Specs */
 .modal-apps-specs .spec-ref-badge {
