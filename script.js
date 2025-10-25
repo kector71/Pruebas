@@ -241,15 +241,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleCardClick(event) {
          const card = event.target.closest('.result-card');
          if (card) {
-             const itemId = card.dataset.id; // <-- CORRECCIÓN 1: Usar data-id
+             const itemId = card.dataset.id; // <-- CORRECCIÓN: Usar data-id
              
-             // <-- CORRECCIÓN 2: Buscar por _appId
+             // <-- CORRECCIÓN: Buscar por _appId
              const itemData = brakePadsData.find(item => item._appId == itemId);
  
              if (itemData) {
                  openModal(itemData);
              } else {
-                 console.warn("No item data found for id:", itemId); // <-- CORRECCIÓN 3: Log para id
+                 console.warn("No item data found for id:", itemId);
              }
          }
      }
@@ -538,7 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             let data = await response.json();
 
-            data = data.map((item, index) => { // <-- CORRECCIÓN 1: Añadir 'index'
+            data = data.map((item, index) => { // <-- CORRECCIÓN: Añadir 'index'
                 if (item.imagen && (!item.imagenes || item.imagenes.length === 0)) {
                     item.imagenes = [
                         item.imagen.replace("text=", `text=Vista+1+`),
@@ -554,7 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  const safeFmsis = Array.isArray(item.fmsi) ? item.fmsi.map(String) : [];
 
                 return { ...item,
-                         _appId: index, // <-- CORRECCIÓN 2: Añadir ID único
+                         _appId: index, // <-- CORRECCIÓN: Añadir ID único
                          ref: safeRefs,
                          oem: safeOems,
                          fmsi: safeFmsis,
