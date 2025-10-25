@@ -325,15 +325,7 @@ body.lp-dark #positionDelantera.active, body.lp-dark #positionTrasera.active { c
 .brand-tags-container { display: flex; flex-wrap: wrap; gap: 0.5rem; padding: 0.5rem 0; }
 .brand-tag { font-family: 'Inter', sans-serif; font-size: 0.75rem; font-weight: 500; padding: 4px 10px; border-radius: 50px; border: 1px solid var(--material-surface-border); background-color: transparent; color: var(--text-color); opacity: 0.8; cursor: pointer; transition: background-color 0.2s ease, color 0.5s ease, border-color 0.5s ease, opacity 0.2s, box-shadow 0.2s, border-width 0.2s ease; white-space: nowrap; }
 .brand-tag:hover { opacity: 1; background-color: var(--input-bg); }
-/* ===== INICIO CORRECCIÓN TAGS DE MARCA ===== */
-.brand-tag.active {
-    /* background-color: var(--input-bg); -- ELIMINADO para que se vea el color del JS */
-    border-width: 2px;
-    opacity: 1;
-    padding: 3px 9px; /* Ajuste para compensar borde */
-    box-shadow: var(--elevation-1);
-}
-/* ===== FIN CORRECCIÓN TAGS DE MARCA ===== */
+.brand-tag.active { background-color: var(--input-bg); border-width: 2px; opacity: 1; padding: 3px 9px; box-shadow: var(--elevation-1); }
 @media (max-width: 767px) { .brand-tags-container { display: none; } }
 
 @keyframes skeleton-pulse { 0%, 100% { background-color: var(--skeleton-bg); } 50% { background-color: var(--skeleton-highlight); } }
