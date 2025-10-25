@@ -216,11 +216,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 appSummaryHTML = `<div class="card-app-summary">${appSummaryItems.join(', ')}${item.aplicaciones.length > 3 ? ', ...' : ''}</div>`;
             }
 
-            // Usar la primera referencia (si existe) para data-ref y alt text
+            // Usar la primera referencia (si existe) para alt text
              const primaryRefForData = (Array.isArray(item.ref) && item.ref.length > 0) ? String(item.ref[0]).split(' ')[0] : 'N/A';
 
             return `
-                <div class="result-card" data-ref="${primaryRefForData}" style="animation-delay: ${index * 50}ms" tabindex="0" role="button" aria-haspopup="dialog">
+                <div class="result-card" data-id="${item._appId}" style="animation-delay: ${index * 50}ms" tabindex="0" role="button" aria-haspopup="dialog">
                     <div class="card-thumbnail"><img src="${firstImageSrc}" alt="Referencia ${primaryRefForData}" class="result-image" loading="lazy"></div>
                     <div class="card-content-wrapper">
                         <div class="card-details">
@@ -241,17 +241,15 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleCardClick(event) {
          const card = event.target.closest('.result-card');
          if (card) {
-             const primaryRef = card.dataset.ref;
-             // Buscar usando la primera parte de la primera ref
-             const itemData = brakePadsData.find(item => 
-                 Array.isArray(item.ref) && 
-                 item.ref.length > 0 && 
-                 String(item.ref[0]).split(' ')[0] === primaryRef
-             );
+             const itemId = card.dataset.id; // <-- CORRECCIÓN 1: Usar data-id
+             
+             // <-- CORRECCIÓN 2: Buscar por _appId
+             const itemData = brakePadsData.find(item => item._appId == itemId);
+ 
              if (itemData) {
                  openModal(itemData);
              } else {
-                 console.warn("No item data found for ref:", primaryRef);
+                 console.warn("No item data found for id:", itemId); // <-- CORRECCIÓN 3: Log para id
              }
          }
      }
@@ -540,7 +538,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             let data = await response.json();
 
-            data = data.map(item => {
+            data = data.map((item, index) => { // <-- CORRECCIÓN 1: Añadir 'index'
                 if (item.imagen && (!item.imagenes || item.imagenes.length === 0)) {
                     item.imagenes = [
                         item.imagen.replace("text=", `text=Vista+1+`),
@@ -556,6 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  const safeFmsis = Array.isArray(item.fmsi) ? item.fmsi.map(String) : [];
 
                 return { ...item,
+                         _appId: index, // <-- CORRECCIÓN 2: Añadir ID único
                          ref: safeRefs,
                          oem: safeOems,
                          fmsi: safeFmsis,
