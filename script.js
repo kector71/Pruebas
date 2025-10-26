@@ -76,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const filtered = brakePadsData.filter(item => {
             const itemVehicles = item.aplicaciones.map(app => `${app.marca} ${app.serie} ${app.litros} ${app.año} ${app.especificacion}`).join(' ').toLowerCase();
             const itemPosicion = item.posición;
-            
+
             // --- Lógica de Búsqueda Actualizada (busca en partes de la ref) ---
             const busqMatch = !filters.busqueda ||
                 (Array.isArray(item.ref) && item.ref.some(rString => typeof rString === 'string' && rString.toLowerCase().includes(filters.busqueda))) || // Busca en el string completo
@@ -242,10 +242,10 @@ document.addEventListener('DOMContentLoaded', () => {
          const card = event.target.closest('.result-card');
          if (card) {
              const itemId = card.dataset.id; // <-- CORRECCIÓN: Usar data-id
-             
+
              // <-- CORRECCIÓN: Buscar por _appId
              const itemData = brakePadsData.find(item => item._appId == itemId);
- 
+
              if (itemData) {
                  openModal(itemData);
              } else {
@@ -313,10 +313,39 @@ document.addEventListener('DOMContentLoaded', () => {
     function openSideMenu() { els.sideMenu.classList.add('open'); els.sideMenu.setAttribute('aria-hidden', 'false'); els.sideMenuOverlay.style.display = 'block'; requestAnimationFrame(() => { els.sideMenuOverlay.classList.add('visible'); }); els.menuBtn.setAttribute('aria-expanded', 'true'); els.menuCloseBtn.focus(); }
     function closeSideMenu() { els.sideMenu.classList.remove('open'); els.sideMenu.setAttribute('aria-hidden', 'true'); els.sideMenuOverlay.classList.remove('visible'); els.menuBtn.setAttribute('aria-expanded', 'false'); els.menuBtn.focus(); els.sideMenuOverlay.addEventListener('transitionend', () => { if (!els.sideMenuOverlay.classList.contains('visible')) { els.sideMenuOverlay.style.display = 'none'; } }, { once: true }); }
     function setupSwipe(carouselElement) { let startX, startY, endX, endY; const threshold = 50; carouselElement.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; }, { passive: true }); carouselElement.addEventListener('touchmove', (e) => { if (Math.abs(e.touches[0].clientX - startX) > Math.abs(e.touches[0].clientY - startY)) { e.preventDefault(); } }, { passive: false }); carouselElement.addEventListener('touchend', (e) => { endX = e.changedTouches[0].clientX; endY = e.changedTouches[0].clientY; const diffX = endX - startX; const diffY = endY - startY; if (Math.abs(diffX) > threshold && Math.abs(diffX) > Math.abs(diffY)) { if (diffX > 0) { navigateCarousel(carouselElement, -1); } else { navigateCarousel(carouselElement, 1); } } }); }
-    const clearAllFilters = () => { const inputsToClear = [els.busqueda, els.marca, els.modelo, els.anio, els.oem, els.fmsi, els.medidasAncho, els.medidasAlto]; inputsToClear.forEach(input => input.value = ''); els.posDel.classList.remove('active'); els.posTras.classList.remove('active'); if (els.brandTagsContainer) { els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => { activeTag.classList.remove('active'); activeTag.style.borderColor = ''; activeTag.style.color = ''; }); } filterData(); };
+    const clearAllFilters = () => { const inputsToClear = [els.busqueda, els.marca, els.modelo, els.anio, els.oem, els.fmsi, els.medidasAncho, els.medidasAlto]; inputsToClear.forEach(input => input.value = ''); els.posDel.classList.remove('active'); els.posTras.classList.remove('active'); if (els.brandTagsContainer) { els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => { activeTag.classList.remove('active'); }); } filterData(); }; // Removed manual style reset
     const createRippleEffect = (event) => { const button = event.currentTarget; const circle = document.createElement('span'); const diameter = Math.max(button.clientWidth, button.clientHeight); const radius = diameter / 2; const rect = button.getBoundingClientRect(); circle.style.width = circle.style.height = `${diameter}px`; circle.style.left = `${event.clientX - (rect.left + radius)}px`; circle.style.top = `${event.clientY - (rect.top + radius)}px`; circle.classList.add('ripple'); const ripple = button.getElementsByClassName('ripple')[0]; if (ripple) { ripple.remove(); } button.appendChild(circle); };
     const updateURLWithFilters = () => { const params = new URLSearchParams(); const filters = { busqueda: els.busqueda.value.trim(), marca: els.marca.value.trim(), modelo: els.modelo.value.trim(), anio: els.anio.value.trim(), oem: els.oem.value.trim(), fmsi: els.fmsi.value.trim(), ancho: els.medidasAncho.value.trim(), alto: els.medidasAlto.value.trim(), }; for (const key in filters) { if (filters[key]) { params.set(key, filters[key]); } } const activePositions = getPositionFilter(); if (activePositions.length > 0) { params.set('pos', activePositions.join(',')); } const newUrl = `${window.location.pathname}?${params.toString()}`; history.pushState({}, '', newUrl); };
-    const applyFiltersFromURL = () => { const params = new URLSearchParams(window.location.search); els.busqueda.value = params.get('busqueda') || ''; const brandFromURL = params.get('marca'); els.marca.value = brandFromURL || ''; els.modelo.value = params.get('modelo') || ''; els.anio.value = params.get('anio') || ''; els.oem.value = params.get('oem') || ''; els.fmsi.value = params.get('fmsi') || ''; els.medidasAncho.value = params.get('ancho') || ''; els.medidasAlto.value = params.get('alto') || ''; const posParam = params.get('pos'); if (posParam) { if (posParam.includes('Delantera')) els.posDel.classList.add('active'); if (posParam.includes('Trasera')) els.posTras.classList.add('active'); } if (els.brandTagsContainer) { els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => { activeTag.classList.remove('active'); activeTag.style.borderColor = ''; activeTag.style.color = ''; }); } if (brandFromURL && els.brandTagsContainer) { const tagToActivate = els.brandTagsContainer.querySelector(`.brand-tag[data-brand="${brandFromURL}"]`); if (tagToActivate) { tagToActivate.classList.add('active'); const colorVar = brandColorMap[brandFromURL]; if (colorVar) { const activeColor = getComputedStyle(document.documentElement).getPropertyValue(colorVar).trim(); tagToActivate.style.borderColor = activeColor; tagToActivate.style.color = activeColor; } } } };
+    const applyFiltersFromURL = () => {
+        const params = new URLSearchParams(window.location.search);
+        els.busqueda.value = params.get('busqueda') || '';
+        const brandFromURL = params.get('marca');
+        els.marca.value = brandFromURL || '';
+        els.modelo.value = params.get('modelo') || '';
+        els.anio.value = params.get('anio') || '';
+        els.oem.value = params.get('oem') || '';
+        els.fmsi.value = params.get('fmsi') || '';
+        els.medidasAncho.value = params.get('ancho') || '';
+        els.medidasAlto.value = params.get('alto') || '';
+        const posParam = params.get('pos');
+        if (posParam) {
+            if (posParam.includes('Delantera')) els.posDel.classList.add('active');
+            if (posParam.includes('Trasera')) els.posTras.classList.add('active');
+        }
+        // Desactivar cualquier etiqueta activa preexistente
+        if (els.brandTagsContainer) {
+            els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => {
+                activeTag.classList.remove('active');
+            });
+        }
+        // Activar la etiqueta de la URL si existe
+        if (brandFromURL && els.brandTagsContainer) {
+            const tagToActivate = els.brandTagsContainer.querySelector(`.brand-tag[data-brand="${brandFromURL}"]`);
+            if (tagToActivate) {
+                tagToActivate.classList.add('active'); // Solo añadir clase, CSS se encarga del estilo
+            }
+        }
+    };
 
     // --- SETUP EVENT LISTENERS (CON LÓGICA DE 3 TEMAS: Claro, AMOLED Dark, Orbital) ---
     function setupEventListeners() {
@@ -497,25 +526,48 @@ document.addEventListener('DOMContentLoaded', () => {
         function createSparks(button) { for (let i = 0; i < NUM_SPARKS; i++) { const spark = document.createElement('div'); spark.classList.add('spark'); const size = Math.random() * 4 + 3; spark.style.width = `${size}px`; spark.style.height = `${size}px`; spark.style.backgroundColor = SPARK_COLORS[Math.floor(Math.random() * SPARK_COLORS.length)]; spark.style.left = `calc(50% + ${Math.random() * 20 - 10}px)`; spark.style.top = `calc(50% + ${Math.random() * 20 - 10}px)`; const angle = Math.random() * Math.PI * 2; const distance = Math.random() * 25 + 20; const sparkX = Math.cos(angle) * distance; const sparkY = Math.sin(angle) * distance; spark.style.setProperty('--spark-x', `${sparkX}px`); spark.style.setProperty('--spark-y', `${sparkY}px`); button.appendChild(spark); spark.addEventListener('animationend', () => spark.remove(), { once: true }); } }
 
         // --- CORRECCIÓN BOTÓN BORRAR ---
-        els.clearBtn.addEventListener('click', (e) => { 
-            if (els.clearBtn.disabled) return; 
-            els.clearBtn.disabled = true; 
+        els.clearBtn.addEventListener('click', (e) => {
+            if (els.clearBtn.disabled) return;
+            els.clearBtn.disabled = true;
             // El ripple se añade desde el listener general
-            // els.clearBtn.classList.add('animate-button'); // <-- LÍNEA ELIMINADA
-            if (trashLid) trashLid.classList.add('animate-lid'); 
-            if (trashBody) trashBody.classList.add('animate-body'); 
-            createSparks(els.clearBtn); 
-            clearAllFilters(); 
-            setTimeout(() => { 
-                // els.clearBtn.classList.remove('animate-button'); // <-- LÍNEA ELIMINADA
-                if (trashLid) trashLid.classList.remove('animate-lid'); 
-                if (trashBody) trashBody.classList.remove('animate-body'); 
-                els.clearBtn.disabled = false; 
-            }, 900); 
+            if (trashLid) trashLid.classList.add('animate-lid');
+            if (trashBody) trashBody.classList.add('animate-body');
+            createSparks(els.clearBtn);
+            clearAllFilters();
+            setTimeout(() => {
+                if (trashLid) trashLid.classList.remove('animate-lid');
+                if (trashBody) trashBody.classList.remove('animate-body');
+                els.clearBtn.disabled = false;
+            }, 900);
         });
         // --- FIN CORRECCIÓN BOTÓN BORRAR ---
 
-        if (els.brandTagsContainer) { els.brandTagsContainer.addEventListener('click', (e) => { const tag = e.target.closest('.brand-tag'); if (!tag) return; const brand = tag.dataset.brand; const isActive = tag.classList.contains('active'); els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => { if (activeTag !== tag) { activeTag.classList.remove('active'); activeTag.style.borderColor = ''; activeTag.style.color = ''; } }); if (isActive) { tag.classList.remove('active'); tag.style.borderColor = ''; tag.style.color = ''; els.marca.value = ''; } else { tag.classList.add('active'); const colorVar = brandColorMap[brand]; if (colorVar) { const activeColor = getComputedStyle(document.documentElement).getPropertyValue(colorVar).trim(); tagToActivate.style.borderColor = activeColor; tagToActivate.style.color = activeColor; } els.marca.value = brand; } filterData(); }); }
+        // --- MODIFICACIÓN Listener Etiquetas Marca ---
+        if (els.brandTagsContainer) {
+            els.brandTagsContainer.addEventListener('click', (e) => {
+                const tag = e.target.closest('.brand-tag');
+                if (!tag) return;
+                const brand = tag.dataset.brand;
+                const isActive = tag.classList.contains('active');
+
+                // Desactivar otras etiquetas activas
+                els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => {
+                    if (activeTag !== tag) {
+                        activeTag.classList.remove('active');
+                    }
+                });
+
+                // Activar/Desactivar la etiqueta clickeada
+                if (isActive) {
+                    tag.classList.remove('active');
+                    els.marca.value = ''; // Limpiar filtro de marca
+                } else {
+                    tag.classList.add('active');
+                    els.marca.value = brand; // Aplicar filtro de marca
+                }
+                filterData(); // Filtrar resultados
+            });
+        }
 
         els.paginationContainer.addEventListener('click', (e) => { const btn = e.target.closest('.page-btn'); if (!btn || btn.disabled || btn.classList.contains('active')) { return; } const newPage = parseInt(btn.dataset.page); if (newPage) { currentPage = newPage; renderCurrentPage(); els.resultsHeaderCard.scrollIntoView({ behavior: 'smooth', block: 'start' }); } });
 
@@ -547,7 +599,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     ];
                 }
                 const partes = item.medidas ? item.medidas.split('x').map(s => parseFloat(s.trim())) : [0,0];
-                
+
                 // --- CAMBIO: Asegurar que ref, oem, fmsi sean arrays de strings ---
                  const safeRefs = Array.isArray(item.ref) ? item.ref.map(String) : [];
                  const safeOems = Array.isArray(item.oem) ? item.oem.map(String) : [];
@@ -578,7 +630,17 @@ document.addEventListener('DOMContentLoaded', () => {
             const brandColors = [ '--brand-color-1', '--brand-color-2', '--brand-color-3', '--brand-color-4', '--brand-color-5', '--brand-color-6', '--brand-color-7', '--brand-color-8', '--brand-color-9', '--brand-color-10' ];
             brandColorMap = {};
             sortedBrands.forEach((brand, index) => { brandColorMap[brand] = brandColors[index % brandColors.length]; });
-            if (els.brandTagsContainer) { els.brandTagsContainer.innerHTML = sortedBrands.map(brand => `<button class="brand-tag" data-brand="${brand}">${brand}</button>`).join(''); }
+
+            // --- MODIFICACIÓN Generación Etiquetas Marca ---
+            if (els.brandTagsContainer) {
+                els.brandTagsContainer.innerHTML = sortedBrands.map(brand => {
+                    const colorVar = brandColorMap[brand];
+                    // Obtenemos el valor del color CSS para usarlo en la variable inline
+                    const brandColorValue = colorVar ? getComputedStyle(document.documentElement).getPropertyValue(colorVar).trim() : 'currentColor';
+                    return `<button class="brand-tag" data-brand="${brand}" style="--tag-brand-color: ${brandColorValue};">${brand}</button>`;
+                }).join('');
+            }
+
             applyFiltersFromURL();
             // El tema se aplica ANTES en setupEventListeners
             filterData(); // Filtrar después de aplicar tema y filtros URL
