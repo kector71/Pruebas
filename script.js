@@ -117,7 +117,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderApplicationsList = (aplicaciones) => { const groupedApps = aplicaciones.reduce((acc, app) => { const marca = app.marca || 'N/A'; if (!acc[marca]) { acc[marca] = []; } acc[marca].push(app); return acc; }, {}); Object.keys(groupedApps).forEach(marca => { groupedApps[marca].sort((a, b) => { const serieA = a.serie || ''; const serieB = b.serie || ''; if (serieA < serieB) return -1; if (serieA > serieB) return 1; const anioA = a.año || ''; const anioB = b.año || ''; if (anioA < anioB) return -1; if (anioA > anioB) return 1; return 0; }); }); let appListHTML = ''; for (const marca in groupedApps) { appListHTML += `<div class="app-brand-header">${marca.toUpperCase()}</div>`; groupedApps[marca].forEach(app => { appListHTML += `<div class="app-detail-row"><div>${app.serie || ''}</div><div>${app.litros || ''}</div><div>${app.año || ''}</div></div>`; }); } return appListHTML; };
 
-    // --- Función renderSpecs ACTUALIZADA (Corregida V2) ---
+    // --- Función renderSpecs ACTUALIZADA (Combina Ancho/Alto) ---
     const renderSpecs = (item) => {
         let specsHTML = `<div class="app-brand-header">ESPECIFICACIONES</div>`; // Encabezado de sección
 
@@ -126,7 +126,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- Generar HTML para las referencias DENTRO de la sección Specs ---
         const refsSpecsHTML = (Array.isArray(item.ref) && item.ref.length > 0)
-            ? item.ref.flatMap(refString => String(refString).split(' ')) // Divide el string "005INC 7261BP" en ["005INC", "7261BP"]
+            ? item.ref.flatMap(refString => String(refString).split(' '))
                   .map(part => `<span class="ref-badge spec-ref-badge ${getRefBadgeClass(part)}">${part}</span>`)
                   .join('')
             : '<span class="ref-badge ref-badge-na spec-ref-badge">N/A</span>';
@@ -135,15 +135,20 @@ document.addEventListener('DOMContentLoaded', () => {
         specsHTML += `<div class="spec-label"><strong>Referencias</strong></div>
                       <div class="spec-value modal-ref-container">${refsSpecsHTML}</div>`; // Contenedor con clase
 
-        // --- Resto de las especificaciones (OEM, FMSI, Medidas) - Estructura Label + Value ---
+        // --- Resto de las especificaciones (OEM, FMSI) ---
         const oemText = (Array.isArray(item.oem) && item.oem.length > 0 ? item.oem.join(', ') : 'N/A');
         specsHTML += `<div class="spec-label"><strong>OEM</strong></div><div class="spec-value">${oemText}</div>`;
 
         const fmsiText = (Array.isArray(item.fmsi) && item.fmsi.length > 0 ? item.fmsi.join(', ') : 'N/A');
         specsHTML += `<div class="spec-label"><strong>Platina FMSI</strong></div><div class="spec-value">${fmsiText}</div>`;
 
-        specsHTML += `<div class="spec-label"><strong>Ancho</strong></div><div class="spec-value">${item.anchoNum || 'N/A'} mm</div>`;
-        specsHTML += `<div class="spec-label"><strong>Alto</strong></div><div class="spec-value">${item.altoNum || 'N/A'} mm</div>`;
+        // --- NUEVA LÍNEA COMBINADA para Medidas ---
+        const anchoVal = item.anchoNum || 'N/A';
+        const altoVal = item.altoNum || 'N/A';
+        specsHTML += `<div class="spec-label"><strong>Medidas (mm)</strong></div><div class="spec-value">Ancho: ${anchoVal} / Alto: ${altoVal}</div>`;
+        // --- FIN NUEVA LÍNEA ---
+
+        // (Se eliminaron las líneas separadas para Ancho y Alto)
 
         specsHTML += `</div>`; // Cierre de spec-details-grid
 

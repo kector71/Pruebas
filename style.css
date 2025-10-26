@@ -125,8 +125,8 @@ body.modo-orbital {
 
     --brand-color-1: #0d6efd; --brand-color-2: #198754; --brand-color-3: #dc3545;
     --brand-color-4: #ffca2c; --brand-color-5: #20c997; --brand-color-6: #fd7e14;
-    --brand-color-7: #6f42c1; --brand-color-8: #d63384; --brand-color-9: #6c757d;
-    --brand-color-10: #495057;
+    --brand-color-7: #6f42c1; --brand-color-8: #d63384; --brand-color-9: #526e86;
+    --brand-color-10: #ff0000;
 
     --arrow-glow-animation: arrow-glow;
     --material-surface-light-rgb: 30, 41, 59;
@@ -349,12 +349,12 @@ body.lp-dark #positionDelantera.active, body.lp-dark #positionTrasera.active { c
     background-color: var(--input-bg); /* Mantiene el hover genérico */
 }
 .brand-tag.active {
-    background-color: transparent; /* 3. Sin relleno */
+    background-color: transparent; /* Sin relleno */
     /* color: #000; */ /* <-- LÍNEA ELIMINADA */
-    border-color: var(--tag-brand-color); /* 4. Borde de color */
-    border-width: 2px; /* Hacemos el borde un poco más grueso para que se note */
-    padding: 3px 9px; /* Ajustamos padding por el borde más grueso */
-    box-shadow: none; /* 1. Sin brillo/sombra */
+    border-color: var(--tag-brand-color); /* Borde de color */
+    border-width: 2px; /* Borde un poco más grueso */
+    padding: 3px 9px; /* Ajuste de padding */
+    box-shadow: none; /* Sin sombra */
     opacity: 1;
 }
 @media (max-width: 767px) {
@@ -380,7 +380,17 @@ body.lp-dark #positionDelantera.active, body.lp-dark #positionTrasera.active { c
 .view-btn.active svg { opacity: 1; }
 
 @keyframes fadeInUpCard { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
-.results-wrapper { display: grid; gap: 0.8rem; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+.results-wrapper {
+    display: grid;
+    gap: 0.8rem;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    transition: opacity 0.3s ease; /* UX: Transición para estado de carga */
+}
+/* UX: Estado de carga/filtrado */
+.results-wrapper.loading {
+    opacity: 0.6;
+    pointer-events: none;
+}
 
 /* ===== INICIO DE LA MODIFICACIÓN (Animación Tarjeta Completa - Zoom Aumentado) ===== */
 .result-card {
@@ -775,7 +785,7 @@ body:not(.lp-dark):not(.modo-orbital) #orbitalBtn.active .lp-icon-palette {
 .ref-inc { background-color: #0d47a1; color: #FFFFFF; } /* Azul Oscuro */
 .ref-bp { background-color: #6c757d; color: #FFFFFF; } /* Gris */
 .ref-k { background-color: var(--badge-trasera-bg); color: var(--badge-trasera-text); } /* Rojo (reutiliza variable) */
-.ref-bex { background-color: #64b5f6; color: #000000; } /* Azul Claro (texto negro) */
+.ref-bex { background-color: #64b5f6; color: #FFFFFF; } /* Azul Claro (texto blanco) <-- MODIFICACIÓN */
 .ref-default { /* Verde Menta */
     background-color: var(--badge-menta-bg);
     color: var(--badge-menta-text);
@@ -789,8 +799,8 @@ body:not(.lp-dark):not(.modo-orbital) #orbitalBtn.active .lp-icon-palette {
 /*
 body.lp-dark .ref-default, body.lp-dark .ref-badge-na,
 body.modo-orbital .ref-default, body.modo-orbital .ref-badge-na {
-    background-color: #004D40; 
-    color: #B2DFDB; 
+    background-color: #004D40;
+    color: #B2DFDB;
 }
 */
 
