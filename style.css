@@ -480,6 +480,7 @@ body.lp-dark .card-app-summary, body.modo-orbital .card-app-summary { opacity: 0
     gap: 0.6rem 0.8rem; /* Espacio vertical y horizontal */
     align-items: baseline; /* Alinea texto con la primera línea de badges/texto */
     padding: 5px 0; /* Aumenta un poco el padding vertical */
+    font-size: 0.5rem; /* <-- ¡MODIFICACIÓN AÑADIDA! */
 }
 .modal-apps-specs .spec-label {
     font-weight: 600; /* Label en negrita */
