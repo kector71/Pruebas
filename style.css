@@ -349,12 +349,12 @@ body.lp-dark #positionDelantera.active, body.lp-dark #positionTrasera.active { c
     background-color: var(--input-bg); /* Mantiene el hover genérico */
 }
 .brand-tag.active {
-    background-color: var(--tag-brand-color); /* Fondo con el color de la marca */
-    color: #fff; /* Texto blanco para contraste */
-    border-color: var(--tag-brand-color); /* Borde del mismo color */
-    border-width: 1px; /* Restaura el ancho del borde */
-    padding: 4px 10px; /* Restaura el padding */
-    box-shadow: var(--elevation-1);
+    background-color: transparent; /* 3. Sin relleno */
+    /* color: #000; */ /* <-- LÍNEA ELIMINADA */
+    border-color: var(--tag-brand-color); /* 4. Borde de color */
+    border-width: 2px; /* Hacemos el borde un poco más grueso para que se note */
+    padding: 3px 9px; /* Ajustamos padding por el borde más grueso */
+    box-shadow: none; /* 1. Sin brillo/sombra */
     opacity: 1;
 }
 @media (max-width: 767px) {
