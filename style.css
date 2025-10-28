@@ -501,7 +501,7 @@ body.lp-dark .card-app-summary, body.modo-orbital .card-app-summary { opacity: 0
 .results-wrapper.list-view .card-ref-container { margin-bottom: 0; flex-grow: 0; } /* Ajuste para vista lista */
 .results-wrapper.list-view .card-app-summary {
     -webkit-line-clamp: 1;
-    line-clamp: 1; /* Propiedad estándar para VSC */
+  D line-clamp: 1; /* Propiedad estándar para VSC */
     max-height: 1.3em;
 }
 
@@ -635,20 +635,20 @@ body.lp-dark .modal-ref, body.modo-orbital .modal-ref { color: var(--text-color)
 
 /* ===== INICIO DE LA CORRECCIÓN MODAL ===== */
 .modal-apps-specs .app-brand-header {
-    font-size: 0.78125rem;
-    margin-top: 1.25rem; /* <-- MODIFICADO: Añade espacio superior */
-    margin-bottom: 0.8rem;
-    padding-bottom: 5px;
-    border-bottom-width: 2px;
-    color: var(--text-color);
-    font-weight: 700;
-    opacity: 1;
-    border-color: var(--material-surface-border);
-    transition: color 0.5s ease, border-color 0.5s ease;
+    font-size: 0.78125rem;
+    margin-top: 1.25rem; /* <-- MODIFICADO: Añade espacio superior */
+    margin-bottom: 0.8rem;
+    padding-bottom: 5px;
+    border-bottom-width: 2px;
+    color: var(--text-color);
+    font-weight: 700;
+    opacity: 1;
+    border-color: var(--material-surface-border);
+    transition: color 0.5s ease, border-color 0.5s ease;
 }
 /* NUEVA REGLA: Quita el margen solo al primer subtítulo */
 .modal-apps-specs .applications-list-container > .app-brand-header:first-child {
-    margin-top: 0;
+    margin-top: 0;
 }
 /* ===== FIN DE LA CORRECCIÓN MODAL ===== */
 
@@ -733,7 +733,7 @@ body.lp-dark { --arrow-glow-animation: arrow-glow-dark; } /* AMOLED usa rojo */
     .filters-column { flex-basis: auto; width: 100%; }
     .input-group-horizontal { flex-direction: column; gap: 0.3rem; }
     .results-wrapper { grid-template-columns: 1fr; }
-    .results-header-card { margin-top: 1rem; }
+D .results-header-card { margin-top: 1rem; }
 }
 @media (max-width: 600px) { .form-input, .position-btn { font-size: 1rem; padding: 0.75rem; } }
 @media (max-width: 480px) {
@@ -778,7 +778,7 @@ body.lp-dark { --arrow-glow-animation: arrow-glow-dark; } /* AMOLED usa rojo */
          .card-ref-container .ref-badge { font-size: 0.75rem; padding: 0.15rem 0.5rem;} /* Ajustar tamaño de ref badges */
          .position-badge { font-size: 0.75rem; padding: 0.15rem 0.5rem;} /* Ajustar tamaño igual a ref badge */
          .pagination-container { gap: 0.3rem; }
-  D         .page-btn { padding: 5px 10px; min-width: 32px; font-size: 0.85rem;}
+         .page-btn { padding: 5px 10px; min-width: 32px; font-size: 0.85rem;}
          .side-menu { width: 250px; left: -270px; }
 }
 
@@ -789,13 +789,13 @@ body.lp-dark { --arrow-glow-animation: arrow-glow-dark; } /* AMOLED usa rojo */
 
 /* ===== ESTILOS BOTÓN ORBITAL ACTIVO ===== */
 #orbitalBtn.active {
-T   background-color: var(--brand-color-3); /* Color magenta/rosa */
+    background-color: var(--brand-color-3); /* Color magenta/rosa */
     border-color: var(--brand-color-3);     /* Borde del mismo color */
     box-shadow: 0 4px 6px rgba(232, 62, 140, 0.4); /* Sombra a juego (opcional) */
 }
 /* Contraste del icono en modo claro */
 body:not(.lp-dark):not(.modo-orbital) #orbitalBtn.active .lp-icon-palette {
-    stroke: #ffffff; /* Cambia el icono a blanco sobre fondo magenta */
+s   stroke: #ffffff; /* Cambia el icono a blanco sobre fondo magenta */
 }
 
 /* ================== ESTILOS ETIQUETAS DE REFERENCIA ================== */
@@ -828,11 +828,11 @@ body.modo-orbital .ref-default, body.modo-orbital .ref-badge-na {
 
 /* Contenedor para etiquetas DENTRO de Specs */
 .modal-apps-specs .modal-ref-container { /* Estilos específicos para este contenedor */
-    display: flex;
+D   display: flex;
     flex-wrap: wrap;
     gap: 0.3rem;
     justify-content: flex-start; /* Alinea a la izquierda */
-  s text-align: left;
+    text-align: left;
 }
 
 
