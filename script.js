@@ -90,7 +90,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const fmsiMatch = !filters.fmsi || (Array.isArray(item.fmsi) && item.fmsi.some(f => typeof f === 'string' && f.toLowerCase().includes(filters.fmsi)));
             let posMatch = true; if (filters.pos.length > 0) { posMatch = filters.pos.includes(itemPosicion); }
             
-            // --- MODIFICACIÓN: Lógica de Medidas (Soporta múltiples) ---
+            // --- INICIO: Lógica de Medidas (Soporta múltiples) ---
             const TOLERANCIA = 1.0;
             let anchoMatchTolerancia = !filters.ancho;
             let altoMatchTolerancia = !filters.alto;
@@ -105,24 +105,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     const anyMeasureMatches = item.medidasProcesadas.some(medida => {
                         const anchoMatch = !filters.ancho || (medida.ancho >= (filters.ancho - TOLERANCIA) && medida.ancho <= (filters.ancho + TOLERANCIA));
                         const altoMatch = !filters.alto || (medida.alto >= (filters.alto - TOLERANCIA) && medida.alto <= (filters.alto + TOLERANCIA));
-                        
-                        // Si ambos filtros (ancho y alto) están presentes, ambos deben coincidir en la *misma* medida
-                        // Si solo un filtro está presente, solo ese necesita coincidir (el otro será 'true' por defecto)
                         return anchoMatch && altoMatch;
                     });
 
-                    // Si al menos una medida coincidió, los filtros pasan
                     if (anyMeasureMatches) {
                         anchoMatchTolerancia = true;
                         altoMatchTolerancia = true;
                     } else {
-                        // Si ningún set de medidas coincidió
                         anchoMatchTolerancia = false;
                         altoMatchTolerancia = false;
                     }
                 }
             }
-            // --- FIN MODIFICACIÓN MEDIDAS ---
+            // --- FIN: Lógica de Medidas ---
 
             return busqMatch && appMatch && oemMatch && fmsiMatch && posMatch && anchoMatchTolerancia && altoMatchTolerancia;
         });
@@ -149,7 +144,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderApplicationsList = (aplicaciones) => { const groupedApps = aplicaciones.reduce((acc, app) => { const marca = app.marca || 'N/A'; if (!acc[marca]) { acc[marca] = []; } acc[marca].push(app); return acc; }, {}); Object.keys(groupedApps).forEach(marca => { groupedApps[marca].sort((a, b) => { const serieA = a.serie || ''; const serieB = b.serie || ''; if (serieA < serieB) return -1; if (serieA > serieB) return 1; const anioA = a.año || ''; const anioB = b.año || ''; if (anioA < anioB) return -1; if (anioA > anioB) return 1; return 0; }); }); let appListHTML = ''; for (const marca in groupedApps) { appListHTML += `<div class="app-brand-header">${marca.toUpperCase()}</div>`; groupedApps[marca].forEach(app => { appListHTML += `<div class="app-detail-row"><div>${app.serie || ''}</div><div>${app.litros || ''}</div><div>${app.año || ''}</div></div>`; }); } return appListHTML; };
 
-    // --- Función renderSpecs ACTUALIZADA (Combina Ancho/Alto) ---
+    // --- Función renderSpecs ACTUALIZADA ---
     const renderSpecs = (item) => {
         let specsHTML = `<div class="app-brand-header">ESPECIFICACIONES</div>`; // Encabezado de sección
 
@@ -174,7 +169,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const fmsiText = (Array.isArray(item.fmsi) && item.fmsi.length > 0 ? item.fmsi.join(', ') : 'N/A');
         specsHTML += `<div class="spec-label"><strong>Platina FMSI</strong></div><div class="spec-value">${fmsiText}</div>`;
 
-        // --- MODIFICACIÓN: LÍNEA COMBINADA para Medidas (Soporta múltiples y usa 'x') ---
+        // --- INICIO: LÍNEA COMBINADA para Medidas (Soporta múltiples y usa 'x') ---
         let medidasTexto = 'N/A';
         // Usamos 'medidasProcesadas' que viene del 'inicializarApp'
         if (item.medidasProcesadas && item.medidasProcesadas.length > 0) {
@@ -187,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         specsHTML += `<div class="spec-label"><strong>Medidas (mm)</strong></div><div class="spec-value">${medidasTexto}</div>`;
-        // --- FIN MODIFICACIÓN MEDIDAS ---
+        // --- FIN: LÍNEA COMBINADA para Medidas ---
 
         specsHTML += `</div>`; // Cierre de spec-details-grid
 
@@ -255,7 +250,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const appSummaryItems = item.aplicaciones.slice(0, 3).map(app => `${app.marca} ${app.serie}`).filter((value, index, self) => self.indexOf(value) === index);
-s.length > 0) {
+            let appSummaryHTML = '';
+            if (appSummaryItems.length > 0) {
                 appSummaryHTML = `<div class="card-app-summary">${appSummaryItems.join(', ')}${item.aplicaciones.length > 3 ? ', ...' : ''}</div>`;
             }
 
@@ -267,7 +263,8 @@ s.length > 0) {
                     <div class="card-thumbnail"><img src="${firstImageSrc}" alt="Referencia ${primaryRefForData}" class="result-image" loading="lazy"></div>
                     <div class="card-content-wrapper">
                         <div class="card-details">
-section>
+                             <div class="card-ref-container">${refsHTML}</div>
+                             ${posBadge}
                         </div>
                         ${appSummaryHTML}
                     </div>
@@ -279,14 +276,12 @@ section>
         setupPagination(totalResults);
     };
 
-    // --- Función handleCardClick ACTUALIZADA ---
+    // --- Función handleCardClick (Original) ---
     function handleCardClick(event) {
          const card = event.target.closest('.result-card');
-        -id'); // <-- CORRECCIÓN: Usar data-id
-
-             // <-- CORRECCIÓN: Buscar por _appId
+         if (card) {
+             const itemId = card.dataset.id;
              const itemData = brakePadsData.find(item => item._appId == itemId);
-
              if (itemData) {
                  openModal(itemData);
              } else {
@@ -297,9 +292,8 @@ section>
 
     const updateScrollIndicator = () => { const wrapper = els.modalDetailsWrapper; const content = els.modalDetailsContent; if (wrapper && content) { const isScrollable = content.scrollHeight > content.clientHeight; const isAtBottom = content.scrollTop + content.clientHeight >= content.scrollHeight - 5; if (isScrollable && !isAtBottom) { wrapper.classList.add('scrollable'); } else { wrapper.classList.remove('scrollable'); } } };
 
-    // --- Función openModal ACTUALIZADA ---
+    // --- Función openModal (Original) ---
     function openModal(item) {
-        // --- Generar HTML para las etiquetas en el ENCABEZADO del modal ---
         const refsHeaderHTML = (Array.isArray(item.ref) && item.ref.length > 0)
             ? item.ref.flatMap(refString => String(refString).split(' '))
                   .map(part => `<span class="ref-badge header-ref-badge ${getRefBadgeClass(part)}">${part}</span>`)
@@ -308,7 +302,6 @@ section>
 
         els.modalRef.innerHTML = `<div class="modal-header-ref-container">${refsHeaderHTML}</div>`;
 
-        // --- Resto del código de openModal ---
         const posBadgeClass = item.posición === 'Delantera' ? 'delantera' : 'trasera';
         els.modalPosition.innerHTML = `<span class="position-badge ${posBadgeClass}">${item.posición}</span>`;
 
@@ -382,7 +375,7 @@ section>
         // Activar la etiqueta de la URL si existe
         if (brandFromURL && els.brandTagsContainer) {
             const tagToActivate = els.brandTagsContainer.querySelector(`.brand-tag[data-brand="${brandFromURL}"]`);
-section>
+            if (tagToActivate) {
                 tagToActivate.classList.add('active'); // Solo añadir clase, CSS se encarga del estilo
             }
         }
@@ -422,7 +415,7 @@ section>
             els.body.classList.add('lp-dark'); // Añadir lp-dark (AMOLED)
             iconAnimation(els.moonIcon, els.sunIcon);
             els.darkBtn.setAttribute('aria-pressed', 'true');
-section>
+            els.darkBtn.setAttribute('aria-label', 'Activar modo claro');
              if (els.orbitalBtn) {
                 els.orbitalBtn.classList.remove('active');
                 els.orbitalBtn.setAttribute('aria-pressed', 'false');
@@ -437,13 +430,13 @@ section>
             els.body.classList.add('modo-orbital');
              if (els.orbitalBtn) {
                 els.orbitalBtn.classList.add('active');
-section>
+                els.orbitalBtn.setAttribute('aria-pressed', 'true');
             }
             // Resetear el botón darkBtn
             iconAnimation(els.sunIcon, els.moonIcon); // Mostrar sol en Orbital
             els.darkBtn.setAttribute('aria-pressed', 'false');
             els.darkBtn.setAttribute('aria-label', 'Activar modo claro'); // Salir de Orbital va a Claro
-section>
+            localStorage.setItem('themePreference', 'orbital');
             console.log("Applied Orbital Theme");
         };
 
@@ -496,7 +489,7 @@ section>
                  applyAmoledDarkTheme();
                 break;
              case 'light':
-section>
+                 applyLightTheme();
                  break;
             default: // Claro por defecto
                 applyLightTheme();
@@ -509,11 +502,7 @@ section>
         window.addEventListener('scroll', () => { els.upBtn.classList.toggle('show', window.scrollY > 300); });
         els.menuBtn.addEventListener('click', openSideMenu);
         els.menuCloseBtn.addEventListener('click', closeSideMenu);
-        
-        // --- INICIO DE CORRECCIÓN 1 ---
         els.sideMenuOverlay.addEventListener('click', closeSideMenu);
-        // --- FIN DE CORRECCIÓN 1 ---
-
         els.openGuideLink.addEventListener('click', () => { closeSideMenu(); setTimeout(openGuideModal, 50); });
         window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && els.sideMenu.classList.contains('open')) { closeSideMenu(); } });
 
@@ -532,7 +521,7 @@ section>
 
         els.viewGridBtn.addEventListener('click', () => {
             if (els.results.classList.contains('list-view')) {
-section>
+                els.results.classList.remove('list-view');
                 els.viewGridBtn.classList.add('active'); els.viewGridBtn.setAttribute('aria-checked', 'true');
                 els.viewListBtn.classList.remove('active'); els.viewListBtn.setAttribute('aria-checked', 'false');
                 localStorage.setItem('viewMode', 'grid');
@@ -570,7 +559,6 @@ section>
         const trashLid = els.clearBtn.querySelector('.trash-lid'); const trashBody = els.clearBtn.querySelector('.trash-body'); const NUM_SPARKS = 10; const SPARK_COLORS = ['#00ffff', '#ff00ff', '#00ff7f', '#ffc700', '#ff5722'];
         function createSparks(button) { for (let i = 0; i < NUM_SPARKS; i++) { const spark = document.createElement('div'); spark.classList.add('spark'); const size = Math.random() * 4 + 3; spark.style.width = `${size}px`; spark.style.height = `${size}px`; spark.style.backgroundColor = SPARK_COLORS[Math.floor(Math.random() * SPARK_COLORS.length)]; spark.style.left = `calc(50% + ${Math.random() * 20 - 10}px)`; spark.style.top = `calc(50% + ${Math.random() * 20 - 10}px)`; const angle = Math.random() * Math.PI * 2; const distance = Math.random() * 25 + 20; const sparkX = Math.cos(angle) * distance; const sparkY = Math.sin(angle) * distance; spark.style.setProperty('--spark-x', `${sparkX}px`); spark.style.setProperty('--spark-y', `${sparkY}px`); button.appendChild(spark); spark.addEventListener('animationend', () => spark.remove(), { once: true }); } }
 
-        // --- CORRECCIÓN BOTÓN BORRAR ---
         els.clearBtn.addEventListener('click', (e) => {
             if (els.clearBtn.disabled) return;
             els.clearBtn.disabled = true;
@@ -581,19 +569,17 @@ section>
             clearAllFilters();
             setTimeout(() => {
                 if (trashLid) trashLid.classList.remove('animate-lid');
-section>
+                if (trashBody) trashBody.classList.remove('animate-body');
                 els.clearBtn.disabled = false;
             }, 900);
         });
-        // --- FIN CORRECCIÓN BOTÓN BORRAR ---
 
-        // --- MODIFICACIÓN Listener Etiquetas Marca ---
         if (els.brandTagsContainer) {
             els.brandTagsContainer.addEventListener('click', (e) => {
                 const tag = e.target.closest('.brand-tag');
                 if (!tag) return;
                 const brand = tag.dataset.brand;
-section>
+                const isActive = tag.classList.contains('active');
 
                 // Desactivar otras etiquetas activas
                 els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => {
@@ -605,11 +591,11 @@ section>
                 // Activar/Desactivar la etiqueta clickeada
                 if (isActive) {
                     tag.classList.remove('active');
-section>
+                    els.marca.value = ''; // Limpiar filtro de marca
                 } else {
                     tag.classList.add('active');
                     els.marca.value = brand; // Aplicar filtro de marca
-              D-08.
+                }
                 filterData(); // Filtrar resultados
             });
         }
@@ -619,7 +605,7 @@ section>
         els.modalCloseBtn.addEventListener('click', closeModal);
         els.modal.addEventListener('click', (event) => { if (event.target === els.modal) { closeModal(); } });
 
-section>
+        els.guideModalCloseBtn.addEventListener('click', closeGuideModal);
         els.guideModal.addEventListener('click', (event) => { if (event.target === els.guideModal) { closeGuideModal(); } });
         window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && els.guideModal.style.display === 'flex') { closeGuideModal(); } });
 
@@ -635,7 +621,7 @@ section>
             }
             let data = await response.json();
 
-            data = data.map((item, index) => { // <-- CORRECCIÓN: Añadir 'index'
+            data = data.map((item, index) => {
                 if (item.imagen && (!item.imagenes || item.imagenes.length === 0)) {
                     item.imagenes = [
                         item.imagen.replace("text=", `text=Vista+1+`),
@@ -644,50 +630,31 @@ section>
                     ];
                 }
                 
-                // --- MODIFICACIÓN: Procesar el array de medidas ---
+                // --- INICIO: Procesar el array de medidas ---
                 let medidasProcesadas = [];
                 // Aseguramos que 'item.medidas' sea un array
                 if (Array.isArray(item.medidas) && item.medidas.length > 0) {
                     medidasProcesadas = item.medidas.map(medidaStr => {
-section>
+                        // Procesamos cada string de medida (ej: "140x50")
                         const partes = typeof medidaStr === 'string' ? medidaStr.split('x').map(s => parseFloat(s.trim())) : [0, 0];
-                        return {
-                            ancho: partes[0] || 0,
-section>
-                        };
-                    });
-                }
-                // --- FIN MODIFICACIÓN MEDIDAS ---
-
-                // --- CAMBIO: Asegurar que ref, oem, fmsi sean arrays de strings ---
-                 const safeRefs = Array.isArray(item.ref) ? item.ref.map(String) : [];
-                 const safeOems = Array.isArray(item.oem) ? item.oem.map(String) : [];
-                 const safeFmsis = Array.isArray(item.fmsi) ? item.fmsi.map(String) : [];
-
-section>
-                         _appId: index, // <-- CORRECCIÓN: Añadir ID único
+                  _appId: index,
                          ref: safeRefs,
                          oem: safeOems,
-section>
+                         fmsi: safeFmsis,
                          medidasProcesadas: medidasProcesadas // <-- Guardamos el array de objetos
-                         // Ya no usamos anchoNum y altoNum
                      };
             });
 
             brakePadsData = data;
 
-section>
+            const getAllApplicationValues = (key) => { const allValues = new Set(); brakePadsData.forEach(item => { item.aplicaciones.forEach(app => { const prop = (key === 'modelo') ? 'serie' : key; if (app[prop]) allValues.add(String(app[prop])); }); }); return [...allValues].sort(); }; // Ensure string conversion
             fillDatalist(els.datalistMarca, getAllApplicationValues('marca'));
             fillDatalist(els.datalistModelo, getAllApplicationValues('modelo'));
-
-            // --- INICIO DE CORRECCIÓN 2 ---
             fillDatalist(els.datalistAnio, getAllApplicationValues('año'));
-            // --- FIN DE CORRECCIÓN 2 ---
-            
             const allOems = [...new Set(brakePadsData.flatMap(i => i.oem || []))].filter(Boolean).sort();
             const allFmsis = [...new Set(brakePadsData.flatMap(i => i.fmsi || []))].filter(Boolean).sort();
             fillDatalist(els.datalistOem, allOems);
-  D-08.
+            fillDatalist(els.datalistFmsi, allFmsis);
             const allBrandsList = brakePadsData.flatMap(item => item.aplicaciones.map(app => app.marca)).filter(Boolean);
             const brandFrequencies = allBrandsList.reduce((counts, brand) => { counts[brand] = (counts[brand] || 0) + 1; return counts; }, {});
             const sortedBrands = Object.entries(brandFrequencies).sort(([, countA], [, countB]) => countB - countA).slice(0, 10).map(([brand]) => brand);
@@ -695,26 +662,26 @@ section>
             brandColorMap = {};
             sortedBrands.forEach((brand, index) => { brandColorMap[brand] = brandColors[index % brandColors.length]; });
 
-            // --- MODIFICACIÓN Generación Etiquetas Marca ---
             if (els.brandTagsContainer) {
                 els.brandTagsContainer.innerHTML = sortedBrands.map(brand => {
                     const colorVar = brandColorMap[brand];
                     // Obtenemos el valor del color CSS para usarlo en la variable inline
                     const brandColorValue = colorVar ? getComputedStyle(document.documentElement).getPropertyValue(colorVar).trim() : 'currentColor';
                     return `<button class="brand-tag" data-brand="${brand}" style="--tag-brand-color: ${brandColorValue};">${brand}</button>`;
-                }).join('');
+section>
             }
 
             applyFiltersFromURL();
             // El tema se aplica ANTES en setupEventListeners
             filterData(); // Filtrar después de aplicar tema y filtros URL
-section>
+        } catch (error) {
             console.error("Error al cargar los datos:", error);
             els.results.innerHTML = `<div class="no-results-container"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line><line x1="12" y1="22" x2="12" y2="22"></line></svg><p>Error al cargar datos</p><span>No se pudo conectar con la base de datos (data.json). Asegúrate que el archivo exista.</span></div>`;
             els.countContainer.innerHTML = "Error";
             els.paginationContainer.innerHTML = '';
         }
-section>
+    }
+
     // Inicializar listeners PRIMERO para que el tema se aplique ANTES de renderizar
     setupEventListeners();
     // Luego cargar datos y renderizar
