@@ -63,7 +63,7 @@
 {"ref":["079INC"],"oem":[],"fmsi":["D079"],"posición":"Delantera","medidas":"76.7 x 61.2","imagenes":["https://i.postimg.cc/cCgR1vZy/079.webp"],"aplicaciones":[{"marca":"Volkswagen","serie":"Gol 1.6L","litros":"","año":"94-97","especificacion":""}]},
 {"ref":["083INC"],"oem":[],"fmsi":["D083"],"posición":"Delantera","medidas":"109 x 39","imagenes":["https://i.postimg.cc/fytcWVZ4/083.webp"],"aplicaciones":[{"marca":"Daewoo","serie":"Tico","litros":"","año":"96-99","especificacion":""}]},
 {"ref":["721INC"],"oem":[],"fmsi":["D9"],"posición":"Delantera","medidas":"81 x 66.2","imagenes":["https://i.postimg.cc/zvbCDy5Y/721.webp"],"aplicaciones":[{"marca":"Fiat","serie":"Zastava 1300","litros":"","año":"71-75","especificacion":""}]},
-{"ref":["728AINC"],"oem":[],"fmsi":["D52"],"posición":"Delantera","medidas":"183.8 X 64.4","imagenes":["https://i.postimg.cc/zvbCDy51/728A.webp"],"aplicaciones":[{"marca":"Chevrolet","serie":"C-10","litros":"","año":"72-84","especificacion":""},
+{"ref":["728AINC"],"oem":[],"fmsi":["D52"],"posición":"Delantera","medidas":["183.8 X 64.4","197.4 x 61.6"],"imagenes":["https://i.postimg.cc/zvbCDy51/728A.webp"],"aplicaciones":[{"marca":"Chevrolet","serie":"C-10","litros":"","año":"72-84","especificacion":""},
 {"marca":"Chevrolet","serie":"C-30","litros":"","año":"79-82","especificacion":""},
 {"marca":"Chevrolet","serie":"C-30","litros":"","año":"71-78","especificacion":""},
 {"marca":"Chevrolet","serie":"Camaro","litros":"","año":"93-95","especificacion":""},
