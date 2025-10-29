@@ -255,8 +255,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const appSummaryItems = item.aplicaciones.slice(0, 3).map(app => `${app.marca} ${app.serie}`).filter((value, index, self) => self.indexOf(value) === index);
-            let appSummaryHTML = '';
-            if (appSummaryItems.length > 0) {
+s.length > 0) {
                 appSummaryHTML = `<div class="card-app-summary">${appSummaryItems.join(', ')}${item.aplicaciones.length > 3 ? ', ...' : ''}</div>`;
             }
 
@@ -268,8 +267,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <div class="card-thumbnail"><img src="${firstImageSrc}" alt="Referencia ${primaryRefForData}" class="result-image" loading="lazy"></div>
                     <div class="card-content-wrapper">
                         <div class="card-details">
-                             <div class="card-ref-container">${refsHTML}</div>
-                             ${posBadge}
+section>
                         </div>
                         ${appSummaryHTML}
                     </div>
@@ -284,8 +282,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Función handleCardClick ACTUALIZADA ---
     function handleCardClick(event) {
          const card = event.target.closest('.result-card');
-         if (card) {
-             const itemId = card.dataset.id; // <-- CORRECCIÓN: Usar data-id
+        -id'); // <-- CORRECCIÓN: Usar data-id
 
              // <-- CORRECCIÓN: Buscar por _appId
              const itemData = brakePadsData.find(item => item._appId == itemId);
@@ -385,7 +382,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // Activar la etiqueta de la URL si existe
         if (brandFromURL && els.brandTagsContainer) {
             const tagToActivate = els.brandTagsContainer.querySelector(`.brand-tag[data-brand="${brandFromURL}"]`);
-            if (tagToActivate) {
+section>
                 tagToActivate.classList.add('active'); // Solo añadir clase, CSS se encarga del estilo
             }
         }
@@ -425,7 +422,7 @@ document.addEventListener('DOMContentLoaded', () => {
             els.body.classList.add('lp-dark'); // Añadir lp-dark (AMOLED)
             iconAnimation(els.moonIcon, els.sunIcon);
             els.darkBtn.setAttribute('aria-pressed', 'true');
-            els.darkBtn.setAttribute('aria-label', 'Activar modo claro');
+section>
              if (els.orbitalBtn) {
                 els.orbitalBtn.classList.remove('active');
                 els.orbitalBtn.setAttribute('aria-pressed', 'false');
@@ -440,13 +437,13 @@ document.addEventListener('DOMContentLoaded', () => {
             els.body.classList.add('modo-orbital');
              if (els.orbitalBtn) {
                 els.orbitalBtn.classList.add('active');
-                els.orbitalBtn.setAttribute('aria-pressed', 'true');
+section>
             }
             // Resetear el botón darkBtn
             iconAnimation(els.sunIcon, els.moonIcon); // Mostrar sol en Orbital
             els.darkBtn.setAttribute('aria-pressed', 'false');
             els.darkBtn.setAttribute('aria-label', 'Activar modo claro'); // Salir de Orbital va a Claro
-            localStorage.setItem('themePreference', 'orbital');
+section>
             console.log("Applied Orbital Theme");
         };
 
@@ -499,7 +496,7 @@ document.addEventListener('DOMContentLoaded', () => {
                  applyAmoledDarkTheme();
                 break;
              case 'light':
-                 applyLightTheme();
+section>
                  break;
             default: // Claro por defecto
                 applyLightTheme();
@@ -512,7 +509,11 @@ document.addEventListener('DOMContentLoaded', () => {
         window.addEventListener('scroll', () => { els.upBtn.classList.toggle('show', window.scrollY > 300); });
         els.menuBtn.addEventListener('click', openSideMenu);
         els.menuCloseBtn.addEventListener('click', closeSideMenu);
-s.sideMenuOverlay.addEventListener('click', closeSideMenu);
+        
+        // --- INICIO DE CORRECCIÓN 1 ---
+        els.sideMenuOverlay.addEventListener('click', closeSideMenu);
+        // --- FIN DE CORRECCIÓN 1 ---
+
         els.openGuideLink.addEventListener('click', () => { closeSideMenu(); setTimeout(openGuideModal, 50); });
         window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && els.sideMenu.classList.contains('open')) { closeSideMenu(); } });
 
@@ -531,7 +532,7 @@ s.sideMenuOverlay.addEventListener('click', closeSideMenu);
 
         els.viewGridBtn.addEventListener('click', () => {
             if (els.results.classList.contains('list-view')) {
-                els.results.classList.remove('list-view');
+section>
                 els.viewGridBtn.classList.add('active'); els.viewGridBtn.setAttribute('aria-checked', 'true');
                 els.viewListBtn.classList.remove('active'); els.viewListBtn.setAttribute('aria-checked', 'false');
                 localStorage.setItem('viewMode', 'grid');
@@ -580,7 +581,7 @@ s.sideMenuOverlay.addEventListener('click', closeSideMenu);
             clearAllFilters();
             setTimeout(() => {
                 if (trashLid) trashLid.classList.remove('animate-lid');
-                if (trashBody) trashBody.classList.remove('animate-body');
+section>
                 els.clearBtn.disabled = false;
             }, 900);
         });
@@ -592,7 +593,7 @@ s.sideMenuOverlay.addEventListener('click', closeSideMenu);
                 const tag = e.target.closest('.brand-tag');
                 if (!tag) return;
                 const brand = tag.dataset.brand;
-                const isActive = tag.classList.contains('active');
+section>
 
                 // Desactivar otras etiquetas activas
                 els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => {
@@ -604,11 +605,11 @@ s.sideMenuOverlay.addEventListener('click', closeSideMenu);
                 // Activar/Desactivar la etiqueta clickeada
                 if (isActive) {
                     tag.classList.remove('active');
-                    els.marca.value = ''; // Limpiar filtro de marca
+section>
                 } else {
                     tag.classList.add('active');
                     els.marca.value = brand; // Aplicar filtro de marca
-                }
+              D-08.
                 filterData(); // Filtrar resultados
             });
         }
@@ -618,7 +619,7 @@ s.sideMenuOverlay.addEventListener('click', closeSideMenu);
         els.modalCloseBtn.addEventListener('click', closeModal);
         els.modal.addEventListener('click', (event) => { if (event.target === els.modal) { closeModal(); } });
 
-        els.guideModalCloseBtn.addEventListener('click', closeGuideModal);
+section>
         els.guideModal.addEventListener('click', (event) => { if (event.target === els.guideModal) { closeGuideModal(); } });
         window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && els.guideModal.style.display === 'flex') { closeGuideModal(); } });
 
@@ -648,11 +649,11 @@ s.sideMenuOverlay.addEventListener('click', closeSideMenu);
                 // Aseguramos que 'item.medidas' sea un array
                 if (Array.isArray(item.medidas) && item.medidas.length > 0) {
                     medidasProcesadas = item.medidas.map(medidaStr => {
-                        // Procesamos cada string de medida (ej: "140x50")
+section>
                         const partes = typeof medidaStr === 'string' ? medidaStr.split('x').map(s => parseFloat(s.trim())) : [0, 0];
                         return {
                             ancho: partes[0] || 0,
-                            alto: partes[1] || 0
+section>
                         };
                     });
                 }
@@ -663,11 +664,11 @@ s.sideMenuOverlay.addEventListener('click', closeSideMenu);
                  const safeOems = Array.isArray(item.oem) ? item.oem.map(String) : [];
                  const safeFmsis = Array.isArray(item.fmsi) ? item.fmsi.map(String) : [];
 
-                return { ...item,
+section>
                          _appId: index, // <-- CORRECCIÓN: Añadir ID único
                          ref: safeRefs,
                          oem: safeOems,
-                         fmsi: safeFmsis,
+section>
                          medidasProcesadas: medidasProcesadas // <-- Guardamos el array de objetos
                          // Ya no usamos anchoNum y altoNum
                      };
@@ -675,14 +676,18 @@ s.sideMenuOverlay.addEventListener('click', closeSideMenu);
 
             brakePadsData = data;
 
-            const getAllApplicationValues = (key) => { const allValues = new Set(); brakePadsData.forEach(item => { item.aplicaciones.forEach(app => { const prop = (key === 'modelo') ? 'serie' : key; if (app[prop]) allValues.add(String(app[prop])); }); }); return [...allValues].sort(); }; // Ensure string conversion
+section>
             fillDatalist(els.datalistMarca, getAllApplicationValues('marca'));
             fillDatalist(els.datalistModelo, getAllApplicationValues('modelo'));
-s.datalistAnio, getAllApplicationValues('año'));
+
+            // --- INICIO DE CORRECCIÓN 2 ---
+            fillDatalist(els.datalistAnio, getAllApplicationValues('año'));
+            // --- FIN DE CORRECCIÓN 2 ---
+            
             const allOems = [...new Set(brakePadsData.flatMap(i => i.oem || []))].filter(Boolean).sort();
             const allFmsis = [...new Set(brakePadsData.flatMap(i => i.fmsi || []))].filter(Boolean).sort();
             fillDatalist(els.datalistOem, allOems);
-            fillDatalist(els.datalistFmsi, allFmsis);
+  D-08.
             const allBrandsList = brakePadsData.flatMap(item => item.aplicaciones.map(app => app.marca)).filter(Boolean);
             const brandFrequencies = allBrandsList.reduce((counts, brand) => { counts[brand] = (counts[brand] || 0) + 1; return counts; }, {});
             const sortedBrands = Object.entries(brandFrequencies).sort(([, countA], [, countB]) => countB - countA).slice(0, 10).map(([brand]) => brand);
@@ -694,21 +699,22 @@ s.datalistAnio, getAllApplicationValues('año'));
             if (els.brandTagsContainer) {
                 els.brandTagsContainer.innerHTML = sortedBrands.map(brand => {
                     const colorVar = brandColorMap[brand];
-    _brand-color: ${brandColorValue};">${brand}</button>`;
+                    // Obtenemos el valor del color CSS para usarlo en la variable inline
+                    const brandColorValue = colorVar ? getComputedStyle(document.documentElement).getPropertyValue(colorVar).trim() : 'currentColor';
+                    return `<button class="brand-tag" data-brand="${brand}" style="--tag-brand-color: ${brandColorValue};">${brand}</button>`;
                 }).join('');
             }
 
             applyFiltersFromURL();
             // El tema se aplica ANTES en setupEventListeners
             filterData(); // Filtrar después de aplicar tema y filtros URL
-        } catch (error) {
+section>
             console.error("Error al cargar los datos:", error);
             els.results.innerHTML = `<div class="no-results-container"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line><line x1="12" y1="22" x2="12" y2="22"></line></svg><p>Error al cargar datos</p><span>No se pudo conectar con la base de datos (data.json). Asegúrate que el archivo exista.</span></div>`;
             els.countContainer.innerHTML = "Error";
             els.paginationContainer.innerHTML = '';
         }
-    }
-
+section>
     // Inicializar listeners PRIMERO para que el tema se aplique ANTES de renderizar
     setupEventListeners();
     // Luego cargar datos y renderizar
