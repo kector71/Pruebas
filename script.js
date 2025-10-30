@@ -611,7 +611,26 @@ document.addEventListener('DOMContentLoaded', () => {
                         item.imagen.replace("text=", `text=Vista+3+`)
                     ];
                 }
-                const partes = item.medidas ? item.medidas.split('x').map(s => parseFloat(s.trim())) : [0,0];
+
+                // --- INICIO DE LA CORRECCIÓN PARA 'medidas' ---
+                
+                // 1. Aseguramos que 'medidaString' sea un string o null
+                let medidaString = null;
+                if (Array.isArray(item.medidas) && item.medidas.length > 0) {
+                    // Si es un array (como en "728AINC"), toma el primer elemento
+                    medidaString = item.medidas[0]; 
+                } else if (typeof item.medidas === 'string') {
+                    // Si es un string (como en "001INC"), úsalo
+                    medidaString = item.medidas;
+                }
+
+                // 2. Ahora 'partes' se calcula de forma segura
+                // Se usa /x/i para que funcione con 'x' (minúscula) o 'X' (mayúscula)
+                const partes = medidaString ? medidaString.split(/x/i).map(s => parseFloat(s.trim())) : [0,0];
+                
+                // --- FIN DE LA CORRECCIÓN ---
+
+
                 const safeRefs = Array.isArray(item.ref) ? item.ref.map(String) : [];
                 const safeOems = Array.isArray(item.oem) ? item.oem.map(String) : [];
                 const safeFmsis = Array.isArray(item.fmsi) ? item.fmsi.map(String) : [];
