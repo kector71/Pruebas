@@ -312,30 +312,14 @@ document.addEventListener('DOMContentLoaded', () => {
         els.modalAppsSpecs.innerHTML = `<div class="applications-list-container">${renderApplicationsList(item.aplicaciones)}${renderSpecs(item)}</div>`;
 
         els.modalContent.classList.remove('closing');
-        
-        // --- INICIO DE LA CORRECCIÓN ---
-        // Cambiado de 'flex' a 'block' para respetar el centrado del CSS
-        els.modal.style.display = 'block'; 
-        // --- FIN DE LA CORRECCIÓN ---
-
+        els.modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
         requestAnimationFrame(() => { setTimeout(() => { updateScrollIndicator(); els.modalDetailsContent.addEventListener('scroll', updateScrollIndicator); }, 100); });
     }
 
 
     function closeModal() { els.modalContent.classList.add('closing'); els.modalDetailsContent.removeEventListener('scroll', updateScrollIndicator); els.modalDetailsWrapper.classList.remove('scrollable'); setTimeout(() => { els.modal.style.display = 'none'; document.body.style.overflow = ''; els.modalCarousel.innerHTML = ''; els.modalRef.innerHTML = ''; els.modalPosition.innerHTML = ''; els.modalAppsSpecs.innerHTML = ''; els.modalCounterWrapper.innerHTML = ''; els.modalContent.classList.remove('closing'); }, 220); }
-    
-    function openGuideModal() { 
-        els.guideModalContent.classList.remove('closing'); 
-        
-        // --- INICIO DE LA CORRECCIÓN ---
-        // Cambiado de 'flex' a 'block' para respetar el centrado del CSS
-        els.guideModal.style.display = 'block'; 
-        // --- FIN DE LA CORRECCIÓN ---
-        
-        document.body.style.overflow = 'hidden'; 
-    }
-
+    function openGuideModal() { els.guideModalContent.classList.remove('closing'); els.guideModal.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
     function closeGuideModal() { els.guideModalContent.classList.add('closing'); setTimeout(() => { els.guideModal.style.display = 'none'; document.body.style.overflow = ''; els.guideModalContent.classList.remove('closing'); }, 220); }
     function openSideMenu() { els.sideMenu.classList.add('open'); els.sideMenu.setAttribute('aria-hidden', 'false'); els.sideMenuOverlay.style.display = 'block'; requestAnimationFrame(() => { els.sideMenuOverlay.classList.add('visible'); }); els.menuBtn.setAttribute('aria-expanded', 'true'); els.menuCloseBtn.focus(); }
     function closeSideMenu() { els.sideMenu.classList.remove('open'); els.sideMenu.setAttribute('aria-hidden', 'true'); els.sideMenuOverlay.classList.remove('visible'); els.menuBtn.setAttribute('aria-expanded', 'false'); els.menuBtn.focus(); els.sideMenuOverlay.addEventListener('transitionend', () => { if (!els.sideMenuOverlay.classList.contains('visible')) { els.sideMenuOverlay.style.display = 'none'; } }, { once: true }); }
@@ -605,7 +589,7 @@ document.addEventListener('DOMContentLoaded', () => {
         els.modal.addEventListener('click', (event) => { if (event.target === els.modal) { closeModal(); } });
         els.guideModalCloseBtn.addEventListener('click', closeGuideModal);
         els.guideModal.addEventListener('click', (event) => { if (event.target === els.guideModal) { closeGuideModal(); } });
-        window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && els.guideModal.style.display === 'flex') { closeGuideModal(); } }); // 'flex' o 'block' no importa para keydown
+        window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && els.guideModal.style.display === 'flex') { closeGuideModal(); } });
 
     } // --- Fin de setupEventListeners ---
 
