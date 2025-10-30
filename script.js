@@ -145,9 +145,36 @@ document.addEventListener('DOMContentLoaded', () => {
         const fmsiText = (Array.isArray(item.fmsi) && item.fmsi.length > 0 ? item.fmsi.join(', ') : 'N/A');
         specsHTML += `<div class="spec-label"><strong>Platina FMSI</strong></div><div class="spec-value">${fmsiText}</div>`;
 
-        const anchoVal = item.anchoNum || 'N/A';
-        const altoVal = item.altoNum || 'N/A';
-        specsHTML += `<div class="spec-label"><strong>Medidas (mm)</strong></div><div class="spec-value">Ancho: ${anchoVal} / Alto: ${altoVal}</div>`;
+        // --- INICIO DE LA MODIFICACIÓN (Medidas Múltiples) ---
+        
+        let medidasHTML = '';
+        
+        // Comprueba si item.medidas es un array y tiene elementos
+        if (Array.isArray(item.medidas) && item.medidas.length > 0) {
+            
+            // Mapea cada string de medida (ej: "183.8 X 64.4") a su propio <div>
+            medidasHTML = item.medidas.map(medidaStr => {
+                // Separa el string por 'x' (ignorando mayúsculas/minúsculas)
+                const partes = medidaStr.split(/x/i).map(s => s.trim());
+                const ancho = partes[0] || 'N/A';
+                const alto = partes[1] || 'N/A';
+                
+                // Devuelve una línea de HTML por cada medida
+                return `<div>Ancho: ${ancho} x Alto: ${alto}</div>`;
+            }).join(''); // Une todas las líneas de HTML
+
+        } else {
+            // Código de fallback (si no es un array o está vacío, usa anchoNum/altoNum)
+            const anchoVal = item.anchoNum || 'N/A';
+            const altoVal = item.altoNum || 'N/A';
+            medidasHTML = `<div>Ancho: ${anchoVal} x Alto: ${altoVal}</div>`;
+        }
+
+        // Añade el bloque completo al HTML
+        specsHTML += `<div class="spec-label"><strong>Medidas (mm)</strong></div>
+                          <div class="spec-value">${medidasHTML}</div>`;
+        
+        // --- FIN DE LA MODIFICACIÓN ---
         
         specsHTML += `</div>`; // Cierre de spec-details-grid
         return specsHTML;
@@ -242,10 +269,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>`;
         }).join('');
-
-        // --- 3. REFACTORIZACIÓN: Estas líneas ya no son necesarias aquí ---
-        // els.results.removeEventListener('click', handleCardClick);
-        // els.results.addEventListener('click', handleCardClick);
         
         setupPagination(totalResults);
     };
