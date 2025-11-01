@@ -357,6 +357,7 @@ body.lp-dark #positionDelantera.active, body.lp-dark #positionTrasera.active { c
     border-radius: 50px;
     
     /* --- MONOCROMÁTICO --- */
+    /* --tag-brand-color no se usa, pero lo dejamos por si acaso */
     border: 1px solid var(--material-surface-border);
     color: var(--text-color);
     
@@ -842,6 +843,94 @@ body.modo-orbital { --arrow-glow-animation: arrow-glow; } /* Orbital usa azul */
 body.lp-dark { --arrow-glow-animation: arrow-glow-dark; } /* AMOLED usa rojo */
 @keyframes fadeInUp { to { opacity:1; transform: translateY(0); } }
 
+/* ================== ETIQUETAS DE FILTROS ACTIVOS ================== */
+.active-filters-container {
+    /* Ocupa el espacio disponible en el header de resultados */
+    flex-grow: 1;
+    display: flex;
+    flex-wrap: wrap; /* Permite que fluyan si no caben */
+    gap: 0.4rem;
+    padding-right: 1rem; /* Espacio antes del contador de resultados */
+}
+
+.filter-tag {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    font-size: 0.75rem;
+    font-weight: 500;
+    padding: 3px 4px 3px 8px; /* Padding (izq, arriba/abajo, der) */
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    opacity: 0.9;
+    border: 1px solid var(--material-surface-border);
+    border-radius: 6px;
+    animation: fadeInUpCard 0.3s ease forwards; /* Reutiliza animación de tarjeta */
+}
+
+/* Botón 'x' para cerrar */
+.filter-tag-close {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: none;
+    background-color: transparent;
+    color: var(--text-color);
+    opacity: 0.6;
+    cursor: pointer;
+    transition: background-color 0.2s ease, opacity 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem; /* Tamaño de la 'x' */
+    line-height: 1;
+}
+.filter-tag-close:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    opacity: 1;
+}
+
+/* Ajustes para Tema Oscuro */
+body.lp-dark .filter-tag-close:hover,
+body.modo-orbital .filter-tag-close:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* ================== CONTROLES DE ORDENAR ================== */
+.results-controls-right {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-shrink: 0; /* Evita que se encoja */
+}
+.sort-container {
+    flex-shrink: 0;
+}
+.form-select-sort {
+    width: auto; /* Ancho automático basado en el contenido */
+    min-width: 140px;
+    padding-right: 30px; /* Espacio para la flecha del select */
+    margin-bottom: 0; /* Sobrescribe el margen de .form-input */
+    font-size: 0.8rem;
+    padding-top: 5px;
+    padding-bottom: 5px;
+    height: 36px; /* Misma altura que botones de vista */
+    
+    /* Apariencia para que se vea la flecha */
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+    background-size: 16px;
+}
+/* Flecha del select en modo oscuro */
+body.lp-dark .form-select-sort,
+body.modo-orbital .form-select-sort {
+     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+}
+
 /* ================== AJUSTES RESPONSIVE ================== */
 @media (max-width: 767px) {
     .main-layout { flex-direction: column; gap: 1rem; align-items: stretch; padding-bottom: 80px; } /* Padding inferior para espacio */
@@ -849,6 +938,32 @@ body.lp-dark { --arrow-glow-animation: arrow-glow-dark; } /* AMOLED usa rojo */
     .input-group-horizontal { flex-direction: column; gap: 0.3rem; }
     .results-wrapper { grid-template-columns: 1fr; }
     .results-header-card { margin-top: 1rem; }
+
+    /* --- AJUSTES RESPONSIVE PARA HEADER DE RESULTADOS --- */
+    .results-header {
+        flex-direction: column; /* Apila los elementos */
+        align-items: stretch; /* Estira al ancho completo */
+        gap: 0.75rem;
+    }
+    .active-filters-container {
+        order: 1; /* Las etiquetas van primero */
+        padding-right: 0;
+    }
+    .result-count-container {
+        order: 2; /* El contador va segundo */
+        text-align: center;
+    }
+    .results-controls-right {
+        order: 3; /* Los controles van al final */
+        justify-content: space-between; /* Espacia el sort y la vista */
+    }
+    .sort-container {
+        flex-grow: 1; /* Permite que el select crezca */
+    }
+    .form-select-sort {
+        width: 100%;
+    }
+    /* --- FIN DE AJUSTES RESPONSIVE --- */
 }
 @media (max-width: 600px) { .form-input, .position-btn { font-size: 1rem; padding: 0.75rem; } }
 @media (max-width: 480px) {
