@@ -898,8 +898,11 @@ document.addEventListener('DOMContentLoaded', () => {
             fillDatalist(els.datalistAnio, getAllApplicationValues('año'));
             
             const allOems = [...new Set(appState.data.flatMap(i => i.oem || []))].filter(Boolean).sort();
-            const allFmsis = [...new Set(appState.data.flatMap(i => i.fmsi || []))].filter(Boolean).sort();
             
+            // --- CORRECCIÓN DEL TYPO ---
+            const allFmsis = [...new Set(appState.data.flatMap(i => i.fmsi || []))].filter(Boolean).sort();
+            // --- FIN DE LA CORRECCIÓN ---
+
             fillDatalist(els.datalistOem, allOems);
             fillDatalist(els.datalistFmsi, allFmsis);
             
