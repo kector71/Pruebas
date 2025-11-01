@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const itemsPerPage = 24; // Constante, puede quedar fuera del estado
-    // let brandColorMap = {}; // Ya no se usa
+    // let brandColorMap = {}; // No se usa
 
     const els = {
         body: document.body, headerX: document.querySelector('.header-x'), darkBtn: document.getElementById('darkBtn'),
@@ -99,9 +99,10 @@ document.addEventListener('DOMContentLoaded', () => {
         paginationContainer: document.getElementById('pagination-container'),
         resultsHeaderCard: document.getElementById('results-header-card'),
         brandTagsContainer: document.getElementById('brand-tags-container'),
-        
-        // --- CAMBIO: Añadido el nuevo contenedor ---
         activeFiltersContainer: document.getElementById('active-filters-container'),
+        
+        // --- CAMBIO: Añadido el select de ordenar ---
+        sortBySelect: document.getElementById('sort-by-select'),
 
         footer: document.getElementById('footerBanner'),
         modal: document.getElementById('card-modal'),
@@ -210,6 +211,38 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    // --- NUEVA FUNCIÓN PARA ORDENAR Y RENDERIZAR ---
+    const sortAndRenderPage = () => {
+        const sortValue = els.sortBySelect.value;
+        
+        // Función auxiliar para obtener la referencia de forma segura para ordenar
+        const getSortRef = (item) => {
+            if (item.ref && item.ref.length > 0) {
+                // Tomar la primera referencia, ej "001INC", y tomar solo la primera parte "001"
+                return String(item.ref[0]).split(' ')[0];
+            }
+            return ''; // Devolver vacío si no hay 'ref'
+        };
+
+        switch (sortValue) {
+            case 'ref-asc': // A-Z
+                appState.filtered.sort((a, b) => getSortRef(a).localeCompare(getSortRef(b), undefined, { numeric: true }));
+                break;
+            case 'ref-desc': // Z-A
+                appState.filtered.sort((a, b) => getSortRef(b).localeCompare(getSortRef(a), undefined, { numeric: true }));
+                break;
+            case 'relevance': // Orden original del JSON
+            default:
+                // Re-ordenar por el ID único que asignamos al cargar
+                appState.filtered.sort((a, b) => a._appId - b._appId);
+                break;
+        }
+
+        // Resetear a la página 1 y renderizar
+        appState.currentPage = 1;
+        renderCurrentPage();
+    };
+
     const filterData = () => {
         // --- 2. USANDO EL ESTADO ---
         if (!appState.data.length) return;
@@ -217,10 +250,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const fbusq = (val) => val.toLowerCase().trim(); 
         const activePos = getPositionFilter();
 
-        // --- MODIFICACIÓN 1: Parsear el filtro de año ---
         // 'yearRange' es el FILTRO DEL USUARIO (ej. { start: 1995, end: 1995 })
         const yearRange = parseYearFilter(els.anio.value); 
-        // --- FIN MODIFICACIÓN 1 ---
 
         const filters = { 
             busqueda: fbusq(els.busqueda.value), 
@@ -240,11 +271,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const busqMatch = !filters.busqueda ||
                 (Array.isArray(item.ref) && item.ref.some(rString => typeof rString === 'string' && rString.toLowerCase().includes(filters.busqueda))) ||
                 (Array.isArray(item.oem) && item.oem.some(o => typeof o === 'string' && o.toLowerCase().includes(filters.busqueda))) ||
-                (Array.isArray(item.fmsi) && item.fmsi.some(f => typeof f === 'string' && f.toLowerCase().includes(filters.busqueda))) ||
+                (Array.isArray(item.fmsi) && item.fmsi.some(f => typeof f === 'string' && f.toLowerCase().includes(filters.fmsi))) ||
                 itemVehicles.includes(filters.busqueda);
 
             
-            // --- MODIFICACIÓN 2: Lógica de appMatch con rango de año ---
             const yearFilterActive = !!yearRange; // ¿Hay un filtro de año válido?
 
             const appMatch = (!filters.marca && !filters.modelo && !yearFilterActive) || // true si no hay filtros de app
@@ -255,23 +285,19 @@ document.addEventListener('DOMContentLoaded', () => {
                                  // Lógica de AÑO (¡CORREGIDA!)
                                  let anioMatch = true; // Asumir true si no hay filtro de año
                                  if (yearFilterActive) {
-                                     // Parsear el RANGO DE AÑO DEL DATO (ej. '1992-2015')
                                      // 'appYearRange' es el DATO de la pastilla (ej. { start: 1992, end: 2015 })
                                      const appYearRange = parseYearFilter(app.año); 
                                      
-                                     if (!appYearRange) { // Si app.año es "N/A" o inválido, appYearRange será null
+                                     if (!appYearRange) { // Si app.año es "N/A" o inválido
                                          anioMatch = false; // El dato no tiene año válido
                                      } else {
                                          // Comprobar si los rangos se solapan (overlap)
-                                         // [app.start, app.end] overlaps [filter.start, filter.end]
-                                         // Condición de solapamiento: app.start <= filter.end && app.end >= filter.start
                                          anioMatch = appYearRange.start <= yearRange.end && appYearRange.end >= yearRange.start;
                                      }
                                  }
                                  
                                  return marcaMatch && modeloMatch && anioMatch;
                              });
-            // --- FIN MODIFICACIÓN 2 ---
 
             const oemMatch = !filters.oem || (Array.isArray(item.oem) && item.oem.some(o => typeof o === 'string' && o.toLowerCase().includes(filters.oem)));
             const fmsiMatch = !filters.fmsi || (Array.isArray(item.fmsi) && item.fmsi.some(f => typeof f === 'string' && f.toLowerCase().includes(filters.fmsi)));
@@ -284,13 +310,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- 2. ACTUALIZANDO EL ESTADO ---
         appState.filtered = filtered;
-        appState.currentPage = 1; // Resetea la página en cada filtro
         
-        // --- CAMBIO: Llamar a la función de renderizado de etiquetas ---
         renderActiveFilters(); 
-
-        renderCurrentPage();
         updateURLWithFilters();
+
+        // --- CAMBIO: Llamar a la nueva función de ordenar ---
+        sortAndRenderPage(); // <-- Reemplaza a renderCurrentPage()
     };
 
     function navigateCarousel(carouselContainer, direction) {
@@ -742,6 +767,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const otherFilterInputs = [els.marca, els.modelo, els.anio, els.oem, els.fmsi, els.medidasAncho, els.medidasAlto];
         otherFilterInputs.forEach(input => input.addEventListener('input', debouncedFilter));
 
+        // --- CAMBIO: Listener para el select de ordenar ---
+        els.sortBySelect.addEventListener('change', () => {
+            // No se necesita debounce, es una acción intencional
+            sortAndRenderPage();
+        });
+
         [els.posDel, els.posTras].forEach(btn => btn.addEventListener('click', (e) => { e.currentTarget.classList.toggle('active'); filterData(); }));
 
         const trashLid = els.clearBtn.querySelector('.trash-lid'); const trashBody = els.clearBtn.querySelector('.trash-body'); const NUM_SPARKS = 10; const SPARK_COLORS = ['#00ffff', '#ff00ff', '#00ff7f', '#ffc700', '#ff5722'];
@@ -798,7 +829,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (newPage) {
                 // --- 2. ACTUALIZANDO EL ESTADO ---
                 appState.currentPage = newPage;
-                renderCurrentPage(); // Vuelve a renderizar con la nueva página
+                renderCurrentPage(); // <-- Correcto, solo renderiza, no re-ordena
                 els.resultsHeaderCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         });
