@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const itemsPerPage = 24; // Constante, puede quedar fuera del estado
-    // let brandColorMap = {}; // Ya no se usa para colores
+    // let brandColorMap = {}; // Ya no se usa
 
     const els = {
         body: document.body, headerX: document.querySelector('.header-x'), darkBtn: document.getElementById('darkBtn'),
@@ -99,6 +99,10 @@ document.addEventListener('DOMContentLoaded', () => {
         paginationContainer: document.getElementById('pagination-container'),
         resultsHeaderCard: document.getElementById('results-header-card'),
         brandTagsContainer: document.getElementById('brand-tags-container'),
+        
+        // --- CAMBIO: Añadido el nuevo contenedor ---
+        activeFiltersContainer: document.getElementById('active-filters-container'),
+
         footer: document.getElementById('footerBanner'),
         modal: document.getElementById('card-modal'),
         modalContent: document.querySelector('#card-modal .modal-content'),
@@ -133,6 +137,77 @@ document.addEventListener('DOMContentLoaded', () => {
         if (upperRef.startsWith('K')) return 'ref-k';
         if (upperRef.endsWith('BEX')) return 'ref-bex';
         return 'ref-default'; // Verde menta
+    };
+
+    // --- NUEVA FUNCIÓN: RENDERIZAR ETIQUETAS DE FILTROS ---
+    const renderActiveFilters = () => {
+        els.activeFiltersContainer.innerHTML = ''; // Limpiar etiquetas anteriores
+        const filters = {
+            busqueda: { value: els.busqueda.value, label: 'Búsqueda' },
+            marca: { value: els.marca.value, label: 'Marca' },
+            modelo: { value: els.modelo.value, label: 'Modelo/Serie' },
+            anio: { value: els.anio.value, label: 'Año' },
+            oem: { value: els.oem.value, label: 'OEM' },
+            fmsi: { value: els.fmsi.value, label: 'FMSI' },
+            ancho: { value: els.medidasAncho.value, label: 'Ancho' },
+            alto: { value: els.medidasAlto.value, label: 'Alto' },
+        };
+
+        // Crear etiquetas para filtros de texto
+        for (const key in filters) {
+            const filter = filters[key];
+            if (filter.value.trim() !== '') {
+                const tag = document.createElement('div');
+                tag.className = 'filter-tag';
+                // Usar filter.value para el texto de la etiqueta
+                tag.innerHTML = `<span>${filter.value}</span> 
+                                 <button class="filter-tag-close" data-filter-key="${key}" aria-label="Quitar filtro ${filter.label}">&times;</button>`;
+                els.activeFiltersContainer.appendChild(tag);
+            }
+        }
+
+        // Crear etiquetas para filtros de posición (botones)
+        if (els.posDel.classList.contains('active')) {
+            const tag = document.createElement('div');
+            tag.className = 'filter-tag';
+            tag.innerHTML = `<span>Delantera</span>
+                             <button class="filter-tag-close" data-filter-key="posDel" aria-label="Quitar filtro Delantera">&times;</button>`;
+            els.activeFiltersContainer.appendChild(tag);
+        }
+        if (els.posTras.classList.contains('active')) {
+            const tag = document.createElement('div');
+            tag.className = 'filter-tag';
+            tag.innerHTML = `<span>Trasera</span>
+                             <button class="filter-tag-close" data-filter-key="posTras" aria-label="Quitar filtro Trasera">&times;</button>`;
+            els.activeFiltersContainer.appendChild(tag);
+        }
+
+        // --- Añadir Event Listeners a los botones 'x' ---
+        els.activeFiltersContainer.querySelectorAll('.filter-tag-close').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const key = e.currentTarget.dataset.filterKey;
+                
+                // Borrar el valor del filtro correspondiente
+                if (key === 'posDel') {
+                    els.posDel.classList.remove('active');
+                } else if (key === 'posTras') {
+                    els.posTras.classList.remove('active');
+                } else if (els[key]) { // Para todos los inputs (busqueda, marca, etc.)
+                    els[key].value = '';
+                }
+
+                // Si borramos un filtro de marca, deseleccionar la etiqueta de marca
+                if (key === 'marca') {
+                    const activeBrandTag = els.brandTagsContainer.querySelector('.brand-tag.active');
+                    if (activeBrandTag) {
+                        activeBrandTag.classList.remove('active');
+                    }
+                }
+                
+                // Volver a ejecutar el filtro
+                filterData();
+            });
+        });
     };
 
     const filterData = () => {
@@ -211,6 +286,9 @@ document.addEventListener('DOMContentLoaded', () => {
         appState.filtered = filtered;
         appState.currentPage = 1; // Resetea la página en cada filtro
         
+        // --- CAMBIO: Llamar a la función de renderizado de etiquetas ---
+        renderActiveFilters(); 
+
         renderCurrentPage();
         updateURLWithFilters();
     };
@@ -686,13 +764,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // --- Event Listener para ETIQUETAS de Marcas ---
         if (els.brandTagsContainer) {
             els.brandTagsContainer.addEventListener('click', (e) => {
-                const tag = e.target.closest('.brand-tag'); // <-- REVERTIDO A .brand-tag
+                const tag = e.target.closest('.brand-tag'); // <-- Revertido a .brand-tag
                 if (!tag) return;
                 const brand = tag.dataset.brand;
                 const isActive = tag.classList.contains('active');
 
                 // Busca por la clase original
-                els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => { // <-- REVERTIDO
+                els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => { // <-- Revertido
                     if (activeTag !== tag) {
                         activeTag.classList.remove('active');
                     }
