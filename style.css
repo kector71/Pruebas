@@ -331,45 +331,98 @@ body.lp-dark #positionDelantera.active, body.lp-dark #positionTrasera.active { c
 .clear-filters-btn:hover { background-color: var(--btn-primary-hover-bg); box-shadow: var(--elevation-4); }
 .clear-filters-btn svg { width: 20px; height: 20px; stroke: var(--btn-primary-text); stroke-width: 2; fill: none; position: static; transition: none; }
 
-/* === ESTILOS ETIQUETAS MARCA CON COLOR === */
+
+/* === ESTILOS ETIQUETAS MARCA (MONOCROMÁTICO, SIN SCROLL) === */
 .brand-tags-container {
     display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    padding: 0.5rem 0;
+    flex-wrap: wrap; /* Permite que las etiquetas fluyan a la siguiente línea */
+    gap: 0.5rem;     /* Espacio entre etiquetas */
+    
+    /* --- SIN SCROLL --- */
+    max-height: none;
+    overflow-y: visible;
+    
+    /* Bordes para separar */
+    border-top: 1px solid var(--material-surface-border);
+    border-bottom: 1px solid var(--material-surface-border);
+    padding: 0.75rem 0.25rem;
+    margin-top: 0.5rem;
 }
+
 .brand-tag {
     font-family: 'Inter', sans-serif;
     font-size: 0.75rem;
     font-weight: 500;
-    padding: 4px 10px;
+    padding: 4px 6px 4px 10px; /* Más padding a la izq, menos a la der */
     border-radius: 50px;
-    /* Usa la variable --tag-brand-color para borde y texto */
-    border: 1px solid var(--tag-brand-color, var(--material-surface-border));
-    color: var(--tag-brand-color, var(--text-color));
-    background-color: transparent; /* Fondo transparente por defecto */
-    opacity: 0.9; /* Un poco más visible */
+    
+    /* --- MONOCROMÁTICO --- */
+    border: 1px solid var(--material-surface-border);
+    color: var(--text-color);
+    
+    background-color: transparent;
+    opacity: 0.8; /* Un poco más sutil */
     cursor: pointer;
     transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, opacity 0.2s, box-shadow 0.2s;
     white-space: nowrap;
+
+    /* Flex para alinear nombre y contador */
+    display: flex;
+    align-items: center;
+    gap: 6px; /* Espacio entre nombre y contador */
 }
 .brand-tag:hover {
     opacity: 1;
-    background-color: var(--input-bg); /* Mantiene el hover genérico */
+    background-color: var(--input-bg);
 }
 .brand-tag.active {
-    background-color: transparent; /* Sin relleno */
-    /* color: #000; */ /* <-- LÍNEA ELIMINADA */
-    border-color: var(--tag-brand-color); /* Borde de color */
-    border-width: 2px; /* Borde un poco más grueso */
-    padding: 3px 9px; /* Ajuste de padding */
-    box-shadow: none; /* Sin sombra */
+    /* --- ACTIVO (Color Primario) --- */
+    background-color: var(--btn-primary-bg); 
+    color: var(--btn-primary-text); /* Texto blanco */
+    border-color: var(--btn-primary-bg);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     opacity: 1;
 }
+
+/* Nombre de la marca dentro de la etiqueta */
+.brand-name {
+    font-weight: 500;
+}
+.brand-tag.active .brand-name {
+    font-weight: 600;
+}
+
+/* Contador dentro de la etiqueta */
+.brand-count {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 1px 5px;
+    border-radius: 4px;
+    
+    /* --- MONOCROMÁTICO --- */
+    background-color: var(--input-bg);
+    color: var(--text-color);
+    opacity: 0.7;
+    
+    flex-shrink: 0;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Estilo del contador cuando la ETIQUETA está activa */
+.brand-tag.active .brand-count {
+    background-color: rgba(255, 255, 255, 0.2); /* Fondo blanco translúcido */
+    color: var(--btn-primary-text); /* Texto blanco */
+    opacity: 1;
+}
+
+/* Ocultar en móvil (comportamiento original) */
 @media (max-width: 767px) {
-    .brand-tags-container { display: none; }
+    .brand-tags-container { 
+        display: none;
+    }
 }
 /* === FIN ESTILOS ETIQUETAS MARCA === */
+
 
 @keyframes skeleton-pulse { 0%, 100% { background-color: var(--skeleton-bg); } 50% { background-color: var(--skeleton-highlight); } }
 .skeleton-card { background-color: var(--material-surface-light); border: 1px solid var(--material-surface-border); border-radius: 0.75rem; padding: 0.75rem; box-shadow: var(--elevation-1); display: flex; flex-direction: column; gap: 0.8rem; transition: background-color 0.5s ease, border-color 0.5s ease; }

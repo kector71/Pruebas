@@ -71,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const itemsPerPage = 24; // Constante, puede quedar fuera del estado
-    let brandColorMap = {};
+    // let brandColorMap = {}; // Ya no se usa para colores
 
     const els = {
         body: document.body, headerX: document.querySelector('.header-x'), darkBtn: document.getElementById('darkBtn'),
@@ -493,7 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- SETUP EVENT LISTENERS (CON LÓGICA DE 3 TEMAS: Claro, AMOLED Dark, Orbital) ---
+    // --- SETUP EVENT LISTENERS ---
     function setupEventListeners() {
         // Aplicar ripple a todos los botones aplicables
         [els.darkBtn, els.upBtn, els.menuBtn, els.orbitalBtn, els.clearBtn].forEach(btn => btn?.addEventListener('click', createRippleEffect));
@@ -550,7 +550,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Applied Orbital Theme");
         };
 
-        // --- Event Listener Botón Sol/Luna (Ciclo simple Claro <-> AMOLED) ---
+        // --- Event Listener Botón Sol/Luna ---
         els.darkBtn.addEventListener('click', () => {
             els.headerX.style.animation = 'bounceHeader 0.6s cubic-bezier(0.68,-0.55,0.27,1.55)';
             setTimeout(() => { els.headerX.style.animation = ''; }, 600);
@@ -683,14 +683,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 900);
         });
 
+        // --- Event Listener para ETIQUETAS de Marcas ---
         if (els.brandTagsContainer) {
             els.brandTagsContainer.addEventListener('click', (e) => {
-                const tag = e.target.closest('.brand-tag');
+                const tag = e.target.closest('.brand-tag'); // <-- REVERTIDO A .brand-tag
                 if (!tag) return;
                 const brand = tag.dataset.brand;
                 const isActive = tag.classList.contains('active');
 
-                els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => {
+                // Busca por la clase original
+                els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => { // <-- REVERTIDO
                     if (activeTag !== tag) {
                         activeTag.classList.remove('active');
                     }
@@ -706,8 +708,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 filterData();
             });
         }
+        // --- FIN MODIFICACIÓN ---
 
-        // --- Listener de Paginación ACTUALIZADO ---
+        // --- Listener de Paginación ---
         els.paginationContainer.addEventListener('click', (e) => {
             const btn = e.target.closest('.page-btn');
             if (!btn || btn.disabled || btn.classList.contains('active')) {
@@ -751,19 +754,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // --- CORRECCIÓN PARA 'medidas' (usa NaN por defecto) ---
                 
-                // 1. Aseguramos que 'medidaString' sea un string o null
                 let medidaString = null;
                 if (Array.isArray(item.medidas) && item.medidas.length > 0) {
-                    // Si es un array (como en "728AINC"), toma el primer elemento
                     medidaString = item.medidas[0]; 
                 } else if (typeof item.medidas === 'string') {
-                    // Si es un string (como en "001INC"), úsalo
                     medidaString = item.medidas;
                 }
-
-                // 2. Ahora 'partes' se calcula de forma segura
-                // Se usa /x/i para que funcione con 'x' (minúscula) o 'X' (mayúscula)
-                // ¡CAMBIO CLAVE: [NaN, NaN] en lugar de [0, 0] como valor por defecto!
                 const partes = medidaString ? medidaString.split(/x/i).map(s => parseFloat(s.trim())) : [NaN, NaN];
                 
                 // --- FIN DE LA CORRECCIÓN ---
@@ -793,29 +789,47 @@ document.addEventListener('DOMContentLoaded', () => {
             fillDatalist(els.datalistAnio, getAllApplicationValues('año'));
             
             const allOems = [...new Set(appState.data.flatMap(i => i.oem || []))].filter(Boolean).sort();
-            
-            // --- CORRECCIÓN DEL TYPO DE LA ÚLTIMA VEZ ---
             const allFmsis = [...new Set(appState.data.flatMap(i => i.fmsi || []))].filter(Boolean).sort();
-            // --- FIN DE LA CORRECCIÓN DEL TYPO ---
-
+            
             fillDatalist(els.datalistOem, allOems);
             fillDatalist(els.datalistFmsi, allFmsis);
             
-            const allBrandsList = appState.data.flatMap(item => item.aplicaciones.map(app => app.marca)).filter(Boolean);
-            const brandFrequencies = allBrandsList.reduce((counts, brand) => { counts[brand] = (counts[brand] || 0) + 1; return counts; }, {});
-            const sortedBrands = Object.entries(brandFrequencies).sort(([, countA], [, countB]) => countB - countA).slice(0, 10).map(([brand]) => brand);
-            const brandColors = [ '--brand-color-1', '--brand-color-2', '--brand-color-3', '--brand-color-4', '--brand-color-5', '--brand-color-6', '--brand-color-7', '--brand-color-8', '--brand-color-9', '--brand-color-10' ];
             
-            brandColorMap = {};
-            sortedBrands.forEach((brand, index) => { brandColorMap[brand] = brandColors[index % brandColors.length]; });
+            // --- INICIO CÁLCULO DE MARCAS Y CONTEO ---
+            const brandPadCounts = {}; 
+            appState.data.forEach(item => {
+                const uniqueBrandsForItem = new Set();
+                item.aplicaciones.forEach(app => {
+                    if (app.marca) {
+                        uniqueBrandsForItem.add(app.marca);
+                    }
+                });
+                uniqueBrandsForItem.forEach(brand => {
+                    brandPadCounts[brand] = (brandPadCounts[brand] || 0) + 1;
+                });
+            });
 
+            const sortedBrandsWithCounts = Object.entries(brandPadCounts)
+                .sort(([brandA], [brandB]) => brandA.localeCompare(brandB)); 
+            
+            // --- LÓGICA DE COLORES ELIMINADA ---
+            
+
+            // --- INICIO RENDERIZADO DE ETIQUETAS DE MARCAS (MONOCROMÁTICO) ---
             if (els.brandTagsContainer) {
-                els.brandTagsContainer.innerHTML = sortedBrands.map(brand => {
-                    const colorVar = brandColorMap[brand];
-                    const brandColorValue = colorVar ? getComputedStyle(document.documentElement).getPropertyValue(colorVar).trim() : 'currentColor';
-                    return `<button class="brand-tag" data-brand="${brand}" style="--tag-brand-color: ${brandColorValue};">${brand}</button>`;
+                // Generar HTML para etiquetas ("brand-tag")
+                els.brandTagsContainer.innerHTML = sortedBrandsWithCounts.map(([brand, count]) => {
+                    // Ya no se necesita colorVar o brandColorValue
+                    return `
+                        <button class="brand-tag" data-brand="${brand}">
+                            <span class="brand-name">${brand}</span>
+                            <span class="brand-count">${count}</span>
+                        </button>
+                    `;
                 }).join('');
             }
+            // --- FIN RENDERIZADO ---
+
 
             applyFiltersFromURL();
             filterData(); // Filtrar después de aplicar tema y filtros URL
