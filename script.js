@@ -1,77 +1,15 @@
-// --- NUEVA FUNCIÓN AUXILIAR 1: Normalizar Años ---
-/**
- * Convierte un string de año (ej. '95' o '2015') a un número de 4 dígitos.
- * Asume que '30' es el corte: '29' -> 2029, '30' -> 1930
- */
-const normalizeYear = (yearStr) => {
-    if (!yearStr) return NaN;
-    // Convertir a String primero, por si el dato es numérico (ej. 1998)
-    const num = parseInt(String(yearStr).trim());
-    if (isNaN(num)) return NaN;
-    
-    const strNum = String(num); // Usar el string limpio
-    
-    // Manejar años de 2 dígitos
-    if (strNum.length <= 2 && num >= 0 && num <= 99) {
-        if (num < 30) { // 0-29 -> 2000-2029 (ej. '15' -> 2015)
-            return 2000 + num;
-        } else { // 30-99 -> 1930-1999 (ej. '95' -> 1995)
-            return 1900 + num;
-        }
-    }
-    // Manejar años de 4 dígitos
-    if (strNum.length === 4) {
-        return num;
-    }
-    return num; // Fallback
-};
-
-// --- NUEVA FUNCIÓN AUXILIAR 2: Interpretar Filtro de Año ---
-/**
- * Convierte el input del filtro (ej. '95-15' o '2005') 
- * en un objeto de rango { start: 1995, end: 2015 }.
- */
-const parseYearFilter = (filterString) => {
-    if (!filterString) return null; // No hay filtro
-    
-    const trimmedString = filterString.trim();
-    
-    // Buscar un rango (ej. '1995-2015' o '95-15')
-    if (trimmedString.includes('-')) {
-        const parts = trimmedString.split('-').map(s => s.trim());
-        // Asegurarse de que hay dos partes (ej. '2005-') no es válido
-        if (parts.length === 2 && parts[0] && parts[1]) {
-            const start = normalizeYear(parts[0]);
-            const end = normalizeYear(parts[1]);
-            
-            if (!isNaN(start) && !isNaN(end)) {
-                // Devolver { start: 1995, end: 2015 }
-                return { start: Math.min(start, end), end: Math.max(start, end) };
-            }
-        }
-    }
-    
-    // Si no es un rango válido, tratar como año único (ej. '2005' o '98')
-    const singleYear = normalizeYear(trimmedString);
-    if (!isNaN(singleYear)) {
-        return { start: singleYear, end: singleYear }; // Devuelve { start: 1998, end: 1998 }
-    }
-    
-    return null; // El filtro no es un año ni un rango válido
-};
-
-
 document.addEventListener('DOMContentLoaded', () => {
 
     // --- 1. ESTADO CENTRALIZADO ---
+    // Agrupamos variables clave en un solo objeto para mejor manejo.
     const appState = {
-        data: [],      // Reemplaza a brakePadsData
-        filtered: [],  // Reemplaza a filteredDataCache
-        currentPage: 1 // Reemplaza a currentPage
+        data: [],       // Reemplaza a brakePadsData
+        filtered: [],   // Reemplaza a filteredDataCache
+        currentPage: 1  // Reemplaza a currentPage
     };
 
     const itemsPerPage = 24; // Constante, puede quedar fuera del estado
-    // let brandColorMap = {}; // No se usa
+    let brandColorMap = {};
 
     const els = {
         body: document.body, headerX: document.querySelector('.header-x'), darkBtn: document.getElementById('darkBtn'),
@@ -99,11 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
         paginationContainer: document.getElementById('pagination-container'),
         resultsHeaderCard: document.getElementById('results-header-card'),
         brandTagsContainer: document.getElementById('brand-tags-container'),
-        activeFiltersContainer: document.getElementById('active-filters-container'),
-        
-        // --- CAMBIO: Añadido el select de ordenar ---
-        sortBySelect: document.getElementById('sort-by-select'),
-
         footer: document.getElementById('footerBanner'),
         modal: document.getElementById('card-modal'),
         modalContent: document.querySelector('#card-modal .modal-content'),
@@ -140,129 +73,13 @@ document.addEventListener('DOMContentLoaded', () => {
         return 'ref-default'; // Verde menta
     };
 
-    // --- NUEVA FUNCIÓN: RENDERIZAR ETIQUETAS DE FILTROS ---
-    const renderActiveFilters = () => {
-        els.activeFiltersContainer.innerHTML = ''; // Limpiar etiquetas anteriores
-        const filters = {
-            busqueda: { value: els.busqueda.value, label: 'Búsqueda' },
-            marca: { value: els.marca.value, label: 'Marca' },
-            modelo: { value: els.modelo.value, label: 'Modelo/Serie' },
-            anio: { value: els.anio.value, label: 'Año' },
-            oem: { value: els.oem.value, label: 'OEM' },
-            fmsi: { value: els.fmsi.value, label: 'FMSI' },
-            ancho: { value: els.medidasAncho.value, label: 'Ancho' },
-            alto: { value: els.medidasAlto.value, label: 'Alto' },
-        };
-
-        // Crear etiquetas para filtros de texto
-        for (const key in filters) {
-            const filter = filters[key];
-            if (filter.value.trim() !== '') {
-                const tag = document.createElement('div');
-                tag.className = 'filter-tag';
-                // Usar filter.value para el texto de la etiqueta
-                tag.innerHTML = `<span>${filter.value}</span> 
-                                 <button class="filter-tag-close" data-filter-key="${key}" aria-label="Quitar filtro ${filter.label}">&times;</button>`;
-                els.activeFiltersContainer.appendChild(tag);
-            }
-        }
-
-        // Crear etiquetas para filtros de posición (botones)
-        if (els.posDel.classList.contains('active')) {
-            const tag = document.createElement('div');
-            tag.className = 'filter-tag';
-            tag.innerHTML = `<span>Delantera</span>
-                             <button class="filter-tag-close" data-filter-key="posDel" aria-label="Quitar filtro Delantera">&times;</button>`;
-            els.activeFiltersContainer.appendChild(tag);
-        }
-        if (els.posTras.classList.contains('active')) {
-            const tag = document.createElement('div');
-            tag.className = 'filter-tag';
-            tag.innerHTML = `<span>Trasera</span>
-                             <button class="filter-tag-close" data-filter-key="posTras" aria-label="Quitar filtro Trasera">&times;</button>`;
-            els.activeFiltersContainer.appendChild(tag);
-        }
-
-        // --- Añadir Event Listeners a los botones 'x' ---
-        els.activeFiltersContainer.querySelectorAll('.filter-tag-close').forEach(button => {
-            button.addEventListener('click', (e) => {
-                const key = e.currentTarget.dataset.filterKey;
-                
-                // Borrar el valor del filtro correspondiente
-                if (key === 'posDel') {
-                    els.posDel.classList.remove('active');
-                } else if (key === 'posTras') {
-                    els.posTras.classList.remove('active');
-                } else if (els[key]) { // Para todos los inputs (busqueda, marca, etc.)
-                    els[key].value = '';
-                }
-
-                // Si borramos un filtro de marca, deseleccionar la etiqueta de marca
-                if (key === 'marca') {
-                    const activeBrandTag = els.brandTagsContainer.querySelector('.brand-tag.active');
-                    if (activeBrandTag) {
-                        activeBrandTag.classList.remove('active');
-                    }
-                }
-                
-                // Volver a ejecutar el filtro
-                filterData();
-            });
-        });
-    };
-
-    // --- NUEVA FUNCIÓN PARA ORDENAR Y RENDERIZAR ---
-    const sortAndRenderPage = () => {
-        const sortValue = els.sortBySelect.value;
-        
-        // Función auxiliar para obtener la referencia de forma segura para ordenar
-        const getSortRef = (item) => {
-            if (item.ref && item.ref.length > 0) {
-                // Tomar la primera referencia, ej "001INC", y tomar solo la primera parte "001"
-                return String(item.ref[0]).split(' ')[0];
-            }
-            return ''; // Devolver vacío si no hay 'ref'
-        };
-
-        switch (sortValue) {
-            case 'ref-asc': // A-Z
-                appState.filtered.sort((a, b) => getSortRef(a).localeCompare(getSortRef(b), undefined, { numeric: true }));
-                break;
-            case 'ref-desc': // Z-A
-                appState.filtered.sort((a, b) => getSortRef(b).localeCompare(getSortRef(a), undefined, { numeric: true }));
-                break;
-            case 'relevance': // Orden original del JSON
-            default:
-                // Re-ordenar por el ID único que asignamos al cargar
-                appState.filtered.sort((a, b) => a._appId - b._appId);
-                break;
-        }
-
-        // Resetear a la página 1 y renderizar
-        appState.currentPage = 1;
-        renderCurrentPage();
-    };
-
     const filterData = () => {
         // --- 2. USANDO EL ESTADO ---
+        // Lee desde appState.data en lugar de brakePadsData
         if (!appState.data.length) return;
         
-        const fbusq = (val) => val.toLowerCase().trim(); 
-        const activePos = getPositionFilter();
-
-        // 'yearRange' es el FILTRO DEL USUARIO (ej. { start: 1995, end: 1995 })
-        const yearRange = parseYearFilter(els.anio.value); 
-
-        const filters = { 
-            busqueda: fbusq(els.busqueda.value), 
-            marca: fbusq(els.marca.value), 
-            modelo: fbusq(els.modelo.value), 
-            oem: fbusq(els.oem.value), 
-            fmsi: fbusq(els.fmsi.value), 
-            ancho: parseFloat(els.medidasAncho.value), 
-            alto: parseFloat(els.medidasAlto.value), 
-            pos: activePos 
-        };
+        const fbusq = (val) => val.toLowerCase().trim(); const activePos = getPositionFilter();
+        const filters = { busqueda: fbusq(els.busqueda.value), marca: fbusq(els.marca.value), modelo: fbusq(els.modelo.value), anio: fbusq(els.anio.value), oem: fbusq(els.oem.value), fmsi: fbusq(els.fmsi.value), ancho: parseFloat(els.medidasAncho.value), alto: parseFloat(els.medidasAlto.value), pos: activePos };
 
         const filtered = appState.data.filter(item => {
             const itemVehicles = item.aplicaciones.map(app => `${app.marca} ${app.serie} ${app.litros} ${app.año} ${app.especificacion}`).join(' ').toLowerCase();
@@ -271,34 +88,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const busqMatch = !filters.busqueda ||
                 (Array.isArray(item.ref) && item.ref.some(rString => typeof rString === 'string' && rString.toLowerCase().includes(filters.busqueda))) ||
                 (Array.isArray(item.oem) && item.oem.some(o => typeof o === 'string' && o.toLowerCase().includes(filters.busqueda))) ||
-                (Array.isArray(item.fmsi) && item.fmsi.some(f => typeof f === 'string' && f.toLowerCase().includes(filters.fmsi))) ||
+                (Array.isArray(item.fmsi) && item.fmsi.some(f => typeof f === 'string' && f.toLowerCase().includes(filters.busqueda))) ||
                 itemVehicles.includes(filters.busqueda);
 
-            
-            const yearFilterActive = !!yearRange; // ¿Hay un filtro de año válido?
-
-            const appMatch = (!filters.marca && !filters.modelo && !yearFilterActive) || // true si no hay filtros de app
-                             item.aplicaciones.some(app => {
-                                 const marcaMatch = !filters.marca || (app.marca && app.marca.toLowerCase().includes(filters.marca));
-                                 const modeloMatch = !filters.modelo || (app.serie && app.serie.toLowerCase().includes(filters.modelo));
-                                 
-                                 // Lógica de AÑO (¡CORREGIDA!)
-                                 let anioMatch = true; // Asumir true si no hay filtro de año
-                                 if (yearFilterActive) {
-                                     // 'appYearRange' es el DATO de la pastilla (ej. { start: 1992, end: 2015 })
-                                     const appYearRange = parseYearFilter(app.año); 
-                                     
-                                     if (!appYearRange) { // Si app.año es "N/A" o inválido
-                                         anioMatch = false; // El dato no tiene año válido
-                                     } else {
-                                         // Comprobar si los rangos se solapan (overlap)
-                                         anioMatch = appYearRange.start <= yearRange.end && appYearRange.end >= yearRange.start;
-                                     }
-                                 }
-                                 
-                                 return marcaMatch && modeloMatch && anioMatch;
-                             });
-
+            const appMatch = !filters.marca && !filters.modelo && !filters.anio || item.aplicaciones.some(app => (!filters.marca || (app.marca && app.marca.toLowerCase().includes(filters.marca))) && (!filters.modelo || (app.serie && app.serie.toLowerCase().includes(filters.modelo))) && (!filters.anio || (app.año && String(app.año).toLowerCase().includes(filters.anio))));
             const oemMatch = !filters.oem || (Array.isArray(item.oem) && item.oem.some(o => typeof o === 'string' && o.toLowerCase().includes(filters.oem)));
             const fmsiMatch = !filters.fmsi || (Array.isArray(item.fmsi) && item.fmsi.some(f => typeof f === 'string' && f.toLowerCase().includes(filters.fmsi)));
             let posMatch = true; if (filters.pos.length > 0) { posMatch = filters.pos.includes(itemPosicion); }
@@ -310,12 +103,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // --- 2. ACTUALIZANDO EL ESTADO ---
         appState.filtered = filtered;
+        appState.currentPage = 1; // Resetea la página en cada filtro
         
-        renderActiveFilters(); 
+        renderCurrentPage();
         updateURLWithFilters();
-
-        // --- CAMBIO: Llamar a la nueva función de ordenar ---
-        sortAndRenderPage(); // <-- Reemplaza a renderCurrentPage()
     };
 
     function navigateCarousel(carouselContainer, direction) {
@@ -334,7 +125,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderApplicationsList = (aplicaciones) => { const groupedApps = aplicaciones.reduce((acc, app) => { const marca = app.marca || 'N/A'; if (!acc[marca]) { acc[marca] = []; } acc[marca].push(app); return acc; }, {}); Object.keys(groupedApps).forEach(marca => { groupedApps[marca].sort((a, b) => { const serieA = a.serie || ''; const serieB = b.serie || ''; if (serieA < serieB) return -1; if (serieA > serieB) return 1; const anioA = a.año || ''; const anioB = b.año || ''; if (anioA < anioB) return -1; if (anioA > anioB) return 1; return 0; }); }); let appListHTML = ''; for (const marca in groupedApps) { appListHTML += `<div class="app-brand-header">${marca.toUpperCase()}</div>`; groupedApps[marca].forEach(app => { appListHTML += `<div class="app-detail-row"><div>${app.serie || ''}</div><div>${app.litros || ''}</div><div>${app.año || ''}</div></div>`; }); } return appListHTML; };
 
-    // --- Función renderSpecs ACTUALIZADA (Maneja "Sin información") ---
+    // --- Función renderSpecs ACTUALIZADA (Combina Ancho/Alto) ---
     const renderSpecs = (item) => {
         let specsHTML = `<div class="app-brand-header">ESPECIFICACIONES</div>`; // Encabezado de sección
         specsHTML += `<div class="spec-details-grid">`;
@@ -354,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const fmsiText = (Array.isArray(item.fmsi) && item.fmsi.length > 0 ? item.fmsi.join(', ') : 'N/A');
         specsHTML += `<div class="spec-label"><strong>Platina FMSI</strong></div><div class="spec-value">${fmsiText}</div>`;
 
-        // --- INICIO DE LA MODIFICACIÓN (Medidas Múltiples y "Sin información") ---
+        // --- INICIO DE LA MODIFICACIÓN (Medidas Múltiples) ---
         
         let medidasHTML = '';
         
@@ -374,19 +165,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
         } else {
             // Código de fallback (si no es un array o está vacío, usa anchoNum/altoNum)
-            // Usar !isNaN() para verificar si son números válidos (incluyendo 0)
-            const anchoVal = !isNaN(item.anchoNum) ? item.anchoNum : null;
-            const altoVal = !isNaN(item.altoNum) ? item.altoNum : null;
-
-            if (anchoVal === null && altoVal === null) {
-                // Si ambos son null (porque eran NaN), muestra "Sin información"
-                medidasHTML = '<div>Sin información</div>';
-            } else {
-                // Si al menos uno tiene valor, mostrarlo. Usar 'N/A' para el que falte.
-                const anchoDisplay = anchoVal !== null ? anchoVal : 'N/A';
-                const altoDisplay = altoVal !== null ? altoVal : 'N/A';
-                medidasHTML = `<div>Ancho: ${anchoDisplay} x Alto: ${altoDisplay}</div>`;
-            }
+            const anchoVal = item.anchoNum || 'N/A';
+            const altoVal = item.altoNum || 'N/A';
+            medidasHTML = `<div>Ancho: ${anchoVal} x Alto: ${altoVal}</div>`;
         }
 
         // Añade el bloque completo al HTML
@@ -415,6 +196,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (totalPages <= 1) return;
 
         // --- 2. USANDO EL ESTADO ---
+        // Lee appState.currentPage en lugar de currentPage
         let paginationHTML = '';
         paginationHTML += `<button class="page-btn" data-page="${appState.currentPage - 1}" ${appState.currentPage === 1 ? 'disabled' : ''}>Anterior</button>`;
         
@@ -456,8 +238,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const refsHTML = (Array.isArray(item.ref) && item.ref.length > 0)
                 ? item.ref.flatMap(refString => String(refString).split(' '))
-                    .map(part => `<span class="ref-badge ${getRefBadgeClass(part)}">${part}</span>`)
-                    .join('')
+                        .map(part => `<span class="ref-badge ${getRefBadgeClass(part)}">${part}</span>`)
+                        .join('')
                 : '<span class="ref-badge ref-badge-na">N/A</span>';
 
             let firstImageSrc = 'https://via.placeholder.com/300x200.png?text=No+Img';
@@ -498,6 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const itemId = card.dataset.id;
             
             // --- 2. LEYENDO DEL ESTADO ---
+            // Busca en appState.data en lugar de brakePadsData
             const itemData = appState.data.find(item => item._appId == itemId);
 
             if (itemData) {
@@ -596,7 +379,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- SETUP EVENT LISTENERS ---
+    // --- SETUP EVENT LISTENERS (CON LÓGICA DE 3 TEMAS: Claro, AMOLED Dark, Orbital) ---
     function setupEventListeners() {
         // Aplicar ripple a todos los botones aplicables
         [els.darkBtn, els.upBtn, els.menuBtn, els.orbitalBtn, els.clearBtn].forEach(btn => btn?.addEventListener('click', createRippleEffect));
@@ -653,7 +436,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Applied Orbital Theme");
         };
 
-        // --- Event Listener Botón Sol/Luna ---
+        // --- Event Listener Botón Sol/Luna (Ciclo simple Claro <-> AMOLED) ---
         els.darkBtn.addEventListener('click', () => {
             els.headerX.style.animation = 'bounceHeader 0.6s cubic-bezier(0.68,-0.55,0.27,1.55)';
             setTimeout(() => { els.headerX.style.animation = ''; }, 600);
@@ -767,12 +550,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const otherFilterInputs = [els.marca, els.modelo, els.anio, els.oem, els.fmsi, els.medidasAncho, els.medidasAlto];
         otherFilterInputs.forEach(input => input.addEventListener('input', debouncedFilter));
 
-        // --- CAMBIO: Listener para el select de ordenar ---
-        els.sortBySelect.addEventListener('change', () => {
-            // No se necesita debounce, es una acción intencional
-            sortAndRenderPage();
-        });
-
         [els.posDel, els.posTras].forEach(btn => btn.addEventListener('click', (e) => { e.currentTarget.classList.toggle('active'); filterData(); }));
 
         const trashLid = els.clearBtn.querySelector('.trash-lid'); const trashBody = els.clearBtn.querySelector('.trash-body'); const NUM_SPARKS = 10; const SPARK_COLORS = ['#00ffff', '#ff00ff', '#00ff7f', '#ffc700', '#ff5722'];
@@ -792,16 +569,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 900);
         });
 
-        // --- Event Listener para ETIQUETAS de Marcas ---
         if (els.brandTagsContainer) {
             els.brandTagsContainer.addEventListener('click', (e) => {
-                const tag = e.target.closest('.brand-tag'); // <-- Revertido a .brand-tag
+                const tag = e.target.closest('.brand-tag');
                 if (!tag) return;
                 const brand = tag.dataset.brand;
                 const isActive = tag.classList.contains('active');
 
-                // Busca por la clase original
-                els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => { // <-- Revertido
+                els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => {
                     if (activeTag !== tag) {
                         activeTag.classList.remove('active');
                     }
@@ -817,9 +592,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 filterData();
             });
         }
-        // --- FIN MODIFICACIÓN ---
 
-        // --- Listener de Paginación ---
+        // --- Listener de Paginación ACTUALIZADO ---
         els.paginationContainer.addEventListener('click', (e) => {
             const btn = e.target.closest('.page-btn');
             if (!btn || btn.disabled || btn.classList.contains('active')) {
@@ -829,7 +603,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (newPage) {
                 // --- 2. ACTUALIZANDO EL ESTADO ---
                 appState.currentPage = newPage;
-                renderCurrentPage(); // <-- Correcto, solo renderiza, no re-ordena
+                renderCurrentPage(); // Vuelve a renderizar con la nueva página
                 els.resultsHeaderCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         });
@@ -861,15 +635,21 @@ document.addEventListener('DOMContentLoaded', () => {
                     ];
                 }
 
-                // --- CORRECCIÓN PARA 'medidas' (usa NaN por defecto) ---
+                // --- INICIO DE LA CORRECCIÓN PARA 'medidas' ---
                 
+                // 1. Aseguramos que 'medidaString' sea un string o null
                 let medidaString = null;
                 if (Array.isArray(item.medidas) && item.medidas.length > 0) {
+                    // Si es un array (como en "728AINC"), toma el primer elemento
                     medidaString = item.medidas[0]; 
                 } else if (typeof item.medidas === 'string') {
+                    // Si es un string (como en "001INC"), úsalo
                     medidaString = item.medidas;
                 }
-                const partes = medidaString ? medidaString.split(/x/i).map(s => parseFloat(s.trim())) : [NaN, NaN];
+
+                // 2. Ahora 'partes' se calcula de forma segura
+                // Se usa /x/i para que funcione con 'x' (minúscula) o 'X' (mayúscula)
+                const partes = medidaString ? medidaString.split(/x/i).map(s => parseFloat(s.trim())) : [0,0];
                 
                 // --- FIN DE LA CORRECCIÓN ---
 
@@ -883,8 +663,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         ref: safeRefs,
                         oem: safeOems,
                         fmsi: safeFmsis,
-                        anchoNum: partes[0], // Asigna el valor parseado (será NaN si no existe)
-                        altoNum: partes[1] }; // Asigna el valor parseado (será NaN si no existe)
+                        anchoNum: partes[0] || 0,
+                        altoNum: partes[1] || 0 };
             });
 
             // --- 2. ACTUALIZANDO EL ESTADO ---
@@ -898,50 +678,25 @@ document.addEventListener('DOMContentLoaded', () => {
             fillDatalist(els.datalistAnio, getAllApplicationValues('año'));
             
             const allOems = [...new Set(appState.data.flatMap(i => i.oem || []))].filter(Boolean).sort();
-            
-            // --- CORRECCIÓN DEL TYPO ---
             const allFmsis = [...new Set(appState.data.flatMap(i => i.fmsi || []))].filter(Boolean).sort();
-            // --- FIN DE LA CORRECCIÓN ---
-
             fillDatalist(els.datalistOem, allOems);
             fillDatalist(els.datalistFmsi, allFmsis);
             
+            const allBrandsList = appState.data.flatMap(item => item.aplicaciones.map(app => app.marca)).filter(Boolean);
+            const brandFrequencies = allBrandsList.reduce((counts, brand) => { counts[brand] = (counts[brand] || 0) + 1; return counts; }, {});
+            const sortedBrands = Object.entries(brandFrequencies).sort(([, countA], [, countB]) => countB - countA).slice(0, 10).map(([brand]) => brand);
+            const brandColors = [ '--brand-color-1', '--brand-color-2', '--brand-color-3', '--brand-color-4', '--brand-color-5', '--brand-color-6', '--brand-color-7', '--brand-color-8', '--brand-color-9', '--brand-color-10' ];
             
-            // --- INICIO CÁLCULO DE MARCAS Y CONTEO ---
-            const brandPadCounts = {}; 
-            appState.data.forEach(item => {
-                const uniqueBrandsForItem = new Set();
-                item.aplicaciones.forEach(app => {
-                    if (app.marca) {
-                        uniqueBrandsForItem.add(app.marca);
-                    }
-                });
-                uniqueBrandsForItem.forEach(brand => {
-                    brandPadCounts[brand] = (brandPadCounts[brand] || 0) + 1;
-                });
-            });
+            brandColorMap = {};
+            sortedBrands.forEach((brand, index) => { brandColorMap[brand] = brandColors[index % brandColors.length]; });
 
-            const sortedBrandsWithCounts = Object.entries(brandPadCounts)
-                .sort(([brandA], [brandB]) => brandA.localeCompare(brandB)); 
-            
-            // --- LÓGICA DE COLORES ELIMINADA ---
-            
-
-            // --- INICIO RENDERIZADO DE ETIQUETAS DE MARCAS (MONOCROMÁTICO) ---
             if (els.brandTagsContainer) {
-                // Generar HTML para etiquetas ("brand-tag")
-                els.brandTagsContainer.innerHTML = sortedBrandsWithCounts.map(([brand, count]) => {
-                    // Ya no se necesita colorVar o brandColorValue
-                    return `
-                        <button class="brand-tag" data-brand="${brand}">
-                            <span class="brand-name">${brand}</span>
-                            <span class="brand-count">${count}</span>
-                        </button>
-                    `;
+                els.brandTagsContainer.innerHTML = sortedBrands.map(brand => {
+                    const colorVar = brandColorMap[brand];
+                    const brandColorValue = colorVar ? getComputedStyle(document.documentElement).getPropertyValue(colorVar).trim() : 'currentColor';
+                    return `<button class="brand-tag" data-brand="${brand}" style="--tag-brand-color: ${brandColorValue};">${brand}</button>`;
                 }).join('');
             }
-            // --- FIN RENDERIZADO ---
-
 
             applyFiltersFromURL();
             filterData(); // Filtrar después de aplicar tema y filtros URL

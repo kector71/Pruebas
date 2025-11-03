@@ -87,28 +87,13 @@
         </div>
         <div class="results-panel">
             <div class="glass results-header-card" id="results-header-card">
-                <div class="results-header">
-                    
-                    <div class="active-filters-container" id="active-filters-container"></div>
-
-                    <div class="result-count-container" id="result-count-container" aria-live="polite" aria-atomic="true">0 resultados</div>
-                    
-                    <div class="results-controls-right">
-                        <div class="sort-container">
-                            <label for="sort-by-select" class="visually-hidden">Ordenar por</label>
-                            <select id="sort-by-select" class="form-input form-select-sort">
-                                <option value="relevance">Orden por Defecto</option>
-                                <option value="ref-asc">Referencia (A-Z)</option>
-                                <option value="ref-desc">Referencia (Z-A)</option>
-                            </select>
-                        </div>
-
-                        <div class="view-toggle-buttons" role="radiogroup" aria-label="Modo de vista">
-                            <button class="view-btn active" id="viewGridBtn" role="radio" aria-checked="true" aria-label="Vista de cuadrícula"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></button>
-                            <button class="view-btn" id="viewListBtn" role="radio" aria-checked="false" aria-label="Vista de lista"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg></button>
-                        </div>
-                    </div>
-                </div>
+                 <div class="results-header">
+                     <div class="result-count-container" id="result-count-container" aria-live="polite" aria-atomic="true">0 resultados</div>
+                     <div class="view-toggle-buttons" role="radiogroup" aria-label="Modo de vista">
+                         <button class="view-btn active" id="viewGridBtn" role="radio" aria-checked="true" aria-label="Vista de cuadrícula"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></button>
+                         <button class="view-btn" id="viewListBtn" role="radio" aria-checked="false" aria-label="Vista de lista"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg></button>
+                     </div>
+                 </div>
             </div>
             <div class="results-wrapper" id="results-container" role="status"></div>
             <div class="pagination-container" id="pagination-container"></div>
@@ -137,8 +122,8 @@
 
         <button class="material-btn" id="orbitalBtn" aria-label="Activar Modo Orbital" aria-pressed="false">
              <svg class="lp-icon-palette" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                 <path d="M12 3C12 7.97056 16.0294 12 21 12C16.0294 12 12 16.0294 12 21C12 16.0294 7.97056 12 3 12C7.97056 12 12 7.97056 12 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-             </svg>
+                <path d="M12 3C12 7.97056 16.0294 12 21 12C16.0294 12 12 16.0294 12 21C12 16.0294 7.97056 12 3 12C7.97056 12 12 7.97056 12 3Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
              </button>
 
         <button class="material-btn" id="darkBtn" aria-label="Cambiar modo oscuro" aria-pressed="false">
