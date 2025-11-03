@@ -1,14 +1,30 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- 1. ESTADO CENTRALIZADO ---
-    // Agrupamos variables clave en un solo objeto para mejor manejo.
-    const appState = {
-        data: [],       // Reemplaza a brakePadsData
-        filtered: [],   // Reemplaza a filteredDataCache
-        currentPage: 1  // Reemplaza a currentPage
+    // --- 1. PEGA TU CONFIGURACIÓN DE FIREBASE AQUÍ ---
+    // Reemplaza esto con el objeto firebaseConfig de tu consola de Firebase
+    const firebaseConfig = {
+      apiKey: "TU_API_KEY_AQUI",
+      authDomain: "TU_AUTH_DOMAIN_AQUI",
+      projectId: "TU_PROJECT_ID_AQUI",
+      storageBucket: "TU_STORAGE_BUCKET_AQUI",
+      messagingSenderId: "TU_SENDER_ID_AQUI",
+      appId: "TU_APP_ID_AQUI"
     };
 
-    const itemsPerPage = 24; // Constante, puede quedar fuera del estado
+    // --- 2. INICIALIZA FIREBASE ---
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore(); // ¡Usamos firestore()!
+
+
+    // --- 1. ESTADO CENTRALIZADO ---
+    // (Tu código original)
+    const appState = {
+        data: [],
+        filtered: [],
+        currentPage: 1
+    };
+
+    const itemsPerPage = 24;
     let brandColorMap = {};
 
     const els = {
@@ -55,12 +71,12 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- FUNCIONES COMPLETAS ---
+    // (Todas tus funciones originales: debounce, fillDatalist, getPositionFilter, etc.)
     const debounce = (func, delay) => { let timeout; return (...args) => { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), delay); }; };
     const fillDatalist = (datalist, values) => { datalist.innerHTML = values.map(v => `<option value="${v}">`).join(''); };
     const getPositionFilter = () => { const activePositions = []; if (els.posDel.classList.contains('active')) activePositions.push('Delantera'); if (els.posTras.classList.contains('active')) activePositions.push('Trasera'); return activePositions; };
     const hasVehicleFilters = () => { return els.busqueda.value.trim() !== '' || els.marca.value.trim() !== '' || els.modelo.value.trim() !== '' || els.anio.value.trim() !== '' || getPositionFilter().length > 0 || els.oem.value.trim() !== '' || els.fmsi.value.trim() !== '' || els.medidasAncho.value.trim() !== '' || els.medidasAlto.value.trim() !== ''; };
 
-    // --- Función para obtener la clase CSS de la referencia ---
     const getRefBadgeClass = (ref) => {
         if (typeof ref !== 'string') {
             return 'ref-default';
@@ -74,8 +90,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const filterData = () => {
-        // --- 2. USANDO EL ESTADO ---
-        // Lee desde appState.data en lugar de brakePadsData
         if (!appState.data.length) return;
         
         const fbusq = (val) => val.toLowerCase().trim(); const activePos = getPositionFilter();
@@ -101,9 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return busqMatch && appMatch && oemMatch && fmsiMatch && posMatch && anchoMatchTolerancia && altoMatchTolerancia;
         });
 
-        // --- 2. ACTUALIZANDO EL ESTADO ---
         appState.filtered = filtered;
-        appState.currentPage = 1; // Resetea la página en cada filtro
+        appState.currentPage = 1;
         
         renderCurrentPage();
         updateURLWithFilters();
@@ -125,9 +138,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const renderApplicationsList = (aplicaciones) => { const groupedApps = aplicaciones.reduce((acc, app) => { const marca = app.marca || 'N/A'; if (!acc[marca]) { acc[marca] = []; } acc[marca].push(app); return acc; }, {}); Object.keys(groupedApps).forEach(marca => { groupedApps[marca].sort((a, b) => { const serieA = a.serie || ''; const serieB = b.serie || ''; if (serieA < serieB) return -1; if (serieA > serieB) return 1; const anioA = a.año || ''; const anioB = b.año || ''; if (anioA < anioB) return -1; if (anioA > anioB) return 1; return 0; }); }); let appListHTML = ''; for (const marca in groupedApps) { appListHTML += `<div class="app-brand-header">${marca.toUpperCase()}</div>`; groupedApps[marca].forEach(app => { appListHTML += `<div class="app-detail-row"><div>${app.serie || ''}</div><div>${app.litros || ''}</div><div>${app.año || ''}</div></div>`; }); } return appListHTML; };
 
-    // --- Función renderSpecs ACTUALIZADA (Combina Ancho/Alto) ---
     const renderSpecs = (item) => {
-        let specsHTML = `<div class="app-brand-header">ESPECIFICACIONES</div>`; // Encabezado de sección
+        let specsHTML = `<div class="app-brand-header">ESPECIFICACIONES</div>`;
         specsHTML += `<div class="spec-details-grid">`;
 
         const refsSpecsHTML = (Array.isArray(item.ref) && item.ref.length > 0)
@@ -145,38 +157,24 @@ document.addEventListener('DOMContentLoaded', () => {
         const fmsiText = (Array.isArray(item.fmsi) && item.fmsi.length > 0 ? item.fmsi.join(', ') : 'N/A');
         specsHTML += `<div class="spec-label"><strong>Platina FMSI</strong></div><div class="spec-value">${fmsiText}</div>`;
 
-        // --- INICIO DE LA MODIFICACIÓN (Medidas Múltiples) ---
-        
         let medidasHTML = '';
-        
-        // Comprueba si item.medidas es un array y tiene elementos
         if (Array.isArray(item.medidas) && item.medidas.length > 0) {
-            
-            // Mapea cada string de medida (ej: "183.8 X 64.4") a su propio <div>
             medidasHTML = item.medidas.map(medidaStr => {
-                // Separa el string por 'x' (ignorando mayúsculas/minúsculas)
                 const partes = medidaStr.split(/x/i).map(s => s.trim());
                 const ancho = partes[0] || 'N/A';
                 const alto = partes[1] || 'N/A';
-                
-                // Devuelve una línea de HTML por cada medida
                 return `<div>Ancho: ${ancho} x Alto: ${alto}</div>`;
-            }).join(''); // Une todas las líneas de HTML
-
+            }).join('');
         } else {
-            // Código de fallback (si no es un array o está vacío, usa anchoNum/altoNum)
             const anchoVal = item.anchoNum || 'N/A';
             const altoVal = item.altoNum || 'N/A';
             medidasHTML = `<div>Ancho: ${anchoVal} x Alto: ${altoVal}</div>`;
         }
 
-        // Añade el bloque completo al HTML
         specsHTML += `<div class="spec-label"><strong>Medidas (mm)</strong></div>
-                          <div class="spec-value">${medidasHTML}</div>`;
+                        <div class="spec-value">${medidasHTML}</div>`;
         
-        // --- FIN DE LA MODIFICACIÓN ---
-        
-        specsHTML += `</div>`; // Cierre de spec-details-grid
+        specsHTML += `</div>`;
         return specsHTML;
     };
 
@@ -195,8 +193,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const totalPages = Math.ceil(totalItems / itemsPerPage);
         if (totalPages <= 1) return;
 
-        // --- 2. USANDO EL ESTADO ---
-        // Lee appState.currentPage en lugar de currentPage
         let paginationHTML = '';
         paginationHTML += `<button class="page-btn" data-page="${appState.currentPage - 1}" ${appState.currentPage === 1 ? 'disabled' : ''}>Anterior</button>`;
         
@@ -214,9 +210,7 @@ document.addEventListener('DOMContentLoaded', () => {
         els.paginationContainer.innerHTML = paginationHTML;
     }
 
-    // --- Función renderCurrentPage ACTUALIZADA ---
     const renderCurrentPage = () => {
-        // --- 2. LEYENDO DEL ESTADO ---
         const totalResults = appState.filtered.length;
         const startIndex = (appState.currentPage - 1) * itemsPerPage;
         const endIndex = startIndex + itemsPerPage;
@@ -273,14 +267,10 @@ document.addEventListener('DOMContentLoaded', () => {
         setupPagination(totalResults);
     };
 
-    // --- Función handleCardClick ACTUALIZADA ---
     function handleCardClick(event) {
         const card = event.target.closest('.result-card');
         if (card) {
             const itemId = card.dataset.id;
-            
-            // --- 2. LEYENDO DEL ESTADO ---
-            // Busca en appState.data en lugar de brakePadsData
             const itemData = appState.data.find(item => item._appId == itemId);
 
             if (itemData) {
@@ -293,7 +283,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const updateScrollIndicator = () => { const wrapper = els.modalDetailsWrapper; const content = els.modalDetailsContent; if (wrapper && content) { const isScrollable = content.scrollHeight > content.clientHeight; const isAtBottom = content.scrollTop + content.clientHeight >= content.scrollHeight - 5; if (isScrollable && !isAtBottom) { wrapper.classList.add('scrollable'); } else { wrapper.classList.remove('scrollable'); } } };
 
-    // --- Función openModal ACTUALIZADA ---
     function openModal(item) {
         const refsHeaderHTML = (Array.isArray(item.ref) && item.ref.length > 0)
             ? item.ref.flatMap(refString => String(refString).split(' '))
@@ -379,12 +368,9 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- SETUP EVENT LISTENERS (CON LÓGICA DE 3 TEMAS: Claro, AMOLED Dark, Orbital) ---
     function setupEventListeners() {
-        // Aplicar ripple a todos los botones aplicables
         [els.darkBtn, els.upBtn, els.menuBtn, els.orbitalBtn, els.clearBtn].forEach(btn => btn?.addEventListener('click', createRippleEffect));
 
-        // --- Lógica Animación Iconos Sol/Luna ---
         const iconAnimation = (iconToShow, iconToHide) => {
             if (!iconToShow) return;
             const showKeyframes = [ { opacity: 0, transform: 'translate(-50%, -50%) scale(0.6) rotate(-90deg)' }, { opacity: 1, transform: 'translate(-50%, -50%) scale(1) rotate(0deg)' } ];
@@ -394,7 +380,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (iconToHide) { iconToHide.animate(hideKeyframes, options); }
         };
 
-        // --- Funciones para Aplicar Temas ---
         const applyLightTheme = () => {
             els.body.classList.remove('lp-dark', 'modo-orbital');
             iconAnimation(els.sunIcon, els.moonIcon);
@@ -436,7 +421,6 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log("Applied Orbital Theme");
         };
 
-        // --- Event Listener Botón Sol/Luna (Ciclo simple Claro <-> AMOLED) ---
         els.darkBtn.addEventListener('click', () => {
             els.headerX.style.animation = 'bounceHeader 0.6s cubic-bezier(0.68,-0.55,0.27,1.55)';
             setTimeout(() => { els.headerX.style.animation = ''; }, 600);
@@ -448,7 +432,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // --- Event Listener Botón Orbital ---
         if (els.orbitalBtn) {
             els.orbitalBtn.addEventListener('click', () => {
                 els.headerX.style.animation = 'bounceHeader 0.6s cubic-bezier(0.68,-0.55,0.27,1.55)';
@@ -471,7 +454,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // --- Aplicar Tema Guardado al Cargar ---
         const savedTheme = localStorage.getItem('themePreference');
         console.log("Saved theme:", savedTheme);
         switch (savedTheme) {
@@ -490,7 +472,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
         }
 
-        // --- Resto de Event Listeners ---
         els.upBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
         window.addEventListener('scroll', () => { els.upBtn.classList.toggle('show', window.scrollY > 300); });
         els.menuBtn.addEventListener('click', openSideMenu);
@@ -499,7 +480,6 @@ document.addEventListener('DOMContentLoaded', () => {
         els.openGuideLink.addEventListener('click', () => { closeSideMenu(); setTimeout(openGuideModal, 50); });
         window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && els.sideMenu.classList.contains('open')) { closeSideMenu(); } });
 
-        // --- 3. REFACTORIZACIÓN: Asignar el listener de clic de tarjeta UNA SOLA VEZ ---
         els.results.addEventListener('click', handleCardClick);
 
         const debouncedFilter = debounce(filterData, 300);
@@ -593,7 +573,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // --- Listener de Paginación ACTUALIZADO ---
         els.paginationContainer.addEventListener('click', (e) => {
             const btn = e.target.closest('.page-btn');
             if (!btn || btn.disabled || btn.classList.contains('active')) {
@@ -601,9 +580,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const newPage = parseInt(btn.dataset.page);
             if (newPage) {
-                // --- 2. ACTUALIZANDO EL ESTADO ---
                 appState.currentPage = newPage;
-                renderCurrentPage(); // Vuelve a renderizar con la nueva página
+                renderCurrentPage();
                 els.resultsHeaderCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         });
@@ -616,16 +594,34 @@ document.addEventListener('DOMContentLoaded', () => {
 
     } // --- Fin de setupEventListeners ---
 
+
+    // --- ESTA ES LA FUNCIÓN MODIFICADA ---
     async function inicializarApp() {
         showSkeletonLoader();
 
         try {
-            const response = await fetch('data.json');
-            if (!response.ok) {
-                throw new Error(`Error HTTP! estado: ${response.status}`);
-            }
-            let data = await response.json();
+            // ----- INICIO DE LA MODIFICACIÓN (FIRESTORE) -----
 
+            // 1. Apunta a tu COLECCIÓN (cambia 'pastillas' si se llama diferente)
+            const collectionRef = db.collection('pastillas'); 
+            
+            // 2. Obtén todos los documentos de esa colección
+            const snapshot = await collectionRef.get();
+
+            if (snapshot.empty) {
+                throw new Error("No se encontraron documentos en la colección 'pastillas'.");
+            }
+
+            // 3. Convierte los documentos a un array de datos
+            let data = [];
+            snapshot.forEach(doc => {
+                data.push(doc.data()); 
+            });
+            
+            // ----- FIN DE LA MODIFICACIÓN -----
+
+
+            // El resto de tu código de procesamiento sigue EXACTAMENTE IGUAL
             data = data.map((item, index) => {
                 if (item.imagen && (!item.imagenes || item.imagenes.length === 0)) {
                     item.imagenes = [
@@ -634,43 +630,29 @@ document.addEventListener('DOMContentLoaded', () => {
                         item.imagen.replace("text=", `text=Vista+3+`)
                     ];
                 }
-
-                // --- INICIO DE LA CORRECCIÓN PARA 'medidas' ---
                 
-                // 1. Aseguramos que 'medidaString' sea un string o null
                 let medidaString = null;
                 if (Array.isArray(item.medidas) && item.medidas.length > 0) {
-                    // Si es un array (como en "728AINC"), toma el primer elemento
-                    medidaString = item.medidas[0]; 
+                    medidaString = item.medidas[0];  
                 } else if (typeof item.medidas === 'string') {
-                    // Si es un string (como en "001INC"), úsalo
                     medidaString = item.medidas;
                 }
-
-                // 2. Ahora 'partes' se calcula de forma segura
-                // Se usa /x/i para que funcione con 'x' (minúscula) o 'X' (mayúscula)
                 const partes = medidaString ? medidaString.split(/x/i).map(s => parseFloat(s.trim())) : [0,0];
-                
-                // --- FIN DE LA CORRECCIÓN ---
-
-
                 const safeRefs = Array.isArray(item.ref) ? item.ref.map(String) : [];
                 const safeOems = Array.isArray(item.oem) ? item.oem.map(String) : [];
                 const safeFmsis = Array.isArray(item.fmsi) ? item.fmsi.map(String) : [];
 
                 return { ...item,
-                        _appId: index, // ID único
-                        ref: safeRefs,
-                        oem: safeOems,
-                        fmsi: safeFmsis,
-                        anchoNum: partes[0] || 0,
-                        altoNum: partes[1] || 0 };
+                    _appId: index, // ID único
+                    ref: safeRefs,
+                    oem: safeOems,
+                    fmsi: safeFmsis,
+                    anchoNum: partes[0] || 0,
+                    altoNum: partes[1] || 0 };
             });
 
-            // --- 2. ACTUALIZANDO EL ESTADO ---
-            appState.data = data; // Guarda los datos en el estado central
+            appState.data = data;
 
-            // --- 2. LEYENDO DEL ESTADO ---
             const getAllApplicationValues = (key) => { const allValues = new Set(); appState.data.forEach(item => { item.aplicaciones.forEach(app => { const prop = (key === 'modelo') ? 'serie' : key; if (app[prop]) allValues.add(String(app[prop])); }); }); return [...allValues].sort(); };
             
             fillDatalist(els.datalistMarca, getAllApplicationValues('marca'));
@@ -699,11 +681,11 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             applyFiltersFromURL();
-            filterData(); // Filtrar después de aplicar tema y filtros URL
+            filterData();
         
         } catch (error) {
-            console.error("Error al cargar los datos:", error);
-            els.results.innerHTML = `<div class="no-results-container"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line><line x1="12" y1="22" x2="12" y2="22"></line></svg><p>Error al cargar datos</p><span>No se pudo conectar con la base de datos (data.json). Asegúrate que el archivo exista.</span></div>`;
+            console.error("Error al cargar los datos desde Firestore:", error);
+            els.results.innerHTML = `<div class="no-results-container"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line><line x1="12" y1="22" x2="12" y2="22"></line></svg><p>Error al cargar datos</p><span>No se pudo conectar con la base de datos (Firestore). Revise la consola.</span></div>`;
             els.countContainer.innerHTML = "Error";
             els.paginationContainer.innerHTML = '';
         }
