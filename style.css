@@ -931,7 +931,8 @@ body.modo-orbital .ref-default, body.modo-orbital .ref-badge-na {
   pointer-events: none; 
   z-index: 1; 
 
-  background-image: url('../favicon-x.svg'); /* Revisa esta ruta */
+  /* ----- ¡ESTA ES LA LÍNEA CORREGIDA! ----- */
+  background-image: url('favicon-x.svg'); /* Ya no usa '../' */
   background-repeat: no-repeat;
   background-position: center;
   background-size: contain; 
