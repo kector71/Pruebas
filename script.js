@@ -1,10 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // ===================================================================
-    //  ¡CORRECCIÓN HECHA!
+    //  Configuración de Firebase
     // ===================================================================
-    // He pegado la configuración que me diste.
-    // Ahora SÍ se conectará a tu proyecto "brakexadmin".
+    // Se conecta al proyecto "brakexadmin".
     
     const firebaseConfig = {
       apiKey: "AIzaSyBms6_ujBJeVOcMbnxCxS9_7R6xQSpAOI8",
@@ -15,9 +14,6 @@ document.addEventListener('DOMContentLoaded', () => {
       appId: "1:799264562947:web:52d860ae41a5c4b8f75336"
     };
     // ===================================================================
-    //  FIN DE LA CORRECCIÓN
-    // ===================================================================
-
 
     // --- 2. INICIALIZA FIREBASE ---
     firebase.initializeApp(firebaseConfig);
@@ -34,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const itemsPerPage = 24;
     let brandColorMap = {};
 
+    // --- 3. REFERENCIAS AL DOM ---
     const els = {
         body: document.body, headerX: document.querySelector('.header-x'), darkBtn: document.getElementById('darkBtn'),
         sunIcon: document.querySelector('.lp-icon-sun'), moonIcon: document.querySelector('.lp-icon-moon'),
@@ -77,11 +74,35 @@ document.addEventListener('DOMContentLoaded', () => {
         guideModalCloseBtn: document.querySelector('#guide-modal .modal-close-btn')
     };
 
-    // --- FUNCIONES COMPLETAS ---
+    // --- 4. FUNCIONES HELPER ---
     const debounce = (func, delay) => { let timeout; return (...args) => { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), delay); }; };
     const fillDatalist = (datalist, values) => { datalist.innerHTML = values.map(v => `<option value="${v}">`).join(''); };
     const getPositionFilter = () => { const activePositions = []; if (els.posDel.classList.contains('active')) activePositions.push('Delantera'); if (els.posTras.classList.contains('active')) activePositions.push('Trasera'); return activePositions; };
     const hasVehicleFilters = () => { return els.busqueda.value.trim() !== '' || els.marca.value.trim() !== '' || els.modelo.value.trim() !== '' || els.anio.value.trim() !== '' || getPositionFilter().length > 0 || els.oem.value.trim() !== '' || els.fmsi.value.trim() !== '' || els.medidasAncho.value.trim() !== '' || els.medidasAlto.value.trim() !== ''; };
+
+    // --- FUNCIÓN HELPER PARA ORDENAR (AÑADIDA) ---
+    const getSortableRefNumber = (refArray) => {
+        if (!Array.isArray(refArray) || refArray.length === 0) {
+            return 999999; // Pone los items sin ref al final
+        }
+        
+        let targetRef = String(refArray[0]); // Usa la primera por defecto
+
+        // Busca una referencia que empiece con "K-" y úsala (si existe)
+        const kRef = refArray.find(r => typeof r === 'string' && r.toUpperCase().startsWith('K-'));
+        if (kRef) {
+            targetRef = kRef;
+        }
+
+        // Extrae el número de la referencia seleccionada
+        const match = targetRef.match(/(\d+)/); // Encuentra el primer grupo de números
+        if (match) {
+            return parseInt(match[1], 10);
+        }
+
+        return 999999; // No se encontró número, al final
+    };
+    // --- FIN DE NUEVA FUNCIÓN ---
 
     const getRefBadgeClass = (ref) => {
         if (typeof ref !== 'string') {
@@ -95,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return 'ref-default';
     };
 
+    // --- 5. LÓGICA DE FILTRADO ---
     const filterData = () => {
         if (!appState.data.length) return;
         
@@ -130,6 +152,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateURLWithFilters();
     };
 
+    // --- 6. FUNCIONES DE RENDERIZADO ---
     function navigateCarousel(carouselContainer, direction) {
         const track = carouselContainer.querySelector('.image-track');
         const images = carouselContainer.querySelectorAll('.result-image');
@@ -278,6 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
         setupPagination(totalResults);
     };
 
+    // --- 7. LÓGICA DE MODALES Y MENÚS ---
     function handleCardClick(event) {
         const card = event.target.closest('.result-card');
         if (card) {
@@ -349,6 +373,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function setupSwipe(carouselElement) { let startX, startY, endX, endY; const threshold = 50; carouselElement.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; }, { passive: true }); carouselElement.addEventListener('touchmove', (e) => { if (Math.abs(e.touches[0].clientX - startX) > Math.abs(e.touches[0].clientY - startY)) { e.preventDefault(); } }, { passive: false }); carouselElement.addEventListener('touchend', (e) => { endX = e.changedTouches[0].clientX; endY = e.changedTouches[0].clientY; const diffX = endX - startX; const diffY = endY - startY; if (Math.abs(diffX) > threshold && Math.abs(diffX) > Math.abs(diffY)) { if (diffX > 0) { navigateCarousel(carouselElement, -1); } else { navigateCarousel(carouselElement, 1); } } }); }
     const clearAllFilters = () => { const inputsToClear = [els.busqueda, els.marca, els.modelo, els.anio, els.oem, els.fmsi, els.medidasAncho, els.medidasAlto]; inputsToClear.forEach(input => input.value = ''); els.posDel.classList.remove('active'); els.posTras.classList.remove('active'); if (els.brandTagsContainer) { els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => { activeTag.classList.remove('active'); }); } filterData(); };
     const createRippleEffect = (event) => { const button = event.currentTarget; const circle = document.createElement('span'); const diameter = Math.max(button.clientWidth, button.clientHeight); const radius = diameter / 2; const rect = button.getBoundingClientRect(); circle.style.width = circle.style.height = `${diameter}px`; circle.style.left = `${event.clientX - (rect.left + radius)}px`; circle.style.top = `${event.clientY - (rect.top + radius)}px`; circle.classList.add('ripple'); const ripple = button.getElementsByClassName('ripple')[0]; if (ripple) { ripple.remove(); } button.appendChild(circle); };
+    
+    // --- 8. LÓGICA DE URL Y FILTROS INICIALES ---
     const updateURLWithFilters = () => { const params = new URLSearchParams(); const filters = { busqueda: els.busqueda.value.trim(), marca: els.marca.value.trim(), modelo: els.modelo.value.trim(), anio: els.anio.value.trim(), oem: els.oem.value.trim(), fmsi: els.fmsi.value.trim(), ancho: els.medidasAncho.value.trim(), alto: els.medidasAlto.value.trim(), }; for (const key in filters) { if (filters[key]) { params.set(key, filters[key]); } } const activePositions = getPositionFilter(); if (activePositions.length > 0) { params.set('pos', activePositions.join(',')); } const newUrl = `${window.location.pathname}?${params.toString()}`; history.pushState({}, '', newUrl); };
     const applyFiltersFromURL = () => {
         const params = new URLSearchParams(window.location.search);
@@ -379,6 +405,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
+    // --- 9. CONFIGURACIÓN DE EVENT LISTENERS ---
     function setupEventListeners() {
         [els.darkBtn, els.upBtn, els.menuBtn, els.orbitalBtn, els.clearBtn].forEach(btn => btn?.addEventListener('click', createRippleEffect));
 
@@ -391,6 +418,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (iconToHide) { iconToHide.animate(hideKeyframes, options); }
         };
 
+        // --- Lógica de Temas ---
         const applyLightTheme = () => {
             els.body.classList.remove('lp-dark', 'modo-orbital');
             iconAnimation(els.sunIcon, els.moonIcon);
@@ -465,6 +493,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // --- Cargar Tema Guardado ---
         const savedTheme = localStorage.getItem('themePreference');
         console.log("Saved theme:", savedTheme);
         switch (savedTheme) {
@@ -483,6 +512,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
         }
 
+        // --- Listeners de UI ---
         els.upBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
         window.addEventListener('scroll', () => { els.upBtn.classList.toggle('show', window.scrollY > 300); });
         els.menuBtn.addEventListener('click', openSideMenu);
@@ -495,6 +525,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const debouncedFilter = debounce(filterData, 300);
 
+        // --- Listeners de Vista (Grid/Lista) ---
         const savedView = localStorage.getItem('viewMode');
         if (savedView === 'list') {
             els.results.classList.add('list-view');
@@ -523,6 +554,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // --- Listeners de Filtros ---
         const restartSearchIconAnimation = () => {
             const oldIcon = els.searchContainer.querySelector('.search-icon');
             if (oldIcon) {
@@ -543,6 +575,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         [els.posDel, els.posTras].forEach(btn => btn.addEventListener('click', (e) => { e.currentTarget.classList.toggle('active'); filterData(); }));
 
+        // --- Listener Botón Borrar Filtros ---
         const trashLid = els.clearBtn.querySelector('.trash-lid'); const trashBody = els.clearBtn.querySelector('.trash-body'); const NUM_SPARKS = 10; const SPARK_COLORS = ['#00ffff', '#ff00ff', '#00ff7f', '#ffc700', '#ff5722'];
         function createSparks(button) { for (let i = 0; i < NUM_SPARKS; i++) { const spark = document.createElement('div'); spark.classList.add('spark'); const size = Math.random() * 4 + 3; spark.style.width = `${size}px`; spark.style.height = `${size}px`; spark.style.backgroundColor = SPARK_COLORS[Math.floor(Math.random() * SPARK_COLORS.length)]; spark.style.left = `calc(50% + ${Math.random() * 20 - 10}px)`; spark.style.top = `calc(50% + ${Math.random() * 20 - 10}px)`; const angle = Math.random() * Math.PI * 2; const distance = Math.random() * 25 + 20; const sparkX = Math.cos(angle) * distance; const sparkY = Math.sin(angle) * distance; spark.style.setProperty('--spark-x', `${sparkX}px`); spark.style.setProperty('--spark-y', `${sparkY}px`); button.appendChild(spark); spark.addEventListener('animationend', () => spark.remove(), { once: true }); } }
 
@@ -560,6 +593,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 900);
         });
 
+        // --- Listener Tags de Marcas ---
         if (els.brandTagsContainer) {
             els.brandTagsContainer.addEventListener('click', (e) => {
                 const tag = e.target.closest('.brand-tag');
@@ -584,6 +618,7 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
+        // --- Listener Paginación ---
         els.paginationContainer.addEventListener('click', (e) => {
             const btn = e.target.closest('.page-btn');
             if (!btn || btn.disabled || btn.classList.contains('active')) {
@@ -597,6 +632,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // --- Listeners de Modales (Cerrar) ---
         els.modalCloseBtn.addEventListener('click', closeModal);
         els.modal.addEventListener('click', (event) => { if (event.target === els.modal) { closeModal(); } });
         els.guideModalCloseBtn.addEventListener('click', closeGuideModal);
@@ -606,14 +642,14 @@ document.addEventListener('DOMContentLoaded', () => {
     } // --- Fin de setupEventListeners ---
 
 
-    // --- FUNCIÓN DE INICIALIZACIÓN (MODIFICADA PARA FIRESTORE) ---
+    // --- 10. FUNCIÓN DE INICIALIZACIÓN (CONEXIÓN A FIRESTORE) ---
     async function inicializarApp() {
         showSkeletonLoader();
 
         try {
-            // ----- INICIO DE LA MODIFICACIÓN (FIRESTORE) -----
+            // ----- INICIO DE LA CONEXIÓN A FIRESTORE -----
 
-            // 1. Apunta a tu COLECCIÓN (cambia 'pastillas' si se llama diferente)
+            // 1. Apunta a tu COLECCIÓN
             const collectionRef = db.collection('pastillas'); 
             
             // 2. Obtén todos los documentos de esa colección
@@ -632,10 +668,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 data.push(docData); 
             });
             
-            // ----- FIN DE LA MODIFICACIÓN -----
+            // ----- FIN DE LA CONEXIÓN A FIRESTORE -----
 
 
-            // El resto de tu código de procesamiento
+            // --- Procesamiento de datos ---
             data = data.map((item, index) => {
                 if (item.imagen && (!item.imagenes || item.imagenes.length === 0)) {
                     item.imagenes = [
@@ -669,8 +705,19 @@ document.addEventListener('DOMContentLoaded', () => {
                     altoNum: partes[1] || 0 };
             });
 
+            // ----- INICIO DE LA MODIFICACIÓN (ORDENAMIENTO) -----
+            // Ordenamos el array 'data' ANTES de guardarlo en el estado
+            // Usamos la nueva función helper para obtener el número de referencia
+            data.sort((a, b) => {
+                const numA = getSortableRefNumber(a.ref);
+                const numB = getSortableRefNumber(b.ref);
+                return numA - numB;
+            });
+            // ----- FIN DE LA MODIFICACIÓN -----
+
             appState.data = data;
 
+            // --- Llenar Datalists y Tags ---
             const getAllApplicationValues = (key) => { const allValues = new Set(); appState.data.forEach(item => { item.aplicaciones.forEach(app => { const prop = (key === 'modelo') ? 'serie' : key; if (app[prop]) allValues.add(String(app[prop])); }); }); return [...allValues].sort(); };
             
             fillDatalist(els.datalistMarca, getAllApplicationValues('marca'));
@@ -698,11 +745,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 }).join('');
             }
 
+            // --- Renderizado Inicial ---
             applyFiltersFromURL();
             filterData();
         
         } catch (error) {
-            // Este error SÍ es el que queremos ver si algo falla
+            // Manejo de errores (Reglas de Seguridad, colección no encontrada, etc.)
             console.error("Error al cargar los datos desde Firestore:", error);
             els.results.innerHTML = `<div class="no-results-container"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line><line x1="12" y1="22" x2="12" y2="22"></line></svg><p>Error al cargar datos</p><span>No se pudo conectar con la base de datos (Firestore). Revise la consola.</span></div>`;
             els.countContainer.innerHTML = "Error";
@@ -710,9 +758,12 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // --- 11. INICIAR LA APP ---
+    
     // Inicializar listeners PRIMERO
     setupEventListeners();
     // Luego cargar datos y renderizar
     inicializarApp();
 
 }); // Fin DOMContentLoaded
+
