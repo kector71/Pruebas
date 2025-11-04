@@ -1,9 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // ===================================================================
-    //  Configuración de Firebase
+    //  ¡CORRECCIÓN HECHA!
     // ===================================================================
-    // Se conecta al proyecto "brakexadmin".
+    // He pegado la configuración que me diste.
+    // Ahora SÍ se conectará a tu proyecto "brakexadmin".
     
     const firebaseConfig = {
       apiKey: "AIzaSyBms6_ujBJeVOcMbnxCxS9_7R6xQSpAOI8",
@@ -14,6 +15,9 @@ document.addEventListener('DOMContentLoaded', () => {
       appId: "1:799264562947:web:52d860ae41a5c4b8f75336"
     };
     // ===================================================================
+    //  FIN DE LA CORRECCIÓN
+    // ===================================================================
+
 
     // --- 2. INICIALIZA FIREBASE ---
     firebase.initializeApp(firebaseConfig);
@@ -25,14 +29,13 @@ document.addEventListener('DOMContentLoaded', () => {
         data: [],
         filtered: [],
         currentPage: 1,
-        favorites: new Set(), // Para guardar IDs de favoritos
-        isFavoritesMode: false // Para saber si el filtro está activo
+        favorites: new Set(), // Guardará los _appId
+        isFavoritesMode: false // Controla el filtro de favoritos
     };
 
     const itemsPerPage = 24;
     let brandColorMap = {};
 
-    // --- 3. REFERENCIAS AL DOM ---
     const els = {
         body: document.body, headerX: document.querySelector('.header-x'), darkBtn: document.getElementById('darkBtn'),
         sunIcon: document.querySelector('.lp-icon-sun'), moonIcon: document.querySelector('.lp-icon-moon'),
@@ -49,7 +52,6 @@ document.addEventListener('DOMContentLoaded', () => {
         medidasAncho: document.getElementById('medidasAncho'), medidasAlto: document.getElementById('medidasAlto'),
         posDel: document.getElementById('positionDelantera'), posTras: document.getElementById('positionTrasera'),
         clearBtn: document.getElementById('clearFiltersBtn'),
-        filtroFavoritos: document.getElementById('filtroFavoritos'), // <-- ID del nuevo botón
         datalistMarca: document.getElementById('marcas'), datalistModelo: document.getElementById('modelos'),
         datalistAnio: document.getElementById('anios'), datalistOem: document.getElementById('oemList'),
         datalistFmsi: document.getElementById('fmsiList'),
@@ -74,90 +76,66 @@ document.addEventListener('DOMContentLoaded', () => {
         modalCounterWrapper: document.getElementById('modalCounterWrapper'),
         guideModal: document.getElementById('guide-modal'),
         guideModalContent: document.querySelector('#guide-modal .modal-content'),
-        guideModalCloseBtn: document.querySelector('#guide-modal .modal-close-btn')
+        guideModalCloseBtn: document.querySelector('#guide-modal .modal-close-btn'),
+        // === NUEVOS BOTONES DE FILTRO FAVORITOS ===
+        filtroTodos: document.getElementById('filtroTodos'),
+        filtroFavoritos: document.getElementById('filtroFavoritos')
     };
-
-    // --- 4. FUNCIONES HELPER ---
-    const debounce = (func, delay) => { let timeout; return (...args) => { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), delay); }; };
-    const fillDatalist = (datalist, values) => { datalist.innerHTML = values.map(v => `<option value="${v}">`).join(''); };
-    const getPositionFilter = () => { const activePositions = []; if (els.posDel.classList.contains('active')) activePositions.push('Delantera'); if (els.posTras.classList.contains('active')) activePositions.push('Trasera'); return activePositions; };
-    const hasVehicleFilters = () => { return els.busqueda.value.trim() !== '' || els.marca.value.trim() !== '' || els.modelo.value.trim() !== '' || els.anio.value.trim() !== '' || getPositionFilter().length > 0 || els.oem.value.trim() !== '' || els.fmsi.value.trim() !== '' || els.medidasAncho.value.trim() !== '' || els.medidasAlto.value.trim() !== ''; };
 
     // --- FUNCIONES DE FAVORITOS ---
     const loadFavorites = () => {
         try {
-            const favsJSON = localStorage.getItem('brakeXFavorites');
-            if (favsJSON) {
-                const favsArray = JSON.parse(favsJSON);
-                appState.favorites = new Set(favsArray.map(Number)); // Asegura que sean números
+            const favs = localStorage.getItem('brakeXFavorites');
+            if (favs) {
+                appState.favorites = new Set(JSON.parse(favs).map(Number)); // Asegura que sean números
             }
         } catch (e) {
-            console.error("Error loading favorites:", e);
+            console.error("Error al cargar favoritos:", e);
             appState.favorites = new Set();
         }
     };
 
     const saveFavorites = () => {
         try {
-            const favsArray = Array.from(appState.favorites);
-            localStorage.setItem('brakeXFavorites', JSON.stringify(favsArray));
+            localStorage.setItem('brakeXFavorites', JSON.stringify([...appState.favorites]));
         } catch (e) {
-            console.error("Error saving favorites:", e);
+            console.error("Error al guardar favoritos:", e);
         }
     };
 
-    const toggleFavorite = (itemId, buttonElement) => {
-        const idNum = parseInt(itemId, 10);
-        if (appState.favorites.has(idNum)) {
-            appState.favorites.delete(idNum);
-            buttonElement.classList.remove('active');
-            buttonElement.setAttribute('aria-pressed', 'false');
+    const toggleFavorite = (e) => {
+        e.stopPropagation(); // Detiene el clic para que no abra el modal
+        const button = e.currentTarget;
+        const card = button.closest('.result-card');
+        if (!card) return;
+
+        const itemId = parseInt(card.dataset.id);
+        if (isNaN(itemId)) return;
+
+        if (appState.favorites.has(itemId)) {
+            appState.favorites.delete(itemId);
+            button.classList.remove('active');
+            button.setAttribute('aria-pressed', 'false');
         } else {
-            appState.favorites.add(idNum);
-            buttonElement.classList.add('active');
-            buttonElement.setAttribute('aria-pressed', 'true');
+            appState.favorites.add(itemId);
+            button.classList.add('active');
+            button.setAttribute('aria-pressed', 'true');
         }
-        saveFavorites();
         
-        // Si estamos en modo favoritos, re-renderizar la lista
+        saveFavorites();
+
+        // Si estamos en modo favoritos, re-renderizar para quitar la tarjeta
         if (appState.isFavoritesMode) {
             filterData();
         }
     };
 
-    // --- FUNCIÓN PARA HABILITAR/DESHABILITAR FILTROS ---
-    const toggleFilterInputs = (enabled) => {
-        const inputs = [
-            els.busqueda, els.marca, els.modelo, els.anio, els.oem, els.fmsi,
-            els.medidasAncho, els.medidasAlto, els.posDel, els.posTras, els.clearBtn
-        ];
-        inputs.forEach(input => {
-            if (input) input.disabled = !enabled;
-        });
-        
-        if (els.brandTagsContainer) {
-            els.brandTagsContainer.style.pointerEvents = enabled ? 'auto' : 'none';
-            els.brandTagsContainer.style.opacity = enabled ? '1' : '0.5';
-        }
-    };
 
-
-    // --- FUNCIÓN HELPER PARA ORDENAR ---
-    const getSortableRefNumber = (refArray) => {
-        if (!Array.isArray(refArray) || refArray.length === 0) {
-            return 999999; 
-        }
-        let targetRef = String(refArray[0]); 
-        const kRef = refArray.find(r => typeof r === 'string' && r.toUpperCase().startsWith('K-'));
-        if (kRef) {
-            targetRef = kRef;
-        }
-        const match = targetRef.match(/(\d+)/); 
-        if (match) {
-            return parseInt(match[1], 10);
-        }
-        return 999999; 
-    };
+    // --- FUNCIONES COMPLETAS ---
+    const debounce = (func, delay) => { let timeout; return (...args) => { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), delay); }; };
+    const fillDatalist = (datalist, values) => { datalist.innerHTML = values.map(v => `<option value="${v}">`).join(''); };
+    const getPositionFilter = () => { const activePositions = []; if (els.posDel.classList.contains('active')) activePositions.push('Delantera'); if (els.posTras.classList.contains('active')) activePositions.push('Trasera'); return activePositions; };
+    const hasVehicleFilters = () => { return els.busqueda.value.trim() !== '' || els.marca.value.trim() !== '' || els.modelo.value.trim() !== '' || els.anio.value.trim() !== '' || getPositionFilter().length > 0 || els.oem.value.trim() !== '' || els.fmsi.value.trim() !== '' || els.medidasAncho.value.trim() !== '' || els.medidasAlto.value.trim() !== ''; };
 
     const getRefBadgeClass = (ref) => {
         if (typeof ref !== 'string') {
@@ -171,33 +149,46 @@ document.addEventListener('DOMContentLoaded', () => {
         return 'ref-default';
     };
 
-    // --- 5. LÓGICA DE FILTRADO (MODIFICADA) ---
+    // --- LÓGICA DE ORDENAMIENTO ---
+    const getSortableRefNumber = (refArray) => {
+        if (!Array.isArray(refArray) || refArray.length === 0) {
+            return Infinity; // Pone los N/A al final
+        }
+        
+        // Prioriza referencias que empiezan con 'K-'
+        let primaryRef = refArray.find(ref => typeof ref === 'string' && ref.toUpperCase().startsWith('K-'));
+        
+        // Si no hay 'K-', usa la primera referencia de la lista
+        if (!primaryRef) {
+            primaryRef = refArray[0];
+        }
+
+        // Extrae solo la parte numérica
+        const match = String(primaryRef).match(/(\d+)/);
+        if (match && match[0]) {
+            return parseInt(match[0], 10);
+        }
+        
+        return Infinity; // Si no encuentra número, al final
+    };
+
+
     const filterData = () => {
         if (!appState.data.length) return;
-
-        // --- Lógica de Modo Favoritos ---
-        if (appState.isFavoritesMode) {
-            appState.filtered = appState.data.filter(item => 
-                appState.favorites.has(item._appId)
-            );
-            
-            // Ordenar favoritos por número de ref
-            appState.filtered.sort((a, b) => {
-                const numA = getSortableRefNumber(a.ref);
-                const numB = getSortableRefNumber(b.ref);
-                return numA - numB;
-            });
-
-            appState.currentPage = 1;
-            renderCurrentPage();
-            // No actualizamos la URL, ya que es un modo de vista, no un filtro
-            return; // Salta el resto de la lógica de filtrado
-        }
         
         const fbusq = (val) => val.toLowerCase().trim(); const activePos = getPositionFilter();
         const filters = { busqueda: fbusq(els.busqueda.value), marca: fbusq(els.marca.value), modelo: fbusq(els.modelo.value), anio: fbusq(els.anio.value), oem: fbusq(els.oem.value), fmsi: fbusq(els.fmsi.value), ancho: parseFloat(els.medidasAncho.value), alto: parseFloat(els.medidasAlto.value), pos: activePos };
 
-        const filtered = appState.data.filter(item => {
+        let preFilteredData = appState.data;
+
+        // === PASO 1: FILTRAR POR FAVORITOS (SI ESTÁ ACTIVO) ===
+        if (appState.isFavoritesMode) {
+            preFilteredData = appState.data.filter(item => appState.favorites.has(item._appId));
+        }
+
+        // === PASO 2: APLICAR FILTROS DE BÚSQUEDA ===
+        const filtered = preFilteredData.filter(item => {
+            // Asegurarse de que 'aplicaciones' exista antes de mapear
             const safeAplicaciones = Array.isArray(item.aplicaciones) ? item.aplicaciones : [];
             const itemVehicles = safeAplicaciones.map(app => `${app.marca} ${app.serie} ${app.litros} ${app.año} ${app.especificacion}`).join(' ').toLowerCase();
             const itemPosicion = item.posición;
@@ -225,7 +216,6 @@ document.addEventListener('DOMContentLoaded', () => {
         updateURLWithFilters();
     };
 
-    // --- 6. FUNCIONES DE RENDERIZADO ---
     function navigateCarousel(carouselContainer, direction) {
         const track = carouselContainer.querySelector('.image-track');
         const images = carouselContainer.querySelectorAll('.result-image');
@@ -324,21 +314,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const startNum = totalResults === 0 ? 0 : startIndex + 1;
         const endNum = Math.min(endIndex, totalResults);
-        
-        // --- MODIFICADO: Mensaje de resultados ---
-        if (appState.isFavoritesMode) {
-             els.countContainer.innerHTML = `Mostrando <strong>${totalResults}</strong> favoritos`;
-        } else {
-             els.countContainer.innerHTML = `Mostrando <strong>${startNum}–${endNum}</strong> de <strong>${totalResults}</strong> resultados`;
-        }
+        els.countContainer.innerHTML = `Mostrando <strong>${startNum}–${endNum}</strong> de <strong>${totalResults}</strong> resultados`;
 
         if (totalResults === 0) {
-            // --- MODIFICADO: Mensaje de "No hay favoritos" ---
-            if (appState.isFavoritesMode) {
-                els.results.innerHTML = `<div class="no-results-container"><svg class="heart-icon-inline" viewBox="0 0 24 24" style="width: 60px; height: 60px; fill: var(--text-color); stroke: none; opacity: 0.5;"><path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg><p>No tienes favoritos</p><span>Haz clic en el corazón (❤️) de una tarjeta para agregarla aquí.</span></div>`;
-            } else {
-                els.results.innerHTML = `<div class="no-results-container"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z"></path><path d="M21 21L16.65 16.65"></path><path d="M11 8V11L13 13"></path></svg><p>No se encontraron pastillas</p><span>Intenta ajustar tus filtros de búsqueda.</span></div>`;
-            }
+            const message = appState.isFavoritesMode 
+                ? 'No tienes favoritos guardados' 
+                : 'No se encontraron pastillas';
+            const subMessage = appState.isFavoritesMode
+                ? 'Haz clic en el corazón de una pastilla para guardarla.'
+                : 'Intenta ajustar tus filtros de búsqueda.';
+            
+            els.results.innerHTML = `<div class="no-results-container"><svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z"></path><path d="M21 21L16.65 16.65"></path><path d="M11 8V11L13 13"></path></svg><p>${message}</p><span>${subMessage}</span></div>`;
             els.paginationContainer.innerHTML = '';
             return;
         }
@@ -368,18 +354,20 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             const primaryRefForData = (Array.isArray(item.ref) && item.ref.length > 0) ? String(item.ref[0]).split(' ')[0] : 'N/A';
-
+            
+            // === LÓGICA DE FAVORITOS PARA EL BOTÓN ===
             const isFavorite = appState.favorites.has(item._appId);
+            const favoriteBtnHTML = `
+                <button class="favorite-btn ${isFavorite ? 'active' : ''}" data-id="${item._appId}" aria-label="Marcar como favorito" aria-pressed="${isFavorite}">
+                    <svg class="heart-icon" viewBox="0 0 24 24">
+                        <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                    </svg>
+                </button>
+            `;
 
             return `
                 <div class="result-card" data-id="${item._appId}" style="animation-delay: ${index * 50}ms" tabindex="0" role="button" aria-haspopup="dialog">
-                    
-                    <button class="favorite-btn ${isFavorite ? 'active' : ''}" data-item-id="${item._appId}" aria-label="Marcar como favorito" aria-pressed="${isFavorite}">
-                        <svg class="heart-icon" viewBox="0 0 24 24">
-                            <path fill="currentColor" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                        </svg>
-                    </button>
-
+                    ${favoriteBtnHTML}
                     <div class="card-thumbnail"><img src="${firstImageSrc}" alt="Referencia ${primaryRefForData}" class="result-image" loading="lazy"></div>
                     <div class="card-content-wrapper">
                         <div class="card-details">
@@ -391,11 +379,20 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>`;
         }).join('');
         
+        // Asignar listeners a los nuevos botones de corazón
+        els.results.querySelectorAll('.favorite-btn').forEach(btn => {
+            btn.addEventListener('click', toggleFavorite);
+        });
+
         setupPagination(totalResults);
     };
 
-    // --- 7. LÓGICA DE MODALES Y MENÚS ---
     function handleCardClick(event) {
+        // No abrir el modal si se hizo clic en el botón de favorito
+        if (event.target.closest('.favorite-btn')) {
+            return;
+        }
+
         const card = event.target.closest('.result-card');
         if (card) {
             const itemId = card.dataset.id;
@@ -464,51 +461,21 @@ document.addEventListener('DOMContentLoaded', () => {
     function openSideMenu() { els.sideMenu.classList.add('open'); els.sideMenu.setAttribute('aria-hidden', 'false'); els.sideMenuOverlay.style.display = 'block'; requestAnimationFrame(() => { els.sideMenuOverlay.classList.add('visible'); }); els.menuBtn.setAttribute('aria-expanded', 'true'); els.menuCloseBtn.focus(); }
     function closeSideMenu() { els.sideMenu.classList.remove('open'); els.sideMenu.setAttribute('aria-hidden', 'true'); els.sideMenuOverlay.classList.remove('visible'); els.menuBtn.setAttribute('aria-expanded', 'false'); els.menuBtn.focus(); els.sideMenuOverlay.addEventListener('transitionend', () => { if (!els.sideMenuOverlay.classList.contains('visible')) { els.sideMenuOverlay.style.display = 'none'; } }, { once: true }); }
     function setupSwipe(carouselElement) { let startX, startY, endX, endY; const threshold = 50; carouselElement.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; }, { passive: true }); carouselElement.addEventListener('touchmove', (e) => { if (Math.abs(e.touches[0].clientX - startX) > Math.abs(e.touches[0].clientY - startY)) { e.preventDefault(); } }, { passive: false }); carouselElement.addEventListener('touchend', (e) => { endX = e.changedTouches[0].clientX; endY = e.changedTouches[0].clientY; const diffX = endX - startX; const diffY = endY - startY; if (Math.abs(diffX) > threshold && Math.abs(diffX) > Math.abs(diffY)) { if (diffX > 0) { navigateCarousel(carouselElement, -1); } else { navigateCarousel(carouselElement, 1); } } }); }
-    
-    // --- clearAllFilters (MODIFICADA) ---
-    const clearAllFilters = () => { 
-        const inputsToClear = [els.busqueda, els.marca, els.modelo, els.anio, els.oem, els.fmsi, els.medidasAncho, els.medidasAlto]; 
-        inputsToClear.forEach(input => input.value = ''); 
-        els.posDel.classList.remove('active'); 
-        els.posTras.classList.remove('active'); 
-        if (els.brandTagsContainer) { 
-            els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => { 
-                activeTag.classList.remove('active'); 
-            }); 
-        }
-        
-        // --- AÑADIDO ---
-        if (appState.isFavoritesMode) {
-            els.filtroFavoritos.classList.remove('active');
-            appState.isFavoritesMode = false;
-            toggleFilterInputs(true); // Re-habilita los filtros
-        }
-        // --- FIN DE AÑADIDO ---
-
+    const clearAllFilters = () => { const inputsToClear = [els.busqueda, els.marca, els.modelo, els.anio, els.oem, els.fmsi, els.medidasAncho, els.medidasAlto]; inputsToClear.forEach(input => input.value = ''); els.posDel.classList.remove('active'); els.posTras.classList.remove('active'); if (els.brandTagsContainer) { els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => { activeTag.classList.remove('active'); }); } 
+        // Limpiar filtro de favoritos
+        appState.isFavoritesMode = false;
+        els.filtroFavoritos.classList.remove('active');
+        els.filtroTodos.classList.add('active');
         filterData(); 
     };
-
     const createRippleEffect = (event) => { const button = event.currentTarget; const circle = document.createElement('span'); const diameter = Math.max(button.clientWidth, button.clientHeight); const radius = diameter / 2; const rect = button.getBoundingClientRect(); circle.style.width = circle.style.height = `${diameter}px`; circle.style.left = `${event.clientX - (rect.left + radius)}px`; circle.style.top = `${event.clientY - (rect.top + radius)}px`; circle.classList.add('ripple'); const ripple = button.getElementsByClassName('ripple')[0]; if (ripple) { ripple.remove(); } button.appendChild(circle); };
-    
-    // --- 8. LÓGICA DE URL Y FILTROS INICIALES ---
-    const updateURLWithFilters = () => { 
-        // No actualiza la URL si estamos en modo favoritos
-        if (appState.isFavoritesMode) {
-             history.pushState({}, '', window.location.pathname);
-             return;
-        }
-        const params = new URLSearchParams(); const filters = { busqueda: els.busqueda.value.trim(), marca: els.marca.value.trim(), modelo: els.modelo.value.trim(), anio: els.anio.value.trim(), oem: els.oem.value.trim(), fmsi: els.fmsi.value.trim(), ancho: els.medidasAncho.value.trim(), alto: els.medidasAlto.value.trim(), }; for (const key in filters) { if (filters[key]) { params.set(key, filters[key]); } } const activePositions = getPositionFilter(); if (activePositions.length > 0) { params.set('pos', activePositions.join(',')); } const newUrl = `${window.location.pathname}?${params.toString()}`; history.pushState({}, '', newUrl); 
-    };
+    const updateURLWithFilters = () => { const params = new URLSearchParams(); const filters = { busqueda: els.busqueda.value.trim(), marca: els.marca.value.trim(), modelo: els.modelo.value.trim(), anio: els.anio.value.trim(), oem: els.oem.value.trim(), fmsi: els.fmsi.value.trim(), ancho: els.medidasAncho.value.trim(), alto: els.medidasAlto.value.trim(), }; for (const key in filters) { if (filters[key]) { params.set(key, filters[key]); } } const activePositions = getPositionFilter(); if (activePositions.length > 0) { params.set('pos', activePositions.join(',')); } 
+        // Añadir favoritos a URL
+        if (appState.isFavoritesMode) { params.set('favorites', 'true'); }
+        const newUrl = `${window.location.pathname}?${params.toString()}`; history.pushState({}, '', newUrl); };
     
     const applyFiltersFromURL = () => {
         const params = new URLSearchParams(window.location.search);
-        // Si hay cualquier filtro en la URL, nos aseguramos de no estar en modo favoritos
-        if (Array.from(params).length > 0 && els.filtroFavoritos) {
-            appState.isFavoritesMode = false;
-            els.filtroFavoritos.classList.remove('active');
-            toggleFilterInputs(true);
-        }
-
         els.busqueda.value = params.get('busqueda') || '';
         const brandFromURL = params.get('marca');
         els.marca.value = brandFromURL || '';
@@ -523,6 +490,18 @@ document.addEventListener('DOMContentLoaded', () => {
             if (posParam.includes('Delantera')) els.posDel.classList.add('active');
             if (posParam.includes('Trasera')) els.posTras.classList.add('active');
         }
+        
+        // Aplicar filtro de favoritos desde URL
+        if (params.get('favorites') === 'true') {
+            appState.isFavoritesMode = true;
+            els.filtroTodos.classList.remove('active');
+            els.filtroFavoritos.classList.add('active');
+        } else {
+            appState.isFavoritesMode = false;
+            els.filtroTodos.classList.add('active');
+            els.filtroFavoritos.classList.remove('active');
+        }
+
         if (els.brandTagsContainer) {
             els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => {
                 activeTag.classList.remove('active');
@@ -536,9 +515,8 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    // --- 9. CONFIGURACIÓN DE EVENT LISTENERS ---
     function setupEventListeners() {
-        [els.darkBtn, els.upBtn, els.menuBtn, els.orbitalBtn, els.clearBtn, els.filtroFavoritos].forEach(btn => btn?.addEventListener('click', createRippleEffect));
+        [els.darkBtn, els.upBtn, els.menuBtn, els.orbitalBtn, els.clearBtn].forEach(btn => btn?.addEventListener('click', createRippleEffect));
 
         const iconAnimation = (iconToShow, iconToHide) => {
             if (!iconToShow) return;
@@ -549,7 +527,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (iconToHide) { iconToHide.animate(hideKeyframes, options); }
         };
 
-        // --- Lógica de Temas ---
         const applyLightTheme = () => {
             els.body.classList.remove('lp-dark', 'modo-orbital');
             iconAnimation(els.sunIcon, els.moonIcon);
@@ -624,7 +601,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // --- Cargar Tema Guardado ---
         const savedTheme = localStorage.getItem('themePreference');
         console.log("Saved theme:", savedTheme);
         switch (savedTheme) {
@@ -643,7 +619,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 break;
         }
 
-        // --- Listeners de UI ---
         els.upBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
         window.addEventListener('scroll', () => { els.upBtn.classList.toggle('show', window.scrollY > 300); });
         els.menuBtn.addEventListener('click', openSideMenu);
@@ -652,26 +627,10 @@ document.addEventListener('DOMContentLoaded', () => {
         els.openGuideLink.addEventListener('click', () => { closeSideMenu(); setTimeout(openGuideModal, 50); });
         window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && els.sideMenu.classList.contains('open')) { closeSideMenu(); } });
 
-        // MODIFICADO: Listener de Clics en Resultados (maneja modal Y favoritos)
-        els.results.addEventListener('click', (event) => {
-            const favButton = event.target.closest('.favorite-btn');
-            
-            if (favButton) {
-                // --- Clic en Favorito ---
-                event.stopPropagation(); // Previene que se abra el modal
-                const itemId = favButton.dataset.itemId;
-                toggleFavorite(itemId, favButton);
-            
-            } else if (event.target.closest('.result-card')) {
-                // --- Clic en la Tarjeta (para abrir modal) ---
-                handleCardClick(event); // handleCardClick ya busca el .result-card
-            }
-        });
-
+        els.results.addEventListener('click', handleCardClick);
 
         const debouncedFilter = debounce(filterData, 300);
 
-        // --- Listeners de Vista (Grid/Lista) ---
         const savedView = localStorage.getItem('viewMode');
         if (savedView === 'list') {
             els.results.classList.add('list-view');
@@ -700,7 +659,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // --- Listeners de Filtros ---
         const restartSearchIconAnimation = () => {
             const oldIcon = els.searchContainer.querySelector('.search-icon');
             if (oldIcon) {
@@ -721,21 +679,25 @@ document.addEventListener('DOMContentLoaded', () => {
 
         [els.posDel, els.posTras].forEach(btn => btn.addEventListener('click', (e) => { e.currentTarget.classList.toggle('active'); filterData(); }));
 
-        // --- AÑADIDO: Listener Botón Filtro Favoritos ---
-        if (els.filtroFavoritos) {
-            els.filtroFavoritos.addEventListener('click', () => {
-                const isActive = els.filtroFavoritos.classList.toggle('active');
-                appState.isFavoritesMode = isActive;
-                
-                // Re-ejecuta el filtro (que ahora reaccionará al modo favoritos)
-                filterData(); 
-                
-                // Deshabilita los otros filtros para evitar confusión
-                toggleFilterInputs(!isActive); 
-            });
-        }
+        // === EVENTOS PARA FILTRO DE FAVORITOS ===
+        els.filtroTodos.addEventListener('click', () => {
+            if (appState.isFavoritesMode) {
+                appState.isFavoritesMode = false;
+                els.filtroTodos.classList.add('active');
+                els.filtroFavoritos.classList.remove('active');
+                filterData();
+            }
+        });
+        els.filtroFavoritos.addEventListener('click', () => {
+            if (!appState.isFavoritesMode) {
+                appState.isFavoritesMode = true;
+                els.filtroTodos.classList.remove('active');
+                els.filtroFavoritos.classList.add('active');
+                filterData();
+            }
+        });
 
-        // --- Listener Botón Borrar Filtros ---
+
         const trashLid = els.clearBtn.querySelector('.trash-lid'); const trashBody = els.clearBtn.querySelector('.trash-body'); const NUM_SPARKS = 10; const SPARK_COLORS = ['#00ffff', '#ff00ff', '#00ff7f', '#ffc700', '#ff5722'];
         function createSparks(button) { for (let i = 0; i < NUM_SPARKS; i++) { const spark = document.createElement('div'); spark.classList.add('spark'); const size = Math.random() * 4 + 3; spark.style.width = `${size}px`; spark.style.height = `${size}px`; spark.style.backgroundColor = SPARK_COLORS[Math.floor(Math.random() * SPARK_COLORS.length)]; spark.style.left = `calc(50% + ${Math.random() * 20 - 10}px)`; spark.style.top = `calc(50% + ${Math.random() * 20 - 10}px)`; const angle = Math.random() * Math.PI * 2; const distance = Math.random() * 25 + 20; const sparkX = Math.cos(angle) * distance; const sparkY = Math.sin(angle) * distance; spark.style.setProperty('--spark-x', `${sparkX}px`); spark.style.setProperty('--spark-y', `${sparkY}px`); button.appendChild(spark); spark.addEventListener('animationend', () => spark.remove(), { once: true }); } }
 
@@ -745,7 +707,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (trashLid) trashLid.classList.add('animate-lid');
             if (trashBody) trashBody.classList.add('animate-body');
             createSparks(els.clearBtn);
-            clearAllFilters(); // Esta función ya apaga el modo favoritos
+            clearAllFilters();
             setTimeout(() => {
                 if (trashLid) trashLid.classList.remove('animate-lid');
                 if (trashBody) trashBody.classList.remove('animate-body');
@@ -753,7 +715,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 900);
         });
 
-        // --- Listener Tags de Marcas ---
         if (els.brandTagsContainer) {
             els.brandTagsContainer.addEventListener('click', (e) => {
                 const tag = e.target.closest('.brand-tag');
@@ -778,7 +739,6 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         }
 
-        // --- Listener Paginación ---
         els.paginationContainer.addEventListener('click', (e) => {
             const btn = e.target.closest('.page-btn');
             if (!btn || btn.disabled || btn.classList.contains('active')) {
@@ -792,43 +752,46 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // --- Listeners de Modales (Cerrar) ---
         els.modalCloseBtn.addEventListener('click', closeModal);
         els.modal.addEventListener('click', (event) => { if (event.target === els.modal) { closeModal(); } });
         els.guideModalCloseBtn.addEventListener('click', closeGuideModal);
         els.guideModal.addEventListener('click', (event) => { if (event.target === els.guideModal) { closeGuideModal(); } });
-        window.addEventListener('keydown', (e) => { 
-            if (e.key === 'Escape') {
-                if (els.guideModal.style.display === 'flex') { closeGuideModal(); }
-                else if (els.modal.style.display === 'flex') { closeModal(); }
-            }
-        });
-
+        window.addEventListener('keydown', (e) => { if (e.key === 'Escape' && els.guideModal.style.display === 'flex') { closeGuideModal(); } });
 
     } // --- Fin de setupEventListeners ---
 
 
-    // --- 10. FUNCIÓN DE INICIALIZACIÓN (CONEXIÓN A FIRESTORE) ---
+    // --- FUNCIÓN DE INICIALIZACIÓN (MODIFICADA PARA FIRESTORE) ---
     async function inicializarApp() {
         showSkeletonLoader();
-        loadFavorites(); // <-- AÑADIDO: Carga favoritos guardados
+        loadFavorites(); // Cargar favoritos guardados
 
         try {
-            // ----- INICIO DE LA CONEXIÓN A FIRESTORE -----
+            // ----- INICIO DE LA MODIFICACIÓN (FIRESTORE) -----
+
+            // 1. Apunta a tu COLECCIÓN (cambia 'pastillas' si se llama diferente)
             const collectionRef = db.collection('pastillas'); 
+            
+            // 2. Obtén todos los documentos de esa colección
             const snapshot = await collectionRef.get();
+
             if (snapshot.empty) {
+                // Este error saltará si tu firebaseConfig es correcto
+                // pero el nombre 'pastillas' está mal o la colección está vacía.
                 throw new Error("No se encontraron documentos en la colección 'pastillas'.");
             }
+
+            // 3. Convierte los documentos a un array de datos
             let data = [];
             snapshot.forEach(doc => {
                 const docData = doc.data();
                 data.push(docData); 
             });
-            // ----- FIN DE LA CONEXIÓN A FIRESTORE -----
+            
+            // ----- FIN DE LA MODIFICACIÓN -----
 
 
-            // --- Procesamiento de datos ---
+            // El resto de tu código de procesamiento
             data = data.map((item, index) => {
                 if (item.imagen && (!item.imagenes || item.imagenes.length === 0)) {
                     item.imagenes = [
@@ -840,7 +803,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 let medidaString = null;
                 if (Array.isArray(item.medidas) && item.medidas.length > 0) {
-                    medidaString = String(item.medidas[0]); 
+                    medidaString = String(item.medidas[0]); // Asegurar que sea string
                 } else if (typeof item.medidas === 'string') {
                     medidaString = item.medidas;
                 }
@@ -848,10 +811,12 @@ document.addEventListener('DOMContentLoaded', () => {
                 const safeRefs = Array.isArray(item.ref) ? item.ref.map(String) : [];
                 const safeOems = Array.isArray(item.oem) ? item.oem.map(String) : [];
                 const safeFmsis = Array.isArray(item.fmsi) ? item.fmsi.map(String) : [];
+
+                // Asegúrate de que 'aplicaciones' exista, o pon un array vacío
                 const aplicaciones = Array.isArray(item.aplicaciones) ? item.aplicaciones : [];
 
                 return { ...item,
-                    aplicaciones: aplicaciones, 
+                    aplicaciones: aplicaciones, // <-- Corrección de seguridad
                     _appId: index, // ID único
                     ref: safeRefs,
                     oem: safeOems,
@@ -860,16 +825,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     altoNum: partes[1] || 0 };
             });
 
-            // Ordenamos el array 'data' ANTES de guardarlo en el estado
+            // === AÑADIDO: ORDENAR DATOS DESPUÉS DE CARGAR ===
             data.sort((a, b) => {
-                const numA = getSortableRefNumber(a.ref);
-                const numB = getSortableRefNumber(b.ref);
-                return numA - numB;
+                const refA = getSortableRefNumber(a.ref);
+                const refB = getSortableRefNumber(b.ref);
+                return refA - refB;
             });
+            // ===============================================
 
             appState.data = data;
 
-            // --- Llenar Datalists y Tags ---
             const getAllApplicationValues = (key) => { const allValues = new Set(); appState.data.forEach(item => { item.aplicaciones.forEach(app => { const prop = (key === 'modelo') ? 'serie' : key; if (app[prop]) allValues.add(String(app[prop])); }); }); return [...allValues].sort(); };
             
             fillDatalist(els.datalistMarca, getAllApplicationValues('marca'));
@@ -897,12 +862,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }).join('');
             }
 
-            // --- Renderizado Inicial ---
             applyFiltersFromURL();
             filterData();
         
         } catch (error) {
-            // Manejo de errores
+            // Este error SÍ es el que queremos ver si algo falla
             console.error("Error al cargar los datos desde Firestore:", error);
             els.results.innerHTML = `<div class="no-results-container"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line><line x1="12" y1="22" x2="12" y2="22"></line></svg><p>Error al cargar datos</p><span>No se pudo conectar con la base de datos (Firestore). Revise la consola.</span></div>`;
             els.countContainer.innerHTML = "Error";
@@ -910,11 +874,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    // --- 11. INICIAR LA APP ---
-    
     // Inicializar listeners PRIMERO
     setupEventListeners();
     // Luego cargar datos y renderizar
     inicializarApp();
 
 }); // Fin DOMContentLoaded
+
+
