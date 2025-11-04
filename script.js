@@ -1,15 +1,23 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- 1. PEGA TU CONFIGURACIÓN DE FIREBASE AQUÍ ---
-    // Reemplaza esto con el objeto firebaseConfig de tu consola de Firebase
+    // ===================================================================
+    //  ¡CORRECCIÓN HECHA!
+    // ===================================================================
+    // He pegado la configuración que me diste.
+    // Ahora SÍ se conectará a tu proyecto "brakexadmin".
+    
     const firebaseConfig = {
-      apiKey: "TU_API_KEY_AQUI",
-      authDomain: "TU_AUTH_DOMAIN_AQUI",
-      projectId: "TU_PROJECT_ID_AQUI",
-      storageBucket: "TU_STORAGE_BUCKET_AQUI",
-      messagingSenderId: "TU_SENDER_ID_AQUI",
-      appId: "TU_APP_ID_AQUI"
+      apiKey: "AIzaSyBms6_ujBJeVOcMbnxCxS9_7R6xQSpAOI8",
+      authDomain: "brakexadmin.firebaseapp.com",
+      projectId: "brakexadmin",
+      storageBucket: "brakexadmin.firebasestorage.app",
+      messagingSenderId: "799264562947",
+      appId: "1:799264562947:web:52d860ae41a5c4b8f75336"
     };
+    // ===================================================================
+    //  FIN DE LA CORRECCIÓN
+    // ===================================================================
+
 
     // --- 2. INICIALIZA FIREBASE ---
     firebase.initializeApp(firebaseConfig);
@@ -17,7 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- 1. ESTADO CENTRALIZADO ---
-    // (Tu código original)
     const appState = {
         data: [],
         filtered: [],
@@ -58,7 +65,7 @@ document.addEventListener('DOMContentLoaded', () => {
         modalContent: document.querySelector('#card-modal .modal-content'),
         modalCloseBtn: document.querySelector('#card-modal .modal-close-btn'),
         modalCarousel: document.querySelector('#card-modal .modal-image-carousel'),
-        modalRef: document.querySelector('#card-modal .modal-ref'), // Este es el H2 para el header
+        modalRef: document.querySelector('#card-modal .modal-ref'),
         modalPosition: document.querySelector('#card-modal .modal-position'),
         searchContainer: document.getElementById('searchContainer'),
         modalAppsSpecs: document.querySelector('#card-modal .modal-apps-specs'),
@@ -71,7 +78,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- FUNCIONES COMPLETAS ---
-    // (Todas tus funciones originales: debounce, fillDatalist, getPositionFilter, etc.)
     const debounce = (func, delay) => { let timeout; return (...args) => { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), delay); }; };
     const fillDatalist = (datalist, values) => { datalist.innerHTML = values.map(v => `<option value="${v}">`).join(''); };
     const getPositionFilter = () => { const activePositions = []; if (els.posDel.classList.contains('active')) activePositions.push('Delantera'); if (els.posTras.classList.contains('active')) activePositions.push('Trasera'); return activePositions; };
@@ -86,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (upperRef.endsWith('BP')) return 'ref-bp';
         if (upperRef.startsWith('K')) return 'ref-k';
         if (upperRef.endsWith('BEX')) return 'ref-bex';
-        return 'ref-default'; // Verde menta
+        return 'ref-default';
     };
 
     const filterData = () => {
@@ -96,7 +102,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const filters = { busqueda: fbusq(els.busqueda.value), marca: fbusq(els.marca.value), modelo: fbusq(els.modelo.value), anio: fbusq(els.anio.value), oem: fbusq(els.oem.value), fmsi: fbusq(els.fmsi.value), ancho: parseFloat(els.medidasAncho.value), alto: parseFloat(els.medidasAlto.value), pos: activePos };
 
         const filtered = appState.data.filter(item => {
-            const itemVehicles = item.aplicaciones.map(app => `${app.marca} ${app.serie} ${app.litros} ${app.año} ${app.especificacion}`).join(' ').toLowerCase();
+            // Asegurarse de que 'aplicaciones' exista antes de mapear
+            const safeAplicaciones = Array.isArray(item.aplicaciones) ? item.aplicaciones : [];
+            const itemVehicles = safeAplicaciones.map(app => `${app.marca} ${app.serie} ${app.litros} ${app.año} ${app.especificacion}`).join(' ').toLowerCase();
             const itemPosicion = item.posición;
 
             const busqMatch = !filters.busqueda ||
@@ -105,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 (Array.isArray(item.fmsi) && item.fmsi.some(f => typeof f === 'string' && f.toLowerCase().includes(filters.busqueda))) ||
                 itemVehicles.includes(filters.busqueda);
 
-            const appMatch = !filters.marca && !filters.modelo && !filters.anio || item.aplicaciones.some(app => (!filters.marca || (app.marca && app.marca.toLowerCase().includes(filters.marca))) && (!filters.modelo || (app.serie && app.serie.toLowerCase().includes(filters.modelo))) && (!filters.anio || (app.año && String(app.año).toLowerCase().includes(filters.anio))));
+            const appMatch = !filters.marca && !filters.modelo && !filters.anio || safeAplicaciones.some(app => (!filters.marca || (app.marca && app.marca.toLowerCase().includes(filters.marca))) && (!filters.modelo || (app.serie && app.serie.toLowerCase().includes(filters.modelo))) && (!filters.anio || (app.año && String(app.año).toLowerCase().includes(filters.anio))));
             const oemMatch = !filters.oem || (Array.isArray(item.oem) && item.oem.some(o => typeof o === 'string' && o.toLowerCase().includes(filters.oem)));
             const fmsiMatch = !filters.fmsi || (Array.isArray(item.fmsi) && item.fmsi.some(f => typeof f === 'string' && f.toLowerCase().includes(filters.fmsi)));
             let posMatch = true; if (filters.pos.length > 0) { posMatch = filters.pos.includes(itemPosicion); }
@@ -136,7 +144,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (counter) counter.textContent = `${newIndex + 1}/${totalImages}`;
     }
 
-    const renderApplicationsList = (aplicaciones) => { const groupedApps = aplicaciones.reduce((acc, app) => { const marca = app.marca || 'N/A'; if (!acc[marca]) { acc[marca] = []; } acc[marca].push(app); return acc; }, {}); Object.keys(groupedApps).forEach(marca => { groupedApps[marca].sort((a, b) => { const serieA = a.serie || ''; const serieB = b.serie || ''; if (serieA < serieB) return -1; if (serieA > serieB) return 1; const anioA = a.año || ''; const anioB = b.año || ''; if (anioA < anioB) return -1; if (anioA > anioB) return 1; return 0; }); }); let appListHTML = ''; for (const marca in groupedApps) { appListHTML += `<div class="app-brand-header">${marca.toUpperCase()}</div>`; groupedApps[marca].forEach(app => { appListHTML += `<div class="app-detail-row"><div>${app.serie || ''}</div><div>${app.litros || ''}</div><div>${app.año || ''}</div></div>`; }); } return appListHTML; };
+    const renderApplicationsList = (aplicaciones) => { 
+        const safeAplicaciones = Array.isArray(aplicaciones) ? aplicaciones : [];
+        const groupedApps = safeAplicaciones.reduce((acc, app) => { const marca = app.marca || 'N/A'; if (!acc[marca]) { acc[marca] = []; } acc[marca].push(app); return acc; }, {}); Object.keys(groupedApps).forEach(marca => { groupedApps[marca].sort((a, b) => { const serieA = a.serie || ''; const serieB = b.serie || ''; if (serieA < serieB) return -1; if (serieA > serieB) return 1; const anioA = a.año || ''; const anioB = b.año || ''; if (anioA < anioB) return -1; if (anioA > anioB) return 1; return 0; }); }); let appListHTML = ''; for (const marca in groupedApps) { appListHTML += `<div class="app-brand-header">${marca.toUpperCase()}</div>`; groupedApps[marca].forEach(app => { appListHTML += `<div class="app-detail-row"><div>${app.serie || ''}</div><div>${app.litros || ''}</div><div>${app.año || ''}</div></div>`; }); } return appListHTML; };
 
     const renderSpecs = (item) => {
         let specsHTML = `<div class="app-brand-header">ESPECIFICACIONES</div>`;
@@ -160,7 +170,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let medidasHTML = '';
         if (Array.isArray(item.medidas) && item.medidas.length > 0) {
             medidasHTML = item.medidas.map(medidaStr => {
-                const partes = medidaStr.split(/x/i).map(s => s.trim());
+                const partes = String(medidaStr).split(/x/i).map(s => s.trim());
                 const ancho = partes[0] || 'N/A';
                 const alto = partes[1] || 'N/A';
                 return `<div>Ancho: ${ancho} x Alto: ${alto}</div>`;
@@ -243,10 +253,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 firstImageSrc = item.imagen.replace("text=", `text=Vista+1+`);
             }
 
-            const appSummaryItems = item.aplicaciones.slice(0, 3).map(app => `${app.marca} ${app.serie}`).filter((value, index, self) => self.indexOf(value) === index);
+            const safeAplicaciones = Array.isArray(item.aplicaciones) ? item.aplicaciones : [];
+            const appSummaryItems = safeAplicaciones.slice(0, 3).map(app => `${app.marca} ${app.serie}`).filter((value, index, self) => self.indexOf(value) === index);
             let appSummaryHTML = '';
             if (appSummaryItems.length > 0) {
-                appSummaryHTML = `<div class="card-app-summary">${appSummaryItems.join(', ')}${item.aplicaciones.length > 3 ? ', ...' : ''}</div>`;
+                appSummaryHTML = `<div class="card-app-summary">${appSummaryItems.join(', ')}${safeAplicaciones.length > 3 ? ', ...' : ''}</div>`;
             }
 
             const primaryRefForData = (Array.isArray(item.ref) && item.ref.length > 0) ? String(item.ref[0]).split(' ')[0] : 'N/A';
@@ -447,9 +458,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
 
                 if (els.body.classList.contains('modo-orbital')) {
-                    applyLightTheme(); // Desactivar Orbital va a Claro
+                    applyLightTheme();
                 } else {
-                    applyOrbitalTheme(); // Activar Orbital
+                    applyOrbitalTheme();
                 }
             });
         }
@@ -459,7 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
         switch (savedTheme) {
             case 'orbital':
                 if (els.orbitalBtn) applyOrbitalTheme();
-                else applyLightTheme(); // Fallback
+                else applyLightTheme();
                 break;
             case 'dark':
                 applyAmoledDarkTheme();
@@ -595,7 +606,7 @@ document.addEventListener('DOMContentLoaded', () => {
     } // --- Fin de setupEventListeners ---
 
 
-    // --- ESTA ES LA FUNCIÓN MODIFICADA ---
+    // --- FUNCIÓN DE INICIALIZACIÓN (MODIFICADA PARA FIRESTORE) ---
     async function inicializarApp() {
         showSkeletonLoader();
 
@@ -609,19 +620,22 @@ document.addEventListener('DOMContentLoaded', () => {
             const snapshot = await collectionRef.get();
 
             if (snapshot.empty) {
+                // Este error saltará si tu firebaseConfig es correcto
+                // pero el nombre 'pastillas' está mal o la colección está vacía.
                 throw new Error("No se encontraron documentos en la colección 'pastillas'.");
             }
 
             // 3. Convierte los documentos a un array de datos
             let data = [];
             snapshot.forEach(doc => {
-                data.push(doc.data()); 
+                const docData = doc.data();
+                data.push(docData); 
             });
             
             // ----- FIN DE LA MODIFICACIÓN -----
 
 
-            // El resto de tu código de procesamiento sigue EXACTAMENTE IGUAL
+            // El resto de tu código de procesamiento
             data = data.map((item, index) => {
                 if (item.imagen && (!item.imagenes || item.imagenes.length === 0)) {
                     item.imagenes = [
@@ -633,7 +647,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 
                 let medidaString = null;
                 if (Array.isArray(item.medidas) && item.medidas.length > 0) {
-                    medidaString = item.medidas[0];  
+                    medidaString = String(item.medidas[0]); // Asegurar que sea string
                 } else if (typeof item.medidas === 'string') {
                     medidaString = item.medidas;
                 }
@@ -642,7 +656,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const safeOems = Array.isArray(item.oem) ? item.oem.map(String) : [];
                 const safeFmsis = Array.isArray(item.fmsi) ? item.fmsi.map(String) : [];
 
+                // Asegúrate de que 'aplicaciones' exista, o pon un array vacío
+                const aplicaciones = Array.isArray(item.aplicaciones) ? item.aplicaciones : [];
+
                 return { ...item,
+                    aplicaciones: aplicaciones, // <-- Corrección de seguridad
                     _appId: index, // ID único
                     ref: safeRefs,
                     oem: safeOems,
@@ -684,6 +702,7 @@ document.addEventListener('DOMContentLoaded', () => {
             filterData();
         
         } catch (error) {
+            // Este error SÍ es el que queremos ver si algo falla
             console.error("Error al cargar los datos desde Firestore:", error);
             els.results.innerHTML = `<div class="no-results-container"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18.36 6.64a9 9 0 1 1-12.73 0"></path><line x1="12" y1="2" x2="12" y2="12"></line><line x1="12" y1="22" x2="12" y2="22"></line></svg><p>Error al cargar datos</p><span>No se pudo conectar con la base de datos (Firestore). Revise la consola.</span></div>`;
             els.countContainer.innerHTML = "Error";
