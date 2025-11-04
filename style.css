@@ -991,8 +991,7 @@ body.modo-orbital .ref-default, body.modo-orbital .ref-badge-na {
   stroke: var(--text-color); /* Borde del corazón */
   stroke-width: 2;
   transition: all 0.2s ease;
-  /* Sombra para que destaque sobre la imagen */
-  filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+  /* Sombra eliminada de aquí, se maneja por tema */
 }
 
 /* Estado activo (favorito) */
@@ -1006,6 +1005,27 @@ body.modo-orbital .ref-default, body.modo-orbital .ref-badge-na {
   filter: drop-shadow(0 1px 2px rgba(239, 68, 68, 0.5)); /* Sombra roja */
 }
 
+/* --- INICIO DE LA CORRECCIÓN DE VISIBILIDAD --- */
+
+/* Ajustes de opacidad para modos oscuros */
+body.lp-dark .favorite-btn:not(.active),
+body.modo-orbital .favorite-btn:not(.active) {
+    opacity: 0.7; /* Aumenta la opacidad base del botón (el icono heredará esto) */
+}
+
+/* Sombra NEGRA (Default/Light Mode) para icono INACTIVO */
+body:not(.lp-dark):not(.modo-orbital) .favorite-btn:not(.active) .heart-icon {
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+}
+
+/* Sombra BLANCA (Dark/Orbital Modes) para icono INACTIVO */
+body.lp-dark .favorite-btn:not(.active) .heart-icon,
+body.modo-orbital .favorite-btn:not(.active) .heart-icon {
+    filter: drop-shadow(0 1px 1px rgba(255,255,255,0.3));
+}
+/* --- FIN DE LA CORRECCIÓN DE VISIBILIDAD --- */
+
+
 /* En modo lista, ajustar posición */
 .results-wrapper.list-view .favorite-btn {
     top: 50%;
@@ -1015,3 +1035,4 @@ body.modo-orbital .ref-default, body.modo-orbital .ref-badge-na {
 .results-wrapper.list-view .favorite-btn:hover {
     transform: translateY(-50%) scale(1.15);
 }
+
