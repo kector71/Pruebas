@@ -1,13 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
 
     // ===================================================================
-    //  ¡CORRECCIÓN HECHA!
+    //  Configuración de Firebase
     // ===================================================================
-    // He pegado la configuración que me diste.
-    // Ahora SÍ se conectará a tu proyecto "brakexadmin".
-    
     const firebaseConfig = {
-      apiKey: "AIzaSyBms6_ujBJeVOcMbnxCxS9_7R6xQSpAOI8",
+      apiKey: "AIzaSyCha4S_wLxI_CZY1Tc9FOJNA3cUTggISpU",
       authDomain: "brakexadmin.firebaseapp.com",
       projectId: "brakexadmin",
       storageBucket: "brakexadmin.firebasestorage.app",
@@ -15,9 +12,6 @@ document.addEventListener('DOMContentLoaded', () => {
       appId: "1:799264562947:web:52d860ae41a5c4b8f75336"
     };
     // ===================================================================
-    //  FIN DE LA CORRECCIÓN
-    // ===================================================================
-
 
     // --- 2. INICIALIZA FIREBASE ---
     firebase.initializeApp(firebaseConfig);
@@ -77,9 +71,8 @@ document.addEventListener('DOMContentLoaded', () => {
         guideModal: document.getElementById('guide-modal'),
         guideModalContent: document.querySelector('#guide-modal .modal-content'),
         guideModalCloseBtn: document.querySelector('#guide-modal .modal-close-btn'),
-        // === NUEVOS BOTONES DE FILTRO FAVORITOS ===
-        filtroTodos: document.getElementById('filtroTodos'),
-        filtroFavoritos: document.getElementById('filtroFavoritos')
+        // === MODIFICADO (1/4): Objeto 'els' actualizado ===
+        filtroFavoritosBtn: document.getElementById('filtroFavoritosBtn')
     };
 
     // --- FUNCIONES DE FAVORITOS ---
@@ -461,18 +454,50 @@ document.addEventListener('DOMContentLoaded', () => {
     function openSideMenu() { els.sideMenu.classList.add('open'); els.sideMenu.setAttribute('aria-hidden', 'false'); els.sideMenuOverlay.style.display = 'block'; requestAnimationFrame(() => { els.sideMenuOverlay.classList.add('visible'); }); els.menuBtn.setAttribute('aria-expanded', 'true'); els.menuCloseBtn.focus(); }
     function closeSideMenu() { els.sideMenu.classList.remove('open'); els.sideMenu.setAttribute('aria-hidden', 'true'); els.sideMenuOverlay.classList.remove('visible'); els.menuBtn.setAttribute('aria-expanded', 'false'); els.menuBtn.focus(); els.sideMenuOverlay.addEventListener('transitionend', () => { if (!els.sideMenuOverlay.classList.contains('visible')) { els.sideMenuOverlay.style.display = 'none'; } }, { once: true }); }
     function setupSwipe(carouselElement) { let startX, startY, endX, endY; const threshold = 50; carouselElement.addEventListener('touchstart', (e) => { startX = e.touches[0].clientX; startY = e.touches[0].clientY; }, { passive: true }); carouselElement.addEventListener('touchmove', (e) => { if (Math.abs(e.touches[0].clientX - startX) > Math.abs(e.touches[0].clientY - startY)) { e.preventDefault(); } }, { passive: false }); carouselElement.addEventListener('touchend', (e) => { endX = e.changedTouches[0].clientX; endY = e.changedTouches[0].clientY; const diffX = endX - startX; const diffY = endY - startY; if (Math.abs(diffX) > threshold && Math.abs(diffX) > Math.abs(diffY)) { if (diffX > 0) { navigateCarousel(carouselElement, -1); } else { navigateCarousel(carouselElement, 1); } } }); }
-    const clearAllFilters = () => { const inputsToClear = [els.busqueda, els.marca, els.modelo, els.anio, els.oem, els.fmsi, els.medidasAncho, els.medidasAlto]; inputsToClear.forEach(input => input.value = ''); els.posDel.classList.remove('active'); els.posTras.classList.remove('active'); if (els.brandTagsContainer) { els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => { activeTag.classList.remove('active'); }); } 
-        // Limpiar filtro de favoritos
+    
+    const clearAllFilters = () => { 
+        const inputsToClear = [els.busqueda, els.marca, els.modelo, els.anio, els.oem, els.fmsi, els.medidasAncho, els.medidasAlto]; 
+        inputsToClear.forEach(input => input.value = ''); 
+        els.posDel.classList.remove('active'); 
+        els.posTras.classList.remove('active'); 
+        if (els.brandTagsContainer) { 
+            els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => { 
+                activeTag.classList.remove('active'); 
+            }); 
+        } 
+        
+        // === MODIFICADO (3/4): Limpiar el nuevo botón de favoritos ===
         appState.isFavoritesMode = false;
-        els.filtroFavoritos.classList.remove('active');
-        els.filtroTodos.classList.add('active');
+        els.filtroFavoritosBtn.classList.remove('active');
+        els.filtroFavoritosBtn.setAttribute('aria-checked', 'false');
+        
         filterData(); 
     };
+    
     const createRippleEffect = (event) => { const button = event.currentTarget; const circle = document.createElement('span'); const diameter = Math.max(button.clientWidth, button.clientHeight); const radius = diameter / 2; const rect = button.getBoundingClientRect(); circle.style.width = circle.style.height = `${diameter}px`; circle.style.left = `${event.clientX - (rect.left + radius)}px`; circle.style.top = `${event.clientY - (rect.top + radius)}px`; circle.classList.add('ripple'); const ripple = button.getElementsByClassName('ripple')[0]; if (ripple) { ripple.remove(); } button.appendChild(circle); };
-    const updateURLWithFilters = () => { const params = new URLSearchParams(); const filters = { busqueda: els.busqueda.value.trim(), marca: els.marca.value.trim(), modelo: els.modelo.value.trim(), anio: els.anio.value.trim(), oem: els.oem.value.trim(), fmsi: els.fmsi.value.trim(), ancho: els.medidasAncho.value.trim(), alto: els.medidasAlto.value.trim(), }; for (const key in filters) { if (filters[key]) { params.set(key, filters[key]); } } const activePositions = getPositionFilter(); if (activePositions.length > 0) { params.set('pos', activePositions.join(',')); } 
+    
+    const updateURLWithFilters = () => { 
+        const params = new URLSearchParams(); 
+        const filters = { 
+            busqueda: els.busqueda.value.trim(), 
+            marca: els.marca.value.trim(), 
+            modelo: els.modelo.value.trim(), 
+            anio: els.anio.value.trim(), 
+            oem: els.oem.value.trim(), 
+            fmsi: els.fmsi.value.trim(), 
+            ancho: els.medidasAncho.value.trim(), 
+            alto: els.medidasAlto.value.trim(), 
+        }; 
+        for (const key in filters) { if (filters[key]) { params.set(key, filters[key]); } } 
+        const activePositions = getPositionFilter(); 
+        if (activePositions.length > 0) { params.set('pos', activePositions.join(',')); } 
+        
         // Añadir favoritos a URL
         if (appState.isFavoritesMode) { params.set('favorites', 'true'); }
-        const newUrl = `${window.location.pathname}?${params.toString()}`; history.pushState({}, '', newUrl); };
+        
+        const newUrl = `${window.location.pathname}?${params.toString()}`; 
+        history.pushState({}, '', newUrl); 
+    };
     
     const applyFiltersFromURL = () => {
         const params = new URLSearchParams(window.location.search);
@@ -491,15 +516,15 @@ document.addEventListener('DOMContentLoaded', () => {
             if (posParam.includes('Trasera')) els.posTras.classList.add('active');
         }
         
-        // Aplicar filtro de favoritos desde URL
+        // === MODIFICADO (4/4): Aplicar filtro de favoritos desde URL al nuevo botón ===
         if (params.get('favorites') === 'true') {
             appState.isFavoritesMode = true;
-            els.filtroTodos.classList.remove('active');
-            els.filtroFavoritos.classList.add('active');
+            els.filtroFavoritosBtn.classList.add('active');
+            els.filtroFavoritosBtn.setAttribute('aria-checked', 'true');
         } else {
             appState.isFavoritesMode = false;
-            els.filtroTodos.classList.add('active');
-            els.filtroFavoritos.classList.remove('active');
+            els.filtroFavoritosBtn.classList.remove('active');
+            els.filtroFavoritosBtn.setAttribute('aria-checked', 'false');
         }
 
         if (els.brandTagsContainer) {
@@ -659,6 +684,24 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // === MODIFICADO (2/4): Nuevo listener para el botón de corazón en la cabecera ===
+        els.filtroFavoritosBtn.addEventListener('click', () => {
+            // Invierte el estado
+            appState.isFavoritesMode = !appState.isFavoritesMode; 
+            
+            // Sincroniza el botón y ARIA
+            if (appState.isFavoritesMode) {
+                els.filtroFavoritosBtn.classList.add('active');
+                els.filtroFavoritosBtn.setAttribute('aria-checked', 'true');
+            } else {
+                els.filtroFavoritosBtn.classList.remove('active');
+                els.filtroFavoritosBtn.setAttribute('aria-checked', 'false');
+            }
+            
+            // Vuelve a filtrar los datos
+            filterData(); 
+        });
+
         const restartSearchIconAnimation = () => {
             const oldIcon = els.searchContainer.querySelector('.search-icon');
             if (oldIcon) {
@@ -678,25 +721,6 @@ document.addEventListener('DOMContentLoaded', () => {
         otherFilterInputs.forEach(input => input.addEventListener('input', debouncedFilter));
 
         [els.posDel, els.posTras].forEach(btn => btn.addEventListener('click', (e) => { e.currentTarget.classList.toggle('active'); filterData(); }));
-
-        // === EVENTOS PARA FILTRO DE FAVORITOS ===
-        els.filtroTodos.addEventListener('click', () => {
-            if (appState.isFavoritesMode) {
-                appState.isFavoritesMode = false;
-                els.filtroTodos.classList.add('active');
-                els.filtroFavoritos.classList.remove('active');
-                filterData();
-            }
-        });
-        els.filtroFavoritos.addEventListener('click', () => {
-            if (!appState.isFavoritesMode) {
-                appState.isFavoritesMode = true;
-                els.filtroTodos.classList.remove('active');
-                els.filtroFavoritos.classList.add('active');
-                filterData();
-            }
-        });
-
 
         const trashLid = els.clearBtn.querySelector('.trash-lid'); const trashBody = els.clearBtn.querySelector('.trash-body'); const NUM_SPARKS = 10; const SPARK_COLORS = ['#00ffff', '#ff00ff', '#00ff7f', '#ffc700', '#ff5722'];
         function createSparks(button) { for (let i = 0; i < NUM_SPARKS; i++) { const spark = document.createElement('div'); spark.classList.add('spark'); const size = Math.random() * 4 + 3; spark.style.width = `${size}px`; spark.style.height = `${size}px`; spark.style.backgroundColor = SPARK_COLORS[Math.floor(Math.random() * SPARK_COLORS.length)]; spark.style.left = `calc(50% + ${Math.random() * 20 - 10}px)`; spark.style.top = `calc(50% + ${Math.random() * 20 - 10}px)`; const angle = Math.random() * Math.PI * 2; const distance = Math.random() * 25 + 20; const sparkX = Math.cos(angle) * distance; const sparkY = Math.sin(angle) * distance; spark.style.setProperty('--spark-x', `${sparkX}px`); spark.style.setProperty('--spark-y', `${sparkY}px`); button.appendChild(spark); spark.addEventListener('animationend', () => spark.remove(), { once: true }); } }
@@ -880,5 +904,3 @@ document.addEventListener('DOMContentLoaded', () => {
     inicializarApp();
 
 }); // Fin DOMContentLoaded
-
-

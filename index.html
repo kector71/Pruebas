@@ -61,16 +61,9 @@
                     </div>
                 </div>
 
-                <!-- ===== INICIO: BLOQUE DE FAVORITOS (MODIFICADO) ===== -->
-                <div class="filter-group">
-                    <div class="filter-title">Guardados</div>
-                    <!-- Usamos la misma clase que 'Posición' para reusar estilos -->
-                    <div class="position-container"> 
-                        <button class="position-btn active" id="filtroTodos">Todos</button>
-                        <button class="position-btn" id="filtroFavoritos">Favoritos</button>
-                    </div>
-                </div>
-                <!-- ===== FIN: BLOQUE DE FAVORITOS (MODIFICADO) ===== -->
+                <!-- ===== INICIO: BLOQUE DE FAVORITOS (ELIMINADO) ===== -->
+                <!-- Este bloque ha sido removido -->
+                <!-- ===== FIN: BLOQUE DE FAVORITOS (ELIMINADO) ===== -->
 
                 <div class="filter-group">
                     <div class="filter-title">Referencias</div>
@@ -101,10 +94,23 @@
             <div class="glass results-header-card" id="results-header-card">
                 <div class="results-header">
                     <div class="result-count-container" id="result-count-container" aria-live="polite" aria-atomic="true">0 resultados</div>
+                    
+                    <!-- ===== INICIO: BLOQUE DE VISTA (MODIFICADO) ===== -->
                     <div class="view-toggle-buttons" role="radiogroup" aria-label="Modo de vista">
                         <button class="view-btn active" id="viewGridBtn" role="radio" aria-checked="true" aria-label="Vista de cuadrícula"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg></button>
                         <button class="view-btn" id="viewListBtn" role="radio" aria-checked="false" aria-label="Vista de lista"><svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><line x1="3" y1="6" x2="3.01" y2="6"></line><line x1="3" y1="12" x2="3.01" y2="12"></line><line x1="3" y1="18" x2="3.01" y2="18"></line></svg></button>
+                        
+                        <!-- === NUEVO BOTÓN DE FAVORITOS === -->
+                        <button class="view-btn" id="filtroFavoritosBtn" role="switch" aria-checked="false" aria-label="Mostrar solo favoritos">
+                            <svg class="heart-icon" viewBox="0 0 24 24">
+                                <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
+                            </svg>
+                        </button>
+                        <!-- === FIN DEL NUEVO BOTÓN === -->
+                        
                     </div>
+                    <!-- ===== FIN: BLOQUE DE VISTA (MODIFICADO) ===== -->
+                    
                 </div>
             </div>
             <div class="results-wrapper" id="results-container" role="status"></div>
@@ -142,7 +148,7 @@
             <svg class="lp-icon-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="4"></line><line x1="12" y1="20" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="6.34" y2="6.34"></line><line x1="17.66" y1="17.66" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="4" y2="12"></line><line x1="20" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="6.34" y2="17.66"></line><line x1="17.66" y1="6.34" x2="19.78" y2="4.22"></line></svg>
             <svg class="lp-icon-moon" viewBox="0 0 24 24" style="opacity:0;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
         </button>
-     </div>
+   </div>
 
 
     <div id="card-modal" class="modal-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -178,6 +184,7 @@
                     <li><strong>🧼 Borrar Filtros:</strong> Usa el botón rojo para limpiar todos los campos y empezar de nuevo.</li>
                     <li><strong>📊 Vista de Resultados:</strong> Elige entre ver los resultados en cuadrícula (🔲) o en lista (☰) usando los botones sobre los resultados.</li>
                     <li><strong>🖱️ Ver Detalles:</strong> Haz clic en cualquier tarjeta de resultado para abrir una ventana con más información, incluyendo todas las aplicaciones vehiculares y especificaciones.</li>
+                    <li><strong>❤️ Favoritos:</strong> Haz clic en el corazón (🤍) en la barra de resultados para ver solo tus pastillas guardadas. Haz clic en el corazón (🤍) de una tarjeta para guardarla.</li>
                     <li><strong>↔️ Navegar Imágenes:</strong> Dentro de la ventana de detalles, usa las flechas (‹ ›) o desliza el dedo (en móviles) sobre la imagen para ver diferentes vistas de la pastilla.</li>
                     <li><strong>📄 Paginación:</strong> Si hay muchos resultados, usa los botones numéricos (1, 2, 3...) en la parte inferior para navegar entre páginas.</li>
                     <li><strong>☀️🌙💫 Temas:</strong> Cambia entre Claro/Oscuro AMOLED con el botón flotante (🌙) y activa/desactiva el Modo Orbital con el botón de paleta (🎨).</li>

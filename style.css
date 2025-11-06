@@ -280,12 +280,11 @@ body.lp-dark .form-input::placeholder, body.modo-orbital .form-input::placeholde
 .position-container { display:flex; gap: 0.4rem; }
 .position-btn { flex: 1; padding: 6px 4px; border-radius: 100px; cursor: pointer; font-size: 0.8rem; font-weight: 500; text-align: center; transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease; border: 1px solid var(--material-surface-border); background-color: transparent; color: var(--text-color); }
 .position-btn:hover { background-color: var(--btn-google-hover-bg); }
-#positionDelantera.active, #filtroTodos.active { background-color: var(--badge-delantera-bg); border-color: var(--badge-delantera-bg); color: var(--badge-delantera-text); }
-#positionTrasera.active, #filtroFavoritos.active { background-color: var(--badge-trasera-bg); border-color: var(--badge-trasera-bg); color: var(--badge-trasera-text); }
+#positionDelantera.active { background-color: var(--badge-delantera-bg); border-color: var(--badge-delantera-bg); color: var(--badge-delantera-text); }
+#positionTrasera.active { background-color: var(--badge-trasera-bg); border-color: var(--badge-trasera-bg); color: var(--badge-trasera-text); }
 body.lp-dark .position-btn { border-color: var(--material-surface-border); color: var(--text-color); opacity: 0.9; }
 body.lp-dark .position-btn:hover { background-color: var(--btn-google-hover-bg); color: var(--text-color); opacity: 1; }
-body.lp-dark #positionDelantera.active, body.lp-dark #positionTrasera.active,
-body.lp-dark #filtroTodos.active, body.lp-dark #filtroFavoritos.active { color: #fff; opacity: 1;}
+body.lp-dark #positionDelantera.active, body.lp-dark #positionTrasera.active { color: #fff; opacity: 1;}
 
 
 .input-group-horizontal { display:flex; gap: 0.3rem; margin-bottom: 0.3rem; }
@@ -946,52 +945,47 @@ body.modo-orbital .ref-default, body.modo-orbital .ref-badge-na {
   z-index: 2; /* Asegura que los botones estén sobre la marca de agua */
 }
 
-/* ================== BOTÓN DE FAVORITOS (Corregido) ================== */
+/* ================== BOTÓN DE FAVORITOS (Limpiado) ================== */
 
-/* 1. Botón de Filtro "Favoritos" (Ya cubierto por .position-btn) */
-/* No se necesita CSS nuevo, ya que reusamos .position-btn */
-
-
-/* 2. Botón de Corazón en la Tarjeta (Rediseñado) */
 .favorite-btn {
-  position: absolute;
-  top: 0.5rem; /* Ajuste fino */
-  right: 0.5rem; /* Ajuste fino */
-  z-index: 10;
-  width: 36px;
-  height: 36px;
-  padding: 6px;
-  border-radius: 50%;
-  
-  /* Botón transparente */
-  background-color: transparent;
-  border: none;
-  
-  color: var(--text-color); /* Color del icono (vacío) */
-  opacity: 0.5; /* Más sutil por defecto */
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
+    position: absolute;
+    top: 0.5rem; 
+    right: 0.5rem; 
+    z-index: 10;
+    width: 36px;
+    height: 36px;
+    padding: 6px;
+    border-radius: 50%;
+    
+    /* Botón transparente */
+    background-color: transparent;
+    border: none;
+    
+    color: var(--text-color); /* Color del icono (vacío) */
+    opacity: 0.5; /* Más sutil por defecto */
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
 }
 
 .favorite-btn:hover {
-  opacity: 1;
-  transform: scale(1.15);
-  /* Añadimos un fondo SÓLO en hover para dar feedback */
-  background-color: rgba(var(--material-surface-light-rgb), 0.5);
-  backdrop-filter: blur(2px);
+    opacity: 1;
+    transform: scale(1.15);
+    /* Añadimos un fondo SÓLO en hover para dar feedback */
+    background-color: rgba(var(--material-surface-light-rgb), 0.5);
+    backdrop-filter: blur(2px);
 }
 
 .favorite-btn .heart-icon {
-  width: 22px; /* Un poco más grande */
-  height: 22px;
-  fill: transparent; /* Corazón vacío por defecto */
-  stroke: var(--text-color); /* Borde del corazón */
-  stroke-width: 2;
-  transition: all 0.2s ease;
-  /* Sombra eliminada de aquí, se maneja por tema */
+    width: 22px; /* Un poco más grande */
+    height: 22px;
+    fill: transparent; /* Corazón vacío por defecto */
+    stroke: #000000; /* <<-- BORDE NEGRO FIJO */
+    stroke-width: 2;
+    transition: all 0.2s ease;
+    /* Sombra eliminada de aquí, se maneja por tema */
 }
 
 /* Estado activo (favorito) */
@@ -1000,12 +994,13 @@ body.modo-orbital .ref-default, body.modo-orbital .ref-badge-na {
     transform: scale(1.05); /* Animación de "pulso" al activar */
 }
 .favorite-btn.active .heart-icon {
-  fill: #ef4444; /* Corazón rojo (color primario) */
-  stroke: #ef4444; /* Borde rojo */
-  filter: drop-shadow(0 1px 2px rgba(239, 68, 68, 0.5)); /* Sombra roja */
+    fill: #ef4444; /* Corazón rojo (color primario) */
+    stroke: #ef4444; /* Borde rojo */
+    filter: drop-shadow(0 1px 2px rgba(239, 68, 68, 0.5)); /* Sombra roja */
 }
 
 /* --- INICIO DE LA CORRECCIÓN DE VISIBILIDAD --- */
+/* (Esta parte ya estaba en tu código y es correcta) */
 
 /* Ajustes de opacidad para modos oscuros */
 body.lp-dark .favorite-btn:not(.active),
@@ -1036,3 +1031,33 @@ body.modo-orbital .favorite-btn:not(.active) .heart-icon {
     transform: translateY(-50%) scale(1.15);
 }
 
+/* ================== BOTÓN FILTRO FAVORITOS (Header Resultados) ================== */
+
+/* Estilo del corazón dentro del botón de vista */
+.view-btn .heart-icon {
+  width: 20px;
+  height: 20px;
+  transition: all 0.2s ease;
+}
+
+/* Corazón INACTIVO: Contorno del color del texto */
+.view-btn .heart-icon path {
+  fill: transparent;
+  stroke: var(--text-color); /* Borde del color del texto */
+  stroke-width: 2.5;
+  opacity: 0.6; /* Igual que los iconos de grid/lista */
+  transition: all 0.2s ease-out;
+}
+
+/* Botón ACTIVO: Se pone rojo (reutilizando tu variable) */
+.view-btn#filtroFavoritosBtn.active {
+  background-color: var(--badge-trasera-bg); 
+  border-color: var(--badge-trasera-bg);
+}
+
+/* Corazón ACTIVO: Se vuelve blanco sobre fondo rojo */
+.view-btn#filtroFavoritosBtn.active .heart-icon path {
+  fill: #ffffff;
+  stroke: #ffffff;
+  opacity: 1;
+}
