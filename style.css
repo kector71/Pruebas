@@ -1035,29 +1035,53 @@ body.modo-orbital .favorite-btn:not(.active) .heart-icon {
 
 /* Estilo del corazón dentro del botón de vista */
 .view-btn .heart-icon {
-  width: 20px;
-  height: 20px;
-  transition: all 0.2s ease;
+    width: 20px;
+    height: 20px;
+    transition: all 0.2s ease;
 }
 
-/* Corazón INACTIVO: Contorno del color del texto */
+
 .view-btn .heart-icon path {
-  fill: transparent;
-  stroke: var(--text-color); /* Borde del color del texto */
-  stroke-width: 2.5;
-  opacity: 0.6; /* Igual que los iconos de grid/lista */
-  transition: all 0.2s ease-out;
+    fill: transparent; 
+    stroke: var(--text-color); /* <<-- Vuelve al color del tema (visible en modo oscuro) */
+    stroke-width: 2.5; /* <<-- CORRECCIÓN: Grosor 2px (igual a tarjeta) */
+    opacity: 0.6; /* Sutil (inactivo) */
+    transition: all 0.2s ease-out;
 }
 
-/* Botón ACTIVO: Se pone rojo (reutilizando tu variable) */
+/* Sombra INACTIVA (Igual a las tarjetas) */
+body:not(.lp-dark):not(.modo-orbital) .view-btn#filtroFavoritosBtn:not(.active) .heart-icon {
+    filter: drop-shadow(0 1px 1px rgba(0,0,0,0.3));
+}
+body.lp-dark .view-btn#filtroFavoritosBtn:not(.active) .heart-icon,
+body.modo-orbital .view-btn#filtroFavoritosBtn:not(.active) .heart-icon {
+    filter: drop-shadow(0 1px 1px rgba(255,255,255,0.3));
+}
+
+/* Al pasar el mouse sobre el botón INACTIVO: Animar ICONO y hacerlo sólido */
+.view-btn#filtroFavoritosBtn:not(.active):hover .heart-icon {
+    transform: scale(1.15); /* Animación hover */
+}
+.view-btn#filtroFavoritosBtn:not(.active):hover .heart-icon path {
+    opacity: 1; /* Opacidad 100% (se ve "más negro"/blanco) */
+}
+
+/* Botón ACTIVO: Mantenemos el estilo "presionado" */
 .view-btn#filtroFavoritosBtn.active {
-  background-color: var(--badge-trasera-bg); 
-  border-color: var(--badge-trasera-bg);
+    background-color: var(--input-bg);
+    border-color: var(--material-surface-border);
+    box-shadow: var(--elevation-1);
 }
 
-/* Corazón ACTIVO: Se vuelve blanco sobre fondo rojo */
+/* ICONO ACTIVO: Animación "pulso" */
+.view-btn#filtroFavoritosBtn.active .heart-icon {
+    transform: scale(1.05); /* Animación activo */
+}
+
+/* Corazón ACTIVO: Se vuelve rojo (relleno) y CON SOMBRA ROJA */
 .view-btn#filtroFavoritosBtn.active .heart-icon path {
-  fill: #ffffff;
-  stroke: #ffffff;
-  opacity: 1;
+    fill: #ef4444; 
+    stroke: #ef4444; /* Borde rojo */
+    opacity: 1;
+    filter: drop-shadow(0 1px 2px rgba(239, 68, 68, 0.5));
 }
