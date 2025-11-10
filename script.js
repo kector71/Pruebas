@@ -70,7 +70,12 @@ document.addEventListener('DOMContentLoaded', () => {
         guideModalCloseBtn: document.querySelector('#guide-modal .modal-close-btn'),
         filtroFavoritosBtn: document.getElementById('filtroFavoritosBtn'),
         historialBtn: document.getElementById('historialBtn'),
-        searchHistoryContainer: document.getElementById('searchHistoryContainer')
+        searchHistoryContainer: document.getElementById('searchHistoryContainer'),
+        
+        // --- ⬇️ NUEVAS VARIABLES AÑADIDAS ⬇️ ---
+        historyPanel: document.getElementById('historyPanel'),
+        historyListContainer: document.getElementById('historyListContainer')
+        // --- ⬆️ FIN DE NUEVAS VARIABLES ⬆️ ---
     };
 
     function addToSearchHistory(query) {
@@ -91,6 +96,88 @@ document.addEventListener('DOMContentLoaded', () => {
             `<button class="search-history-item" data-query="${q}">${q}</button>`
         ).join('');
     }
+
+    // --- ⬇️ NUEVAS FUNCIONES AÑADIDAS ⬇️ ---
+
+    function deleteFromSearchHistory(query) {
+        let history = JSON.parse(localStorage.getItem('brakeXSearchHistory') || '[]');
+        history = history.filter(q => q !== query);
+        localStorage.setItem('brakeXSearchHistory', JSON.stringify(history));
+        renderSearchHistory(); // Actualiza la lista vieja (en filtros)
+        renderHistoryPanel(); // Actualiza la lista nueva (en panel principal)
+    }
+
+    function renderHistoryPanel() {
+        const history = JSON.parse(localStorage.getItem('brakeXSearchHistory') || '[]');
+        const container = els.historyListContainer;
+        if (!container) return;
+
+        if (history.length === 0) {
+            container.innerHTML = '<div class="no-history-item">No hay historial de búsqueda.</div>';
+            return;
+        }
+
+        container.innerHTML = history.map(q =>
+            `<div class="history-list-item">
+                <button class="history-term-btn" data-query="${q}">${q}</button>
+                <button class="history-delete-btn" data-query="${q}" aria-label="Eliminar ${q} del historial">&times;</button>
+            </div>`
+        ).join('');
+    }
+
+    function toggleHistoryView(forceState) {
+        // Si forceState es 'true', muestra historial. Si es 'false', oculta historial.
+        // Si no se define, simplemente alterna.
+        const isActivating = typeof forceState !== 'undefined'
+            ? forceState
+            : els.historialBtn.getAttribute('aria-pressed') === 'false';
+
+        if (isActivating) {
+            // Muestra el Panel de Historial
+            renderHistoryPanel();
+            els.historyPanel.style.display = 'block';
+            els.results.style.display = 'none';
+            els.paginationContainer.style.display = 'none';
+            els.historialBtn.classList.add('active');
+            els.historialBtn.setAttribute('aria-pressed', 'true');
+
+            // Desactiva el modo favoritos (son mutuamente excluyentes)
+            appState.isFavoritesMode = false;
+            els.filtroFavoritosBtn.classList.remove('active');
+            els.filtroFavoritosBtn.setAttribute('aria-pressed', 'false');
+
+        } else {
+            // Muestra el Panel de Resultados
+            els.historyPanel.style.display = 'none';
+            els.results.style.display = 'grid';
+            els.paginationContainer.style.display = 'flex';
+            els.historialBtn.classList.remove('active');
+            els.historialBtn.setAttribute('aria-pressed', 'false');
+        }
+    }
+    
+    function setupHistoryPanelListeners() {
+        els.historyListContainer.addEventListener('click', (e) => {
+            const termBtn = e.target.closest('.history-term-btn');
+            const deleteBtn = e.target.closest('.history-delete-btn');
+
+            if (termBtn) {
+                const query = termBtn.dataset.query;
+                els.busqueda.value = query;
+                // Cierra el panel de historial y ejecuta la búsqueda
+                toggleHistoryView(false); 
+                filterData();
+                els.busqueda.focus();
+            }
+
+            if (deleteBtn) {
+                const query = deleteBtn.dataset.query;
+                deleteFromSearchHistory(query);
+            }
+        });
+    }
+
+    // --- ⬆️ FIN DE NUEVAS FUNCIONES ⬆️ ---
 
     const loadFavorites = () => {
         try {
@@ -599,6 +686,10 @@ document.addEventListener('DOMContentLoaded', () => {
         els.historialBtn.classList.remove('active');
         els.historialBtn.setAttribute('aria-pressed', 'false');
         els.searchHistoryContainer.style.display = 'none';
+        
+        // --- ⬇️ LÍNEA MODIFICADA ⬇️ ---
+        toggleHistoryView(false); // Oculta el panel de historial y muestra los resultados
+        
         filterData();
     };
 
@@ -798,31 +889,27 @@ document.addEventListener('DOMContentLoaded', () => {
         els.results.addEventListener('click', handleCardClick);
 
         const debouncedFilter = debounce(filterData, 300);
+        
+        // --- ⬇️ LISTENER MODIFICADO ⬇️ ---
         els.filtroFavoritosBtn.addEventListener('click', () => {
             appState.isFavoritesMode = !appState.isFavoritesMode;
+            
             if (appState.isFavoritesMode) {
                 els.filtroFavoritosBtn.classList.add('active');
                 els.filtroFavoritosBtn.setAttribute('aria-pressed', 'true');
+                // Desactiva el modo historial (no pueden estar ambos activos)
+                toggleHistoryView(false); 
             } else {
                 els.filtroFavoritosBtn.classList.remove('active');
                 els.filtroFavoritosBtn.setAttribute('aria-pressed', 'false');
             }
-            filterData();
+            
+            filterData(); // filterData se encargará de mostrar los resultados correctos
         });
 
-        // === BOTÓN HISTORIAL ===
+        // --- ⬇️ LISTENER MODIFICADO ⬇️ ---
         els.historialBtn?.addEventListener('click', () => {
-            const isHistoryActive = els.historialBtn.getAttribute('aria-pressed') === 'true';
-            if (isHistoryActive) {
-                els.historialBtn.classList.remove('active');
-                els.historialBtn.setAttribute('aria-pressed', 'false');
-                els.searchHistoryContainer.style.display = 'none';
-            } else {
-                els.historialBtn.classList.add('active');
-                els.historialBtn.setAttribute('aria-pressed', 'true');
-                els.searchHistoryContainer.style.display = 'flex';
-                els.resultsHeaderCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }
+            toggleHistoryView();
         });
 
         els.busqueda.addEventListener('input', (e) => {
@@ -958,6 +1045,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 closeGuideModal();
             }
         });
+
+        // --- ⬇️ LÍNEA AÑADIDA ⬇️ ---
+        setupHistoryPanelListeners();
     }
 
     async function inicializarApp() {
