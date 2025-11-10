@@ -70,7 +70,8 @@ document.addEventListener('DOMContentLoaded', () => {
         guideModalCloseBtn: document.querySelector('#guide-modal .modal-close-btn'),
         filtroFavoritosBtn: document.getElementById('filtroFavoritosBtn'),
         historialBtn: document.getElementById('historialBtn'),
-        searchHistoryContainer: document.getElementById('searchHistoryContainer')
+        searchHistoryContainer: document.getElementById('searchHistoryContainer'),
+        searchHistoryCard: document.getElementById('searchHistoryCard'), // <-- 🟢 MODIFICADO
     };
 
     function addToSearchHistory(query) {
@@ -83,12 +84,26 @@ document.addEventListener('DOMContentLoaded', () => {
         renderSearchHistory();
     }
 
+    // 🟢 NUEVA FUNCIÓN para manejar el borrado
+    function deleteFromSearchHistory(query) {
+        if (!query.trim()) return;
+        let history = JSON.parse(localStorage.getItem('brakeXSearchHistory') || '[]');
+        history = history.filter(q => q !== query);
+        localStorage.setItem('brakeXSearchHistory', JSON.stringify(history));
+        renderSearchHistory(); // Vuelve a dibujar el historial sin el ítem
+    }
+
+    // 🟠 MODIFICADA para incluir la 'x'
     function renderSearchHistory() {
         const history = JSON.parse(localStorage.getItem('brakeXSearchHistory') || '[]');
         const container = els.searchHistoryContainer;
         if (!container) return;
+        
         container.innerHTML = history.map(q =>
-            `<button class="search-history-item" data-query="${q}">${q}</button>`
+            `<button class="search-history-item" data-query="${q}">
+                ${q}
+                <span class="delete-history-item" data-query-delete="${q}" role="button" aria-label="Eliminar ${q}">&times;</span>
+            </button>`
         ).join('');
     }
 
@@ -598,7 +613,7 @@ document.addEventListener('DOMContentLoaded', () => {
         els.filtroFavoritosBtn.setAttribute('aria-pressed', 'false');
         els.historialBtn.classList.remove('active');
         els.historialBtn.setAttribute('aria-pressed', 'false');
-        els.searchHistoryContainer.style.display = 'none';
+        els.searchHistoryCard.style.display = 'none'; // <-- MODIFICADO
         filterData();
     };
 
@@ -811,17 +826,18 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         // === BOTÓN HISTORIAL ===
+        // 🟠 MODIFICADO para mostrar/ocultar la nueva tarjeta
         els.historialBtn?.addEventListener('click', () => {
             const isHistoryActive = els.historialBtn.getAttribute('aria-pressed') === 'true';
             if (isHistoryActive) {
                 els.historialBtn.classList.remove('active');
                 els.historialBtn.setAttribute('aria-pressed', 'false');
-                els.searchHistoryContainer.style.display = 'none';
+                els.searchHistoryCard.style.display = 'none';
             } else {
                 els.historialBtn.classList.add('active');
                 els.historialBtn.setAttribute('aria-pressed', 'true');
-                els.searchHistoryContainer.style.display = 'flex';
-                els.resultsHeaderCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                els.searchHistoryCard.style.display = 'block';
+                els.searchHistoryCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
             }
         });
 
@@ -916,13 +932,25 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // 🟠 MODIFICADO para manejar clics en la 'x' y en el ítem
         document.addEventListener('click', (e) => {
-            if (e.target.matches('.search-history-item')) {
-                els.busqueda.value = e.target.dataset.query;
+            const historyItem = e.target.closest('.search-history-item');
+            const deleteBtn = e.target.closest('.delete-history-item');
+
+            if (deleteBtn) {
+                // 1. El usuario hizo clic en la 'x'
+                e.stopPropagation(); // Evita que también se active la búsqueda
+                const queryToDelete = deleteBtn.dataset.queryDelete;
+                deleteFromSearchHistory(queryToDelete);
+            
+            } else if (historyItem) {
+                // 2. El usuario hizo clic en el ítem (pero no en la 'x')
+                els.busqueda.value = historyItem.dataset.query;
                 filterData();
                 els.busqueda.focus();
             }
         });
+
 
         document.addEventListener('click', async (e) => {
             if (e.target.matches('.qr-btn')) {
@@ -964,7 +992,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showSkeletonLoader();
         loadFavorites();
         renderSearchHistory();
-        els.searchHistoryContainer.style.display = 'none';
+        els.searchHistoryCard.style.display = 'none'; // <-- 🟢 MODIFICADO
         try {
             const collectionRef = db.collection('pastillas');
             const snapshot = await collectionRef.get();
