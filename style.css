@@ -908,3 +908,33 @@ body.modo-orbital .view-btn#filtroFavoritosBtn:not(.active) .heart-icon {
     max-width: 100%;
     margin: 0 auto;
 }
+
+/* ==== 🟢 Estilos para Historial de Búsqueda (Tarjeta) 🟢 ==== */
+.search-history-item {
+    position: relative;
+    padding-right: 28px; /* Espacio para la 'x' */
+    /* Ajusta el padding si es necesario */
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.delete-history-item {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 1.3rem;
+    font-weight: 500;
+    line-height: 1;
+    color: var(--text-color);
+    opacity: 0.5;
+    transition: opacity 0.2s, transform 0.2s;
+    cursor: pointer;
+    padding: 2px 4px;
+}
+
+.delete-history-item:hover {
+    opacity: 1;
+    transform: translateY(-50%) scale(1.1);
+    color: var(--btn-primary-bg);
+}
