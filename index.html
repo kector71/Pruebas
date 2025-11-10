@@ -42,7 +42,6 @@
                         <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                     </svg>
                 </div>
-                <div class="search-history" id="searchHistoryContainer"></div>
                 <div class="filter-group">
                     <div class="filter-title">Detalles del Vehículo</div>
                     <label for="filtroMarca" class="visually-hidden">Filtrar por Marca</label>
@@ -114,6 +113,16 @@
                         </button>
                     </div>
                 </div>
+            </div>
+
+            <div class="glass" id="searchHistoryCard" style="display: none; margin-bottom: 0.8rem; animation: fadeInUpCard 0.5s forwards;">
+                <h3 class="filter-title" style="margin-bottom: 0.5rem; padding-bottom: 0.5rem; border-bottom: 1px solid var(--material-surface-border);">
+                    Historial de Búsqueda
+                </h3>
+                <p style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 1rem;">Muestra tus últimas 5 búsquedas. Haz clic en un término para buscarlo de nuevo o en la 'x' para eliminarlo.</p>
+                
+                <div class="search-history" id="searchHistoryContainer" style="display: flex;">
+                    </div>
             </div>
             <div class="results-wrapper" id="results-container" role="status"></div>
             <div class="pagination-container" id="pagination-container"></div>
