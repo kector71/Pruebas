@@ -205,15 +205,33 @@ header h1 {
     transition: color 0.5s ease, opacity 0.3s ease;
 }
 body.lp-dark .header-subtitle, body.modo-orbital .header-subtitle { opacity: 0.85; }
-header .header-x {
-    height: 1.1em;
-    width: auto; display: inline-block; vertical-align: middle;
+
+/* --- Estilos para el Nuevo Logo SVG --- */
+.header-logo-svg {
+    height: 1.5em; /* Ajusta la altura general del logo */
+    width: auto;
+    display: inline-block;
+    vertical-align: middle;
+    color: var(--header-x-fill); /* Hereda el color del tema */
     transition: transform 0.6s ease;
 }
-header .header-x path {
-    fill: var(--header-x-fill);
+
+.header-logo-svg .logo-text-brake {
+    fill: var(--header-x-fill); /* Relleno para el texto "Brake" */
     transition: fill 0.5s ease;
 }
+
+/* Animación de hover para el logo */
+.header-logo-svg:hover {
+    transform: scale(1.05);
+}
+.header-logo-svg:hover .logo-x-group {
+    transform: translate(103px, 3px) scale(1.1); /* Sutil efecto de "zoom" en la X */
+}
+.header-logo-svg .logo-x-group {
+    transition: transform 0.3s cubic-bezier(0.2, 0.5, 0.1, 1);
+}
+
 .material-btn {
     position: relative;
     width: 40px; height: 40px; border-radius: 50%;
@@ -1012,5 +1030,3 @@ body.modo-orbital .view-btn#filtroFavoritosBtn:not(.active) .heart-icon {
         display: none; 
     }
 }
-
-/* --- 🔴 ESTILOS DE QR ELIMINADOS 🔴 --- */
