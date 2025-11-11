@@ -14,7 +14,8 @@ document.addEventListener('DOMContentLoaded', () => {
         filtered: [],
         currentPage: 1,
         favorites: new Set(),
-        isFavoritesMode: false
+        isFavoritesMode: false,
+        activeManufacturer: null
     };
     const itemsPerPage = 24;
     const MAX_HISTORY = 5;
@@ -71,7 +72,13 @@ document.addEventListener('DOMContentLoaded', () => {
         filtroFavoritosBtn: document.getElementById('filtroFavoritosBtn'),
         historialBtn: document.getElementById('historialBtn'),
         searchHistoryContainer: document.getElementById('searchHistoryContainer'),
-        searchHistoryCard: document.getElementById('searchHistoryCard'), // <-- 🟢 MODIFICADO
+        searchHistoryCard: document.getElementById('searchHistoryCard'),
+        manufacturerTagsContainer: document.getElementById('manufacturer-tags-container'),
+        qrLargeModal: document.getElementById('qr-large-modal'),
+        qrLargeModalContent: document.querySelector('#qr-large-modal .modal-content'),
+        qrLargeModalCloseBtn: document.querySelector('#qr-large-modal .modal-close-btn'),
+        qrLargeTitle: document.getElementById('qr-large-title'),
+        qrLargeCanvasContainer: document.getElementById('qr-large-canvas-container'),
     };
 
     function addToSearchHistory(query) {
@@ -84,16 +91,14 @@ document.addEventListener('DOMContentLoaded', () => {
         renderSearchHistory();
     }
 
-    // 🟢 NUEVA FUNCIÓN para manejar el borrado
     function deleteFromSearchHistory(query) {
         if (!query.trim()) return;
         let history = JSON.parse(localStorage.getItem('brakeXSearchHistory') || '[]');
         history = history.filter(q => q !== query);
         localStorage.setItem('brakeXSearchHistory', JSON.stringify(history));
-        renderSearchHistory(); // Vuelve a dibujar el historial sin el ítem
+        renderSearchHistory();
     }
 
-    // 🟠 MODIFICADA para incluir la 'x'
     function renderSearchHistory() {
         const history = JSON.parse(localStorage.getItem('brakeXSearchHistory') || '[]');
         const container = els.searchHistoryContainer;
@@ -204,6 +209,8 @@ document.addEventListener('DOMContentLoaded', () => {
             pos: activePos
         };
 
+        const manufacturerFilter = appState.activeManufacturer;
+
         let preFilteredData = appState.data;
         if (appState.isFavoritesMode) {
             preFilteredData = appState.data.filter(item => appState.favorites.has(item._appId));
@@ -233,13 +240,38 @@ document.addEventListener('DOMContentLoaded', () => {
             const TOLERANCIA = 1.0;
             const anchoMatch = !filters.ancho || (item.anchoNum >= filters.ancho - TOLERANCIA && item.anchoNum <= filters.ancho + TOLERANCIA);
             const altoMatch = !filters.alto || (item.altoNum >= filters.alto - TOLERANCIA && item.altoNum <= filters.alto + TOLERANCIA);
-            return busqMatch && appMatch && oemMatch && fmsiMatch && posMatch && anchoMatch && altoMatch;
+
+            let manufacturerMatch = true;
+            if (manufacturerFilter) {
+                const allRefParts = (item.ref || []).flatMap(refStr => String(refStr).toUpperCase().split(' '));
+                
+                manufacturerMatch = allRefParts.some(refPart => {
+                    if (manufacturerFilter === 'K') {
+                        return refPart.startsWith('K');
+                    }
+                    if (manufacturerFilter === 'INC') {
+                        return refPart.endsWith('INC');
+                    }
+                    if (manufacturerFilter === 'BP') {
+                        return refPart.endsWith('BP');
+                    }
+                    if (manufacturerFilter === 'B') { 
+                        return refPart.endsWith('BEX');
+                    }
+                    return false;
+                });
+            }
+
+            return busqMatch && appMatch && oemMatch && fmsiMatch && posMatch && anchoMatch && altoMatch && manufacturerMatch;
         });
+
+        const isFiltered = filters.busqueda || filters.marca || filters.modelo || filters.anio || filters.oem || filters.fmsi || !isNaN(filters.ancho) || !isNaN(filters.alto) || filters.pos.length > 0 || appState.isFavoritesMode || appState.activeManufacturer;
 
         appState.filtered = filtered;
         appState.currentPage = 1;
         renderCurrentPage();
         updateURLWithFilters();
+        renderDynamicBrandTags(appState.filtered, isFiltered);
     };
 
     function navigateCarousel(carouselContainer, direction) {
@@ -455,6 +487,58 @@ document.addEventListener('DOMContentLoaded', () => {
         setupPagination(totalResults);
     };
 
+    function renderDynamicBrandTags(data, isFiltered) {
+        if (!els.brandTagsContainer) return;
+
+        const allBrandsList = data.flatMap(item => 
+            (item.aplicaciones || []).map(app => app.marca)
+        ).filter(Boolean);
+
+        const brandFrequencies = allBrandsList.reduce((counts, brand) => {
+            counts[brand] = (counts[brand] || 0) + 1;
+            return counts;
+        }, {});
+
+        let brandsToShow = [];
+
+        if (isFiltered) {
+            brandsToShow = Object.entries(brandFrequencies)
+                .sort(([, countA], [, countB]) => countB - countA)
+                .slice(0, 10)
+                .map(([brand]) => brand);
+        } else {
+            const allUniqueBrands = Object.keys(brandFrequencies);
+            const shuffleArray = (array) => {
+                let newArr = [...array];
+                for (let i = newArr.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [newArr[i], newArr[j]] = [newArr[j], newArr[i]];
+                }
+                return newArr;
+            };
+            brandsToShow = shuffleArray(allUniqueBrands).slice(0, 10);
+        }
+
+        const activeBrandFilter = els.marca.value.trim().toLowerCase();
+
+        els.brandTagsContainer.innerHTML = brandsToShow.map(brand => {
+            const colorVar = brandColorMap[brand] || '--brand-color-10'; 
+            const isActive = brand.toLowerCase() === activeBrandFilter;
+            
+            return `<button 
+                        class="brand-tag ${isActive ? 'active' : ''}" 
+                        data-brand="${brand}" 
+                        style="--tag-brand-color: var(${colorVar});"
+                    >${brand}</button>`;
+        }).join('');
+
+        if (brandsToShow.length === 0) {
+            els.brandTagsContainer.style.display = 'none';
+        } else {
+            els.brandTagsContainer.style.display = 'flex';
+        }
+    }
+
     function handleCardClick(event) {
         if (event.target.closest('.favorite-btn')) return;
         const card = event.target.closest('.result-card');
@@ -481,7 +565,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
 
-    function openModal(item) {
+    async function openModal(item) {
         const refsHeaderHTML = (Array.isArray(item.ref) && item.ref.length > 0)
             ? item.ref.flatMap(ref => String(ref).split(' '))
                 .map(part => `<span class="ref-badge header-ref-badge ${getRefBadgeClass(part)}">${part}</span>`)
@@ -528,9 +612,48 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         els.modalAppsSpecs.innerHTML = `<div class="applications-list-container">${renderApplicationsList(item.aplicaciones)}${renderSpecs(item)}</div>`;
+        
         const primaryRefForData = (Array.isArray(item.ref) && item.ref.length > 0) ? String(item.ref[0]).split(' ')[0] : 'N/A';
-        const qrBtn = `<button class="qr-btn" data-ref="${primaryRefForData}">Ver QR</button>`;
-        els.modalAppsSpecs.innerHTML += qrBtn;
+        const qrUrl = `${window.location.origin}${window.location.pathname}?busqueda=${encodeURIComponent(primaryRefForData)}`;
+        
+        const qrPlaceholderHTML = `
+            <div class="app-brand-header" style="margin-top: 1.25rem;">COMPARTIR</div>
+            <div id="small-qr-placeholder" class="small-qr-code" role="button" tabindex="0" aria-label="Haz clic para ampliar el QR">
+                </div>
+        `;
+        els.modalAppsSpecs.innerHTML += qrPlaceholderHTML;
+
+        await new Promise(resolve => requestAnimationFrame(resolve));
+
+        // ==============================================================
+        // 🟢 INICIA BLOQUE CORREGIDO: Se busca el QR dentro del modal
+        // ==============================================================
+        const qrPlaceholder = els.modalContent.querySelector('#small-qr-placeholder');
+        // ==============================================================
+        // 🔴 FIN BLOQUE CORREGIDO
+        // ==============================================================
+        
+        if (qrPlaceholder) {
+            try {
+                const canvas = document.createElement('canvas');
+                await QRCode.toCanvas(canvas, qrUrl, { 
+                    margin: 1, 
+                    color: {
+                        dark: "#000000",
+                        light: "#FFFFFF"
+                    }
+                });
+                qrPlaceholder.innerHTML = '';
+                qrPlaceholder.appendChild(canvas);
+                
+                qrPlaceholder.addEventListener('click', () => {
+                    openLargeQrModal(qrUrl, primaryRefForData);
+                });
+            } catch (err) {
+                console.error("Error al generar QR pequeño:", err);
+                qrPlaceholder.innerText = "Error QR";
+            }
+        }
 
         els.modalContent.classList.remove('closing');
         els.modal.style.display = 'flex';
@@ -556,6 +679,39 @@ document.addEventListener('DOMContentLoaded', () => {
             els.modalAppsSpecs.innerHTML = '';
             els.modalCounterWrapper.innerHTML = '';
             els.modalContent.classList.remove('closing');
+        }, 220);
+    }
+    
+    async function openLargeQrModal(url, ref) {
+        els.qrLargeTitle.innerText = `Compartir: ${ref}`;
+        els.qrLargeCanvasContainer.innerHTML = '';
+        
+        try {
+            const canvas = document.createElement('canvas');
+            await QRCode.toCanvas(canvas, url, { 
+                width: 280,
+                margin: 2,
+                color: {
+                    dark: "#000000",
+                    light: "#FFFFFF"
+                }
+            });
+            els.qrLargeCanvasContainer.appendChild(canvas);
+        } catch (err) {
+            console.error("Error al generar QR grande:", err);
+            els.qrLargeCanvasContainer.innerText = "Error al generar QR.";
+        }
+        
+        els.qrLargeModalContent.classList.remove('closing');
+        els.qrLargeModal.style.display = 'flex';
+    }
+
+    function closeLargeQrModal() {
+        els.qrLargeModalContent.classList.add('closing');
+        setTimeout(() => {
+            els.qrLargeModal.style.display = 'none';
+            els.qrLargeModalContent.classList.remove('closing');
+            els.qrLargeCanvasContainer.innerHTML = '';
         }, 220);
     }
 
@@ -603,17 +759,21 @@ document.addEventListener('DOMContentLoaded', () => {
         inputsToClear.forEach(input => input.value = '');
         els.posDel.classList.remove('active');
         els.posTras.classList.remove('active');
-        if (els.brandTagsContainer) {
-            els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => {
+        
+        if (els.manufacturerTagsContainer) {
+            els.manufacturerTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => {
                 activeTag.classList.remove('active');
             });
         }
+        appState.activeManufacturer = null;
+
         appState.isFavoritesMode = false;
         els.filtroFavoritosBtn.classList.remove('active');
         els.filtroFavoritosBtn.setAttribute('aria-pressed', 'false');
         els.historialBtn.classList.remove('active');
         els.historialBtn.setAttribute('aria-pressed', 'false');
-        els.searchHistoryCard.style.display = 'none'; // <-- MODIFICADO
+        els.searchHistoryCard.style.display = 'none';
+        
         filterData();
     };
 
@@ -676,17 +836,6 @@ document.addEventListener('DOMContentLoaded', () => {
             appState.isFavoritesMode = false;
             els.filtroFavoritosBtn.classList.remove('active');
             els.filtroFavoritosBtn.setAttribute('aria-pressed', 'false');
-        }
-        if (els.brandTagsContainer) {
-            els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => {
-                activeTag.classList.remove('active');
-            });
-        }
-        if (brandFromURL && els.brandTagsContainer) {
-            const tagToActivate = els.brandTagsContainer.querySelector(`.brand-tag[data-brand="${brandFromURL}"]`);
-            if (tagToActivate) {
-                tagToActivate.classList.add('active');
-            }
         }
     };
 
@@ -825,8 +974,6 @@ document.addEventListener('DOMContentLoaded', () => {
             filterData();
         });
 
-        // === BOTÓN HISTORIAL ===
-        // 🟠 MODIFICADO para mostrar/ocultar la nueva tarjeta
         els.historialBtn?.addEventListener('click', () => {
             const isHistoryActive = els.historialBtn.getAttribute('aria-pressed') === 'true';
             if (isHistoryActive) {
@@ -905,18 +1052,38 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!tag) return;
                 const brand = tag.dataset.brand;
                 const isActive = tag.classList.contains('active');
-                els.brandTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => {
+
+                if (isActive) {
+                    els.marca.value = '';
+                } else {
+                    els.marca.value = brand;
+                }
+                filterData();
+            });
+        }
+
+        if (els.manufacturerTagsContainer) {
+            els.manufacturerTagsContainer.addEventListener('click', (e) => {
+                const tag = e.target.closest('.brand-tag');
+                if (!tag) return;
+                
+                const manufacturer = tag.dataset.manufacturer;
+                const isActive = tag.classList.contains('active');
+
+                els.manufacturerTagsContainer.querySelectorAll('.brand-tag.active').forEach(activeTag => {
                     if (activeTag !== tag) {
                         activeTag.classList.remove('active');
                     }
                 });
+
                 if (isActive) {
                     tag.classList.remove('active');
-                    els.marca.value = '';
+                    appState.activeManufacturer = null;
                 } else {
                     tag.classList.add('active');
-                    els.marca.value = brand;
+                    appState.activeManufacturer = manufacturer;
                 }
+                
                 filterData();
             });
         }
@@ -932,48 +1099,30 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
-        // 🟠 MODIFICADO para manejar clics en la 'x' y en el ítem
         document.addEventListener('click', (e) => {
             const historyItem = e.target.closest('.search-history-item');
             const deleteBtn = e.target.closest('.delete-history-item');
 
             if (deleteBtn) {
-                // 1. El usuario hizo clic en la 'x'
-                e.stopPropagation(); // Evita que también se active la búsqueda
+                e.stopPropagation(); 
                 const queryToDelete = deleteBtn.dataset.queryDelete;
                 deleteFromSearchHistory(queryToDelete);
             
             } else if (historyItem) {
-                // 2. El usuario hizo clic en el ítem (pero no en la 'x')
                 els.busqueda.value = historyItem.dataset.query;
                 filterData();
                 els.busqueda.focus();
             }
         });
 
-
-        document.addEventListener('click', async (e) => {
-            if (e.target.matches('.qr-btn')) {
-                const ref = e.target.dataset.ref;
-                const url = `${window.location.origin}${window.location.pathname}?busqueda=${encodeURIComponent(ref)}`;
-                const canvas = document.createElement('canvas');
-                await QRCode.toCanvas(canvas, url, { width: 200 });
-                const modal = document.getElementById('card-modal');
-                const content = modal.querySelector('.modal-content');
-                content.innerHTML = `
-                    <button class="modal-close-btn" aria-label="Cerrar">&times;</button>
-                    <h2 style="margin-bottom:1rem;">Compartir: ${ref}</h2>
-                    <div style="text-align:center; padding:1rem;">
-                        ${canvas.outerHTML}
-                        <p style="margin-top:1rem; font-size:0.85rem;">Escanea para abrir esta pastilla</p>
-                    </div>
-                `;
-                modal.style.display = 'flex';
-                document.body.style.overflow = 'hidden';
-                document.querySelector('#card-modal .modal-close-btn').onclick = () => {
-                    modal.style.display = 'none';
-                    document.body.style.overflow = '';
-                };
+        
+        els.qrLargeModalCloseBtn.addEventListener('click', closeLargeQrModal);
+        els.qrLargeModal.addEventListener('click', (event) => { 
+            if (event.target === els.qrLargeModal) closeLargeQrModal(); 
+        });
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && els.qrLargeModal.style.display === 'flex') {
+                closeLargeQrModal();
             }
         });
 
@@ -992,7 +1141,7 @@ document.addEventListener('DOMContentLoaded', () => {
         showSkeletonLoader();
         loadFavorites();
         renderSearchHistory();
-        els.searchHistoryCard.style.display = 'none'; // <-- 🟢 MODIFICADO
+        els.searchHistoryCard.style.display = 'none';
         try {
             const collectionRef = db.collection('pastillas');
             const snapshot = await collectionRef.get();
@@ -1066,26 +1215,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 counts[brand] = (counts[brand] || 0) + 1;
                 return counts;
             }, {});
-            const sortedBrands = Object.entries(brandFrequencies)
-                .sort(([, countA], [, countB]) => countB - countA)
-                .slice(0, 10)
-                .map(([brand]) => brand);
+
+            const allUniqueBrandsSorted = Object.keys(brandFrequencies).sort();
+            
             const brandColors = [
                 '--brand-color-1', '--brand-color-2', '--brand-color-3', '--brand-color-4',
                 '--brand-color-5', '--brand-color-6', '--brand-color-7', '--brand-color-8',
-                '--brand-color-9', '--brand-color-10'
+                '--brand-color-9', '--brand-color-10',
+                '--brand-color-11', '--brand-color-12', '--brand-color-13', '--brand-color-14',
+                '--brand-color-15', '--brand-color-16', '--brand-color-17', '--brand-color-18',
+                '--brand-color-19', '--brand-color-20'
             ];
+            
             brandColorMap = {};
-            sortedBrands.forEach((brand, index) => {
+            
+            allUniqueBrandsSorted.forEach((brand, index) => {
                 brandColorMap[brand] = brandColors[index % brandColors.length];
             });
-
-            if (els.brandTagsContainer) {
-                els.brandTagsContainer.innerHTML = sortedBrands.map(brand => {
-                    const colorVar = brandColorMap[brand] || '--brand-color-10';
-                    return `<button class="brand-tag" data-brand="${brand}" style="--tag-brand-color: var(${colorVar});">${brand}</button>`;
-                }).join('');
-            }
 
             applyFiltersFromURL();
             filterData();

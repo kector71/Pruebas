@@ -91,7 +91,16 @@
                     Borrar Filtros
                 </button>
             </div>
+            
             <div class="brand-tags-container" id="brand-tags-container"></div>
+            
+            <div class="manufacturer-tags-container" id="manufacturer-tags-container">
+                <button class="brand-tag" data-manufacturer="INC">Incolbest</button>
+                <button class="brand-tag" data-manufacturer="K">KTC</button>
+                <button class="brand-tag" data-manufacturer="BP">Break Pak</button>
+                <button class="brand-tag" data-manufacturer="B">Bex-Usa</button>
+            </div>
+
         </div>
         <div class="results-panel">
             <div class="glass results-header-card" id="results-header-card">
@@ -120,10 +129,10 @@
                     Historial de Búsqueda
                 </h3>
                 <p style="font-size: 0.85rem; opacity: 0.8; margin-bottom: 1rem;">Muestra tus últimas 5 búsquedas. Haz clic en un término para buscarlo de nuevo o en la 'x' para eliminarlo.</p>
-                
                 <div class="search-history" id="searchHistoryContainer" style="display: flex;">
                     </div>
             </div>
+
             <div class="results-wrapper" id="results-container" role="status"></div>
             <div class="pagination-container" id="pagination-container"></div>
         </div>
@@ -238,9 +247,21 @@
             <li><button type="button" class="side-menu-link" id="open-guide-link">Guía Rápida de Uso</button></li>
         </ul>
     </nav>
+
+    <div id="qr-large-modal" class="modal-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="qr-large-title">
+        <div class="modal-content qr-modal-large" role="document">
+            <button type="button" class="modal-close-btn" aria-label="Cerrar">&times;</button>
+            <h2 id="qr-large-title" class="modal-ref" style="margin-bottom: 1rem;">Compartir: </h2>
+            <div id="qr-large-canvas-container" style="text-align: center;">
+                </div>
+            <p style="text-align: center; margin-top: 1rem; font-size: 0.9rem; opacity: 0.8;">Escanea para abrir esta pastilla</p>
+        </div>
+    </div>
     <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+    
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+    
     <script src="script.js"></script>
-</body>
+    </body>
 </html>

@@ -33,10 +33,28 @@
     --badge-trasera-text: #fff;
     --skeleton-bg: #e2e8f0;
     --skeleton-highlight: #f1f5f9;
-    --brand-color-1: #007bff; --brand-color-2: #28a745; --brand-color-3: #dc3545;
-    --brand-color-4: #ffc107; --brand-color-5: #17a2b8; --brand-color-6: #fd7e14;
-    --brand-color-7: #6f42c1; --brand-color-8: #e83e8c; --brand-color-9: #6c757d;
+    /* --- PALETA DE 20 COLORES AMPLIADA --- */
+    --brand-color-1: #007bff;
+    --brand-color-2: #28a745;
+    --brand-color-3: #dc3545;
+    --brand-color-4: #ffc107;
+    --brand-color-5: #17a2b8;
+    --brand-color-6: #fd7e14;
+    --brand-color-7: #6f42c1;
+    --brand-color-8: #e83e8c;
+    --brand-color-9: #6c757d;
     --brand-color-10: #343a40;
+    --brand-color-11: #a94a8f;
+    --brand-color-12: #008080;
+    --brand-color-13: #FF6347;
+    --brand-color-14: #4682B4;
+    --brand-color-15: #D2691E;
+    --brand-color-16: #9ACD32;
+    --brand-color-17: #FF4500;
+    --brand-color-18: #2E8B57;
+    --brand-color-19: #DAA520;
+    --brand-color-20: #B22222;
+    /* --- FIN PALETA AMPLIADA --- */
     --material-surface-light-rgb: 255, 255, 255;
     --badge-menta-bg: #98FB98;
     --badge-menta-text: #006400;
@@ -71,10 +89,28 @@ body.lp-dark {
     --skeleton-bg: #1a1a1a;
     --skeleton-highlight: #2c2c2c;
     --btn-google-hover-bg: rgba(255, 255, 255, 0.08);
-    --brand-color-1: #0d6efd; --brand-color-2: #198754; --brand-color-3: #dc3545;
-    --brand-color-4: #ffca2c; --brand-color-5: #20c997; --brand-color-6: #fd7e14;
-    --brand-color-7: #6f42c1; --brand-color-8: #d63384; --brand-color-9: #6c757d;
+    /* --- PALETA DARK AMPLIADA --- */
+    --brand-color-1: #0d6efd;
+    --brand-color-2: #198754;
+    --brand-color-3: #dc3545;
+    --brand-color-4: #ffca2c;
+    --brand-color-5: #20c997;
+    --brand-color-6: #fd7e14;
+    --brand-color-7: #6f42c1;
+    --brand-color-8: #d63384;
+    --brand-color-9: #6c757d;
     --brand-color-10: #495057;
+    --brand-color-11: #c95aac;
+    --brand-color-12: #00a0a0;
+    --brand-color-13: #ff7863;
+    --brand-color-14: #5a9cd9;
+    --brand-color-15: #dc7e3a;
+    --brand-color-16: #b7e04f;
+    --brand-color-17: #ff5f2e;
+    --brand-color-18: #40c47c;
+    --brand-color-19: #e7b93b;
+    --brand-color-20: #ca3e3e;
+    /* --- FIN PALETA DARK --- */
     --material-surface-light-rgb: 17, 17, 17;
     --watermark-mask-color: rgba(255, 255, 255, 0.06);
 }
@@ -110,10 +146,28 @@ body.modo-orbital {
     --btn-google-hover-bg: rgba(255, 255, 255, 0.06);
     --input-focus-border: #3b82f6;
     --input-focus-border-rgb: 59, 130, 246;
-    --brand-color-1: #0d6efd; --brand-color-2: #198754; --brand-color-3: #dc3545;
-    --brand-color-4: #ffca2c; --brand-color-5: #20c997; --brand-color-6: #fd7e14;
-    --brand-color-7: #6f42c1; --brand-color-8: #d63384; --brand-color-9: #526e86;
+    /* --- PALETA ORBITAL AMPLIADA --- */
+    --brand-color-1: #0d6efd;
+    --brand-color-2: #198754;
+    --brand-color-3: #dc3545;
+    --brand-color-4: #ffca2c;
+    --brand-color-5: #20c997;
+    --brand-color-6: #fd7e14;
+    --brand-color-7: #6f42c1;
+    --brand-color-8: #d63384;
+    --brand-color-9: #526e86;
     --brand-color-10: #ff0000;
+    --brand-color-11: #c95aac;
+    --brand-color-12: #00a0a0;
+    --brand-color-13: #ff7863;
+    --brand-color-14: #5a9cd9;
+    --brand-color-15: #dc7e3a;
+    --brand-color-16: #b7e04f;
+    --brand-color-17: #ff5f2e;
+    --brand-color-18: #40c47c;
+    --brand-color-19: #e7b93b;
+    --brand-color-20: #ca3e3e;
+    /* --- FIN PALETA ORBITAL --- */
     --arrow-glow-animation: arrow-glow;
     --material-surface-light-rgb: 30, 41, 59;
     --watermark-mask-color: rgba(203, 213, 225, 0.05);
@@ -291,32 +345,41 @@ body.lp-dark #positionDelantera.active, body.lp-dark #positionTrasera.active { c
     gap: 0.5rem;
     padding: 0.5rem 0;
 }
+
+/* ======================================================= */
+/* 🟢 INICIO BLOQUE CORREGIDO: Estilo de Etiquetas Sólido y Mate */
+/* ======================================================= */
 .brand-tag {
     font-family: 'Inter', sans-serif;
     font-size: 0.75rem;
-    font-weight: 500;
-    padding: 4px 10px;
+    font-weight: 600; /* Texto más grueso para legibilidad */
+    padding: 4px 12px; /* Un poco más de espacio */
     border-radius: 50px;
-    border: 1px solid var(--tag-brand-color, var(--material-surface-border));
-    color: var(--tag-brand-color, var(--text-color));
-    background-color: transparent;
-    opacity: 0.9;
+    border: 1px solid var(--tag-brand-color, var(--btn-google-border)); /* Borde del mismo color */
+    color: #ffffff; /* Texto blanco */
+    background-color: var(--tag-brand-color, var(--btn-google-border)); /* Relleno de color sólido */
+    opacity: 0.85; /* Ligera opacidad para el estado inactivo */
     cursor: pointer;
-    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, opacity 0.2s, box-shadow 0.2s;
+    transition: opacity 0.2s ease, filter 0.2s ease, box-shadow 0.2s ease;
     white-space: nowrap;
+    box-shadow: none; /* SIN SOMBRA/BRILLO */
 }
 .brand-tag:hover {
-    opacity: 1;
-    background-color: var(--input-bg);
+    opacity: 1; /* Opacidad completa al pasar el mouse */
+    filter: brightness(1.1); /* Ligero brillo al pasar el mouse */
+    box-shadow: none; /* SIN SOMBRA/BRILLO */
 }
 .brand-tag.active {
-    background-color: transparent;
+    opacity: 1; /* Opacidad completa */
+    filter: none; /* Sin filtro de brillo */
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.2); /* Sombra interior de "presionado" */
     border-color: var(--tag-brand-color);
-    border-width: 2px;
-    padding: 3px 9px;
-    box-shadow: none;
-    opacity: 1;
+    padding: 4px 12px;
 }
+/* ======================================================= */
+/* 🔴 FIN BLOQUE CORREGIDO                                  */
+/* ======================================================= */
+
 @media (max-width: 767px) {
     .brand-tags-container { display: none; }
 }
@@ -391,7 +454,7 @@ body.lp-dark #positionDelantera.active, body.lp-dark #positionTrasera.active { c
     stroke: var(--text-color);
 }
 #historialBtn .btn-text {
-    display: inline-block; /* ✅ Corrección: texto siempre visible */
+    display: inline-block;
     white-space: nowrap;
 }
 
@@ -735,7 +798,6 @@ body.lp-dark { --arrow-glow-animation: arrow-glow-dark; }
     header h1 { font-size: 1rem; gap: 0px; flex-direction: column; padding-left: 0; padding-right: 0; justify-content: center; flex-grow: 1; }
     .header-subtitle { font-size: 0.7rem; display: block; margin-top: 4px; padding-left: 0; opacity: 0.7; }
     .header-spacer { min-width: 36px; }
-    /* ... (estilos responsive ya están incluidos) ... */
 }
 @media (min-width: 768px) {
     .modal-content { max-width: 1100px; }
@@ -899,25 +961,14 @@ body.modo-orbital .view-btn#filtroFavoritosBtn:not(.active) .heart-icon {
     opacity: 1;
     filter: drop-shadow(0 1px 2px rgba(255, 0, 0, 0.5));
 }
-.qr-modal {
-    text-align: center;
-    padding: 1rem;
-    max-width: 300px;
-}
-.qr-modal canvas {
-    max-width: 100%;
-    margin: 0 auto;
-}
 
-/* ==== 🟢 Estilos para Historial de Búsqueda (Tarjeta) 🟢 ==== */
+/* === Estilos para Historial de Búsqueda (Tarjeta) === */
 .search-history-item {
     position: relative;
-    padding-right: 28px; /* Espacio para la 'x' */
-    /* Ajusta el padding si es necesario */
+    padding-right: 28px;
     padding-top: 5px;
     padding-bottom: 5px;
 }
-
 .delete-history-item {
     position: absolute;
     right: 8px;
@@ -932,9 +983,72 @@ body.modo-orbital .view-btn#filtroFavoritosBtn:not(.active) .heart-icon {
     cursor: pointer;
     padding: 2px 4px;
 }
-
 .delete-history-item:hover {
     opacity: 1;
     transform: translateY(-50%) scale(1.1);
     color: var(--btn-primary-bg);
+}
+
+/* --- Estilos para Etiquetas de Fabricante --- */
+.manufacturer-tags-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding: 0.5rem 0;
+    margin-top: -0.5rem; 
+}
+
+/* Asignar colores basados en las clases de badges existentes */
+.brand-tag[data-manufacturer="INC"] { --tag-brand-color: #0d47a1; }
+.brand-tag[data-manufacturer="K"]   { --tag-brand-color: var(--badge-trasera-bg); }
+.brand-tag[data-manufacturer="BP"]  { --tag-brand-color: #6c757d; }
+.brand-tag[data-manufacturer="B"]   { --tag-brand-color: #64b5f6; }
+
+
+/* Ocultar en móvil, junto con las otras etiquetas */
+@media (max-width: 767px) {
+    .brand-tags-container,
+    .manufacturer-tags-container { 
+        display: none; 
+    }
+}
+
+/* --- Estilos para el QR Pequeño en el Modal --- */
+.small-qr-code {
+    width: 80px; /* Tamaño pequeño */
+    height: 80px;
+    border: 4px solid var(--material-surface-border);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    margin-top: 1rem;
+    padding: 4px; /* Espacio entre el borde y el canvas */
+    background-color: #fff; /* Fondo blanco para el QR */
+}
+
+.small-qr-code canvas {
+    width: 100% !important;
+    height: 100% !important;
+    display: block;
+    border-radius: 2px; /* Ligeras esquinas redondeadas para el canvas */
+}
+
+.small-qr-code:hover {
+    transform: scale(1.05);
+    box-shadow: var(--elevation-2);
+}
+
+/* --- Estilos para el Modal de QR Grande --- */
+.qr-modal-large {
+    max-width: 350px; /* Tamaño ideal para un QR grande */
+    width: 90vw;
+}
+
+#qr-large-canvas-container canvas {
+    width: 100% !important;
+    max-width: 280px;
+    height: auto !important;
+    margin: 0 auto;
+    border-radius: 8px;
+    background: #fff; /* Asegura fondo blanco */
 }
