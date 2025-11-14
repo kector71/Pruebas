@@ -974,7 +974,7 @@ body.modo-orbital .view-btn#filtroFavoritosBtn:not(.active) .heart-icon path {
 .view-btn#filtroFavoritosBtn.active .heart-icon {
     transform: scale(1.05);
 }
-.view-btn#filtroFavoritosBtn.active .heart-icon path {
+.view-btn#filtroFiltroFavoritosBtn.active .heart-icon path {
     fill: #ff0000;
     stroke: #ff0000;
     opacity: 1;
@@ -1019,11 +1019,15 @@ body.modo-orbital .view-btn#filtroFavoritosBtn:not(.active) .heart-icon path {
 .brand-tag[data-manufacturer="K"]   { --tag-brand-color: var(--badge-trasera-bg); }
 .brand-tag[data-manufacturer="BP"]  { --tag-brand-color: #6c757d; }
 .brand-tag[data-manufacturer="B"]   { --tag-brand-color: #64b5f6; }
-/* Ocultar en móvil, junto con las otras etiquetas */
+
+/* --- 🔴 INICIO CORRECCIÓN MÓVIL (ETIQUETAS CENTRADAS) 🔴 --- */
 @media (max-width: 767px) {
     .brand-tags-container,
     .manufacturer-tags-container { 
-        display: none; 
+        /* En lugar de 'display: none;', centramos las etiquetas */
+        justify-content: center;
     }
 }
+/* --- 🔴 FIN CORRECCIÓN MÓVIL 🔴 --- */
+
 /* --- 🔴 ESTILOS DE QR ELIMINADOS 🔴 --- */
