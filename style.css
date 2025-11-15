@@ -80,7 +80,9 @@
 
 /* ===== 3. MODO ORBITAL (Gradientes animados) ===== */
 [data-theme="orbital"] {
-  --bg-body: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  /* --bg-body debe ser un color plano para compatibilidad */
+  --bg-body: #0f172a;
+
   --bg-glass: rgba(30, 30, 50, 0.3);
   --bg-card: rgba(40, 40, 60, 0.5);
   --bg-input: rgba(50, 50, 70, 0.8);
@@ -92,8 +94,12 @@
   --text-muted: #a5b4fc;
 
   --shadow-glass: 0 8px 32px rgba(79, 70, 229, 0.2);
+}
 
-  background: var(--bg-body);
+/* Aplicamos el gradiente animado directamente en el body */
+body[data-theme="orbital"] {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+  background-size: 200% 200%;
   background-attachment: fixed;
   animation: gradientShift 20s ease infinite;
 }
