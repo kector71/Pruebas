@@ -176,6 +176,22 @@ input:focus, select:focus, textarea:focus {
   transform: translateY(-1px);
 }
 
+/* --- INICIO: CORRECCIÓN DE ACCESIBILIDAD --- */
+/* Añade esta clase para ocultar las etiquetas de forma accesible */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border-width: 0;
+}
+/* --- FIN: CORRECCIÓN DE ACCESIBILIDAD --- */
+
+
 /* ===== 5. LAYOUT PRINCIPAL ===== */
 .main-layout {
   display: grid;
