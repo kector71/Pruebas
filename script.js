@@ -573,10 +573,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
         
         // --- ELIMINADO: Bucle de listeners (MEJORA DE RENDIMIENTO) ---
-        // els.results.querySelectorAll('.favorite-btn').forEach(btn => {
-        //     btn.addEventListener('click', toggleFavorite);
-        // });
-
+        
         setupPagination(totalResults);
     };
 
@@ -600,7 +597,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const activeBrandFilter = els.marca.value.trim().toLowerCase();
         
-        // MODIFICADO: Eliminado el style="" y la lógica de colorVar
         els.brandTagsContainer.innerHTML = brandsToShow.map(brand => {
             const isActive = brand.toLowerCase() === activeBrandFilter;
             return `<button class="brand-tag ${isActive ? 'active' : ''}" data-brand="${brand}">${brand}</button>`;
@@ -611,7 +607,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === Modal ===
     // --- ELIMINADO: `handleCardClick` (MEJORA DE RENDIMIENTO) ---
-    // La lógica se movió al nuevo listener unificado en `setupEventListeners`
 
     function updateScrollIndicator() {
         const wrapper = els.modalDetailsWrapper;
