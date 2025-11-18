@@ -1,4 +1,5 @@
 document.addEventListener('DOMContentLoaded', () => {
+
     const firebaseConfig = {
         apiKey: "AIzaSyCha4S_wLxI_CZY1Tc9FOJNA3cUTggISpU",
         authDomain: "brakexadmin.firebaseapp.com",
@@ -11,16 +12,20 @@ document.addEventListener('DOMContentLoaded', () => {
     const db = firebase.firestore();
 
     // === INICIO: MEJORA #4 (AppState Class) ===
+    // === Estado de la aplicación ===
     class AppState {
         constructor() {
             this.data = [];
             this.filtered = [];
             this.currentPage = 1;
-            this._favorites = new Set();
+            this._favorites = new Set(); // Renombrado a "privado"
             this.isFavoritesMode = false;
             this.activeManufacturer = null;
-            this._loadFavorites();
+
+            this._loadFavorites(); // Carga los favoritos automáticamente al iniciar
         }
+
+        // Carga los favoritos desde localStorage
         _loadFavorites() {
             try {
                 const favs = localStorage.getItem('brakeXFavorites');
@@ -28,37 +33,49 @@ document.addEventListener('DOMContentLoaded', () => {
                     this._favorites = new Set(JSON.parse(favs).map(Number));
                 }
             } catch (e) {
-                console.error("Error al cargar favoritos:", e);
+                console.error("Error al cargar favoritos:", e); // Error no crítico, solo log
                 this._favorites = new Set();
             }
         }
+
+        // Guarda los favoritos en localStorage
         _saveFavorites() {
             try {
                 localStorage.setItem('brakeXFavorites', JSON.stringify([...this._favorites]));
             } catch (e) {
-                console.error("Error al guardar favoritos:", e);
+                console.error("Error al guardar favoritos:", e); // Error no crítico, solo log
             }
         }
+
+        // Método público para alternar un favorito
         toggleFavorite(itemId) {
             if (this._favorites.has(itemId)) {
                 this._favorites.delete(itemId);
             } else {
                 this._favorites.add(itemId);
             }
-            this._saveFavorites();
+            this._saveFavorites(); // Guarda automáticamente al cambiar
         }
+        
+        // Método público para verificar si es favorito
         isFavorite(itemId) {
             return this._favorites.has(itemId);
         }
+        
+        // Getter para acceder a los favoritos
         get favorites() {
             return this._favorites;
         }
     }
+
+    // Instanciar el estado global de la app
     const appState = new AppState();
     // === FIN: MEJORA #4 ===
 
     const itemsPerPage = 24;
     const MAX_HISTORY = 5;
+    
+    // --- CORRECCIÓN: Movido al ámbito global ---
     let lastFocusedElement = null;
 
     // === Referencias a elementos del DOM ===
@@ -122,12 +139,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function addToSearchHistory(query) {
         if (!query.trim()) return;
         let history = JSON.parse(localStorage.getItem('brakeXSearchHistory') || '[]');
+        // Prevenir duplicados (ignorando mayúsculas/minúsculas)
         history = history.filter(q => q.toLowerCase() !== query.toLowerCase());
         history.unshift(query);
         history = history.slice(0, MAX_HISTORY);
         localStorage.setItem('brakeXSearchHistory', JSON.stringify(history));
         renderSearchHistory();
     }
+
     function deleteFromSearchHistory(query) {
         if (!query.trim()) return;
         let history = JSON.parse(localStorage.getItem('brakeXSearchHistory') || '[]');
@@ -135,6 +154,7 @@ document.addEventListener('DOMContentLoaded', () => {
         localStorage.setItem('brakeXSearchHistory', JSON.stringify(history));
         renderSearchHistory();
     }
+
     function renderSearchHistory() {
         const history = JSON.parse(localStorage.getItem('brakeXSearchHistory') || '[]');
         const container = els.searchHistoryContainer;
@@ -148,15 +168,24 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // === Gestión de favoritos ===
+    // REFACTORIZADO (MEJORA #4)
+    // --- MODIFICADO PARA EVENT DELEGATION (YA NO RECIBE 'e') ---
     const toggleFavorite = (buttonElement) => {
+        // e.stopPropagation() se maneja ahora en el listener delegado
         const card = buttonElement.closest('.result-card');
         if (!card) return;
         const itemId = parseInt(card.dataset.id);
         if (isNaN(itemId)) return;
+
+        // 1. Llama al método de la clase. Él se encarga de guardar.
         appState.toggleFavorite(itemId);
+
+        // 2. Actualiza la UI del botón
         const isNowFavorite = appState.isFavorite(itemId);
         buttonElement.classList.toggle('active', isNowFavorite);
         buttonElement.setAttribute('aria-pressed', isNowFavorite);
+
+        // 3. Refiltra si estamos en modo favoritos
         if (appState.isFavoritesMode) filterData();
     };
 
@@ -169,9 +198,12 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     };
 
+    // --- FUNCIÓN DE AYUDA (MEJORA #8) ---
     const normalizeText = (text = '') => 
         String(text).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    // --- FIN FUNCIÓN ---
 
+    // --- INICIO: MEJORA #5 (MANEJO DE ERRORES) ---
     const showGlobalError = (title, message) => {
         els.results.innerHTML = `<div class="no-results-container">
             <svg xmlns="http://www.w3.org/2000/svg" width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
@@ -185,27 +217,35 @@ document.addEventListener('DOMContentLoaded', () => {
         els.paginationContainer.innerHTML = '';
         els.countContainer.innerHTML = '0 resultados';
     };
+    // --- FIN: MEJORA #5 ---
 
+    // --- CORRECCIÓN: Movida al ámbito global ---
+    // Función de ayuda para la "trampa de foco" (Mejora #7)
     const handleFocusTrap = (e) => {
         if (e.key !== 'Tab') return;
+
+        // 'e.currentTarget' es el modal o menú que tiene el listener
         const focusableElements = e.currentTarget.querySelectorAll(
             'a[href], button:not([disabled]), textarea, input, select'
         );
-        if (focusableElements.length === 0) return;
+        if (focusableElements.length === 0) return; // No hay nada enfocable
+        
         const firstElement = focusableElements[0];
         const lastElement = focusableElements[focusableElements.length - 1];
-        if (e.shiftKey) {
+
+        if (e.shiftKey) { // Si es Shift + Tab
             if (document.activeElement === firstElement) {
                 lastElement.focus();
                 e.preventDefault();
             }
-        } else {
+        } else { // Si es solo Tab
             if (document.activeElement === lastElement) {
                 firstElement.focus();
                 e.preventDefault();
             }
         }
     };
+    // --- FIN CORRECCIÓN ---
 
     const fillDatalist = (datalist, values) => {
         datalist.innerHTML = values.map(v => `<option value="${v}">`).join('');
@@ -218,7 +258,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return activePositions;
     };
 
-    // === BADGES ===
+    // --- INICIO: MEJORA #3 (BADGES) ---
     const BADGE_CONFIG = {
         'K':   { class: 'ref-k',   test: (ref) => ref.startsWith('K') },
         'INC': { class: 'ref-inc', test: (ref) => ref.endsWith('INC') },
@@ -226,7 +266,9 @@ document.addEventListener('DOMContentLoaded', () => {
         'BEX': { class: 'ref-bex', test: (ref) => ref.endsWith('BEX') },
     };
     const getRefBadgeClass = (ref) => {
-        if (typeof ref !== 'string') return 'ref-default';
+        if (typeof ref !== 'string') {
+            return 'ref-default';
+        }
         const upperRef = ref.toUpperCase();
         for (const key in BADGE_CONFIG) {
             if (BADGE_CONFIG[key].test(upperRef)) {
@@ -235,6 +277,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         return 'ref-default';
     };
+    // --- FIN: MEJORA #3 ---
 
     const getSortableRefNumber = (refArray) => {
         if (!Array.isArray(refArray) || refArray.length === 0) return Infinity;
@@ -245,10 +288,15 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // === Filtrado y renderizado ===
+
+    // --- INICIO: BLOQUE DE FILTRADO REFACTORIZADO (MEJORAS #8 Y CÓDIGO DE EJEMPLO) ---
+
+    // Función de ayuda para obtener y normalizar todos los valores de los filtros
     const getActiveFilters = () => {
         const activePos = [];
         if (els.posDel.classList.contains('active')) activePos.push('Delantera');
         if (els.posTras.classList.contains('active')) activePos.push('Trasera');
+
         return {
             busqueda: normalizeText(els.busqueda.value),
             marca: normalizeText(els.marca.value),
@@ -259,13 +307,14 @@ document.addEventListener('DOMContentLoaded', () => {
             ancho: parseFloat(els.medidasAncho.value) || null,
             alto: parseFloat(els.medidasAlto.value) || null,
             pos: activePos,
-            manufacturer: appState.activeManufacturer,
+            manufacturer: appState.activeManufacturer, 
             favorites: appState.isFavoritesMode
         };
     };
 
-    // === 🔥 FILTROS MEJORADOS ===
+    // Objeto con la lógica de cada filtro (Mejora de Código de Ejemplo)
     const FILTER_STRATEGIES = {
+        // Búsqueda Rápida (Mejora #8 aplicada)
         busqueda: (item, value) => {
             if (!item._searchableText) {
                 const safeAplicaciones = Array.isArray(item.aplicaciones) ? item.aplicaciones : [];
@@ -281,65 +330,16 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             return item._searchableText.includes(value);
         },
-
-        // 🔹 Marca: solo al inicio o palabra completa
-        marca: (item, value) => {
-            if (!value) return true;
-            return (item.aplicaciones || []).some(app => {
-                const appMarca = normalizeText(app.marca || '');
-                return appMarca.startsWith(value) || 
-                       appMarca.split(/\s+/).some(part => part === value);
-            });
-        },
-
-        // 🔹 Modelo/Serie: igual que marca
-        modelo: (item, value) => {
-            if (!value) return true;
-            return (item.aplicaciones || []).some(app => {
-                const appModelo = normalizeText(app.serie || '');
-                return appModelo.startsWith(value) || 
-                       appModelo.split(/\s+/).some(part => part === value);
-            });
-        },
-
-        // 🔹 Año: soporte para rangos (05-23) y coincidencia flexible
-        anio: (item, value) => {
-            if (!value) return true;
-            const cleanValue = value.replace(/\s+/g, '');
-            let minYear, maxYear;
-
-            if (cleanValue.includes('-')) {
-                const [start, end] = cleanValue.split('-').map(part => part.trim());
-                if (!start || !end) return false;
-                minYear = parseInt(start, 10);
-                maxYear = parseInt(end, 10);
-                if (isNaN(minYear) || isNaN(maxYear)) return false;
-                if (minYear > maxYear) [minYear, maxYear] = [maxYear, minYear];
-            } else {
-                const year = parseInt(cleanValue, 10);
-                if (isNaN(year)) return false;
-                minYear = maxYear = year;
-            }
-
-            return (item.aplicaciones || []).some(app => {
-                const appYearStr = (app.año || '').toString().trim();
-                if (!appYearStr) return false;
-                const yearMatches = appYearStr.match(/\b(\d{2,4})\b/g);
-                if (!yearMatches) return false;
-                return yearMatches.some(match => {
-                    let appYear = parseInt(match, 10);
-                    if (isNaN(appYear)) return false;
-                    if (appYear >= 1900 && appYear <= 2099) {
-                        appYear = appYear % 100;
-                    }
-                    return appYear >= minYear && appYear <= maxYear;
-                });
-            });
-        },
-
+        // Filtros de Aplicación (Mejora #8 aplicada)
+        marca: (item, value) => (item.aplicaciones || []).some(app => normalizeText(app.marca).includes(value)),
+        modelo: (item, value) => (item.aplicaciones || []).some(app => normalizeText(app.serie).includes(value)),
+        anio: (item, value) => (item.aplicaciones || []).some(app => normalizeText(app.año).includes(value)),
+        
+        // Filtros de Referencia (Mejora #8 aplicada)
         oem: (item, value) => (item.oem || []).some(o => normalizeText(o).includes(value)),
         fmsi: (item, value) => (item.fmsi || []).some(f => normalizeText(f).includes(value)),
 
+        // Filtros de Medidas (con tolerancia)
         ancho: (item, value) => {
             const TOLERANCIA = 1.0;
             return (item.anchoNum >= value - TOLERANCIA && item.anchoNum <= value + TOLERANCIA);
@@ -349,8 +349,10 @@ document.addEventListener('DOMContentLoaded', () => {
             return (item.altoNum >= value - TOLERANCIA && item.altoNum <= value + TOLERANCIA);
         },
 
+        // Filtro de Posición
         pos: (item, activePositions) => activePositions.length === 0 || activePositions.includes(item.posición),
 
+        // Filtro de Fabricante (Tag)
         manufacturer: (item, manuf) => {
             const allRefParts = (item.ref || []).flatMap(refStr => String(refStr).toUpperCase().split(' '));
             return allRefParts.some(refPart => {
@@ -362,33 +364,49 @@ document.addEventListener('DOMContentLoaded', () => {
             });
         },
 
+        // Filtro de Favoritos (REFACTORIZADO - MEJORA #4)
         favorites: (item, isFavoritesMode) => !isFavoritesMode || appState.isFavorite(item._appId)
     };
 
+    // Nueva función `filterData` refactorizada
     const filterData = () => {
         if (!appState.data.length) return;
+
         const filters = getActiveFilters();
+        
+        // Guardar en historial SÓLO SI hay un término de búsqueda (Mejora de Historial)
         if (filters.busqueda) {
-            addToSearchHistory(els.busqueda.value.trim());
+            addToSearchHistory(els.busqueda.value.trim()); // Usamos el valor original sin normalizar
         }
+
         const isFiltered = Object.values(filters).some(v => 
             v !== null && v !== false && 
             (!Array.isArray(v) || v.length > 0) && 
             (typeof v !== 'string' || v.trim() !== '')
         );
+
+        // Filtramos los datos
         appState.filtered = appState.data.filter(item => {
+            // 'every' se asegura de que el item pase TODOS los filtros activos
             return Object.entries(filters).every(([key, value]) => {
+                // Si el filtro no está activo (valor es null, '', 0, o false), lo ignora
                 if (!value || (Array.isArray(value) && value.length === 0)) {
                     return true;
                 }
+                // Si el filtro está activo, ejecuta la estrategia correspondiente
                 return FILTER_STRATEGIES[key] ? FILTER_STRATEGIES[key](item, value) : true;
             });
         });
+
+        // El resto sigue igual
         appState.currentPage = 1;
         renderCurrentPage();
         updateURLWithFilters();
         renderDynamicBrandTags(appState.filtered, isFiltered);
     };
+
+    // --- FIN: BLOQUE DE FILTRADO REFACTORIZADO ---
+
 
     const renderApplicationsList = (aplicaciones) => {
         const safeAplicaciones = Array.isArray(aplicaciones) ? aplicaciones : [];
@@ -500,7 +518,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const startNum = totalResults === 0 ? 0 : startIndex + 1;
         const endNum = Math.min(endIndex, totalResults);
         els.countContainer.innerHTML = `Mostrando <strong>${startNum}–${endNum}</strong> de <strong>${totalResults}</strong> resultados`;
-
         if (totalResults === 0) {
             const message = appState.isFavoritesMode ? 'No tienes favoritos guardados' : 'No se encontraron pastillas';
             const subMessage = appState.isFavoritesMode ? 'Haz clic en el corazón de una pastilla para guardarla.' : 'Intenta ajustar tus filtros de búsqueda.';
@@ -508,7 +525,6 @@ document.addEventListener('DOMContentLoaded', () => {
             els.paginationContainer.innerHTML = '';
             return;
         }
-
         els.results.innerHTML = paginatedData.map((item, index) => {
             const posBadgeClass = item.posición === 'Delantera' ? 'delantera' : 'trasera';
             const posBadge = `<span class="position-badge ${posBadgeClass}">${item.posición}</span>`;
@@ -517,22 +533,22 @@ document.addEventListener('DOMContentLoaded', () => {
                     .map(part => `<span class="ref-badge ${getRefBadgeClass(part)}">${part}</span>`)
                     .join('')
                 : '<span class="ref-badge ref-badge-na">N/A</span>';
-
             let firstImageSrc = 'https://via.placeholder.com/300x200.png?text=No+Img';
             if (item.imagenes && item.imagenes.length > 0) {
                 firstImageSrc = item.imagenes[0];
             } else if (item.imagen) {
                 firstImageSrc = item.imagen.replace("text=", `text=Vista+1+`);
             }
-
             const safeAplicaciones = Array.isArray(item.aplicaciones) ? item.aplicaciones : [];
             const appSummaryItems = safeAplicaciones.slice(0, 3).map(app => `${app.marca} ${app.serie}`).filter((value, index, self) => self.indexOf(value) === index);
             let appSummaryHTML = appSummaryItems.length > 0
                 ? `<div class="card-app-summary">${appSummaryItems.join(', ')}${safeAplicaciones.length > 3 ? ', ...' : ''}</div>`
                 : '';
-
             const primaryRefForData = (Array.isArray(item.ref) && item.ref.length > 0) ? String(item.ref[0]).split(' ')[0] : 'N/A';
+            
+            // REFACTORIZADO (MEJORA #4)
             const isFavorite = appState.isFavorite(item._appId);
+            
             const favoriteBtnHTML = `
                 <button class="favorite-btn ${isFavorite ? 'active' : ''}" data-id="${item._appId}" aria-label="Marcar como favorito" aria-pressed="${isFavorite}">
                     <svg class="heart-icon" viewBox="0 0 24 24">
@@ -540,7 +556,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     </svg>
                 </button>
             `;
-
             return `
                 <div class="result-card" data-id="${item._appId}" style="animation-delay: ${index * 50}ms" tabindex="0" role="button" aria-haspopup="dialog">
                     ${favoriteBtnHTML}
@@ -554,7 +569,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>`;
         }).join('');
-
+        
+        // --- ELIMINADO: Bucle de listeners (MEJORA DE RENDIMIENTO) ---
+        
         setupPagination(totalResults);
     };
 
@@ -577,14 +594,18 @@ document.addEventListener('DOMContentLoaded', () => {
             brandsToShow = shuffled.slice(0, 10);
         }
         const activeBrandFilter = els.marca.value.trim().toLowerCase();
+        
         els.brandTagsContainer.innerHTML = brandsToShow.map(brand => {
             const isActive = brand.toLowerCase() === activeBrandFilter;
             return `<button class="brand-tag ${isActive ? 'active' : ''}" data-brand="${brand}">${brand}</button>`;
         }).join('');
+
         els.brandTagsContainer.style.display = brandsToShow.length ? 'flex' : 'none';
     }
 
     // === Modal ===
+    // --- ELIMINADO: `handleCardClick` (MEJORA DE RENDIMIENTO) ---
+
     function updateScrollIndicator() {
         const wrapper = els.modalDetailsWrapper;
         const content = els.modalDetailsContent;
@@ -602,10 +623,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 .join('')
             : '<span class="ref-badge ref-badge-na header-ref-badge">N/A</span>';
         els.modalRef.innerHTML = `<div class="modal-header-ref-container">${refsHeaderHTML}</div>`;
-
         const posBadgeClass = item.posición === 'Delantera' ? 'delantera' : 'trasera';
         els.modalPosition.innerHTML = `<span class="position-badge ${posBadgeClass}">${item.posición}</span>`;
-
         let images = [];
         if (item.imagenes && item.imagenes.length > 0) {
             images = item.imagenes;
@@ -618,11 +637,9 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             images = ['https://via.placeholder.com/300x200.png?text=No+Img'];
         }
-
         const imageTrackHTML = images.map((imgSrc, i) =>
             `<img src="${imgSrc}" alt="Referencia ${item.ref?.[0] || 'N/A'} Vista ${i + 1}" class="result-image">`
         ).join('');
-
         els.modalCarousel.innerHTML = `
             <div class="image-track" style="display:flex;" data-current-index="0">${imageTrackHTML}</div>
             ${images.length > 1 ? `
@@ -630,7 +647,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 <button class="carousel-nav-btn" data-direction="1" aria-label="Siguiente imagen">›</button>
             ` : ''}
         `;
-
         els.modalCarousel.querySelectorAll('.carousel-nav-btn').forEach(btn => {
             btn.onclick = (e) => {
                 e.stopPropagation();
@@ -638,22 +654,21 @@ document.addEventListener('DOMContentLoaded', () => {
                 navigateCarousel(els.modalCarousel, direction);
             };
         });
-
         if (images.length > 1) {
             els.modalCounterWrapper.innerHTML = `<span class="carousel-counter">1/${images.length}</span>`;
         } else {
             els.modalCounterWrapper.innerHTML = '';
         }
-
         els.modalAppsSpecs.innerHTML = `<div class="applications-list-container">${renderApplicationsList(item.aplicaciones)}${renderSpecs(item)}</div>`;
-
         els.modalContent.classList.remove('closing');
         els.modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
 
+        // --- INICIO: MEJORA #7 (ACCESIBILIDAD) ---
         lastFocusedElement = document.activeElement;
         els.modal.addEventListener('keydown', handleFocusTrap);
-        els.modalCloseBtn.focus();
+        els.modalCloseBtn.focus(); // Pone el foco en el botón de cerrar
+        // --- FIN: MEJORA #7 ---
 
         requestAnimationFrame(() => {
             setTimeout(() => {
@@ -682,8 +697,11 @@ document.addEventListener('DOMContentLoaded', () => {
         els.modalContent.classList.add('closing');
         els.modalDetailsContent.removeEventListener('scroll', updateScrollIndicator);
         els.modalDetailsWrapper.classList.remove('scrollable');
+
+        // --- INICIO: MEJORA #7 (ACCESIBILIDAD) ---
         els.modal.removeEventListener('keydown', handleFocusTrap);
         if (lastFocusedElement) lastFocusedElement.focus();
+        // --- FIN: MEJORA #7 ---
 
         setTimeout(() => {
             els.modal.style.display = 'none';
@@ -701,15 +719,22 @@ document.addEventListener('DOMContentLoaded', () => {
         els.guideModalContent.classList.remove('closing');
         els.guideModal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
+
+        // --- INICIO: MEJORA #7 (ACCESIBILIDAD) ---
         lastFocusedElement = document.activeElement;
         els.guideModal.addEventListener('keydown', handleFocusTrap);
         els.guideModalCloseBtn.focus();
+        // --- FIN: MEJORA #7 ---
     }
 
     function closeGuideModal() {
         els.guideModalContent.classList.add('closing');
+
+        // --- INICIO: MEJORA #7 (ACCESIBILIDAD) ---
         els.guideModal.removeEventListener('keydown', handleFocusTrap);
         if (lastFocusedElement) lastFocusedElement.focus();
+        // --- FIN: MEJORA #7 ---
+
         setTimeout(() => {
             els.guideModal.style.display = 'none';
             document.body.style.overflow = '';
@@ -719,7 +744,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === UI Interactions ===
     function openSideMenu() {
-        lastFocusedElement = document.activeElement;
+        // --- INICIO: MEJORA #7 (ACCESIBILIDAD) ---
+        lastFocusedElement = document.activeElement; 
+        // --- FIN: MEJORA #7 ---
         els.sideMenu.classList.add('open');
         els.sideMenu.setAttribute('aria-hidden', 'false');
         els.sideMenuOverlay.style.display = 'block';
@@ -728,7 +755,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         els.menuBtn.setAttribute('aria-expanded', 'true');
         els.menuCloseBtn.focus();
+        // --- INICIO: MEJORA #7 (ACCESIBILIDAD) ---
         els.sideMenu.addEventListener('keydown', handleFocusTrap);
+        // --- FIN: MEJORA #7 ---
     }
 
     function closeSideMenu() {
@@ -736,8 +765,12 @@ document.addEventListener('DOMContentLoaded', () => {
         els.sideMenu.setAttribute('aria-hidden', 'true');
         els.sideMenuOverlay.classList.remove('visible');
         els.menuBtn.setAttribute('aria-expanded', 'false');
-        if (lastFocusedElement) lastFocusedElement.focus();
+        
+        // --- INICIO: MEJORA #7 (ACCESIBILIDAD) ---
+        if (lastFocusedElement) lastFocusedElement.focus(); 
         els.sideMenu.removeEventListener('keydown', handleFocusTrap);
+        // --- FIN: MEJORA #7 ---
+        
         els.sideMenuOverlay.addEventListener('transitionend', () => {
             if (!els.sideMenuOverlay.classList.contains('visible')) {
                 els.sideMenuOverlay.style.display = 'none';
@@ -808,8 +841,11 @@ document.addEventListener('DOMContentLoaded', () => {
         els.medidasAncho.value = params.get('ancho') || '';
         els.medidasAlto.value = params.get('alto') || '';
         const posParam = params.get('pos');
+        // --- INICIO: CORRECCIÓN BUG BOTONES DE POSICIÓN ---
+        // Se usa Boolean() para asegurar que el resultado sea true/false, no undefined
         els.posDel.classList.toggle('active', Boolean(posParam?.includes('Delantera')));
         els.posTras.classList.toggle('active', Boolean(posParam?.includes('Trasera')));
+        // --- FIN: CORRECCIÓN BUG BOTONES DE POSICIÓN ---
         const isFavMode = params.get('favorites') === 'true';
         appState.isFavoritesMode = isFavMode;
         els.filtroFavoritosBtn.classList.toggle('active', isFavMode);
@@ -818,8 +854,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // === Event Listeners ===
     function setupEventListeners() {
+        
         [els.darkBtn, els.upBtn, els.menuBtn, els.orbitalBtn, els.clearBtn].forEach(btn => btn?.addEventListener('click', createRippleEffect));
-
+        // Temas
         const applyLightTheme = () => {
             els.body.classList.remove('lp-dark', 'modo-orbital');
             els.darkBtn.setAttribute('aria-pressed', 'false');
@@ -852,7 +889,6 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             localStorage.setItem('themePreference', 'orbital');
         };
-
         els.darkBtn.addEventListener('click', () => {
             els.headerX.style.animation = 'bounceHeader 0.6s cubic-bezier(0.68,-0.55,0.27,1.55)';
             setTimeout(() => els.headerX.style.animation = '', 600);
@@ -860,7 +896,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 ? applyLightTheme()
                 : applyAmoledDarkTheme();
         });
-
         if (els.orbitalBtn) {
             els.orbitalBtn.addEventListener('click', () => {
                 els.headerX.style.animation = 'bounceHeader 0.6s cubic-bezier(0.68,-0.55,0.27,1.55)';
@@ -870,7 +905,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     : applyOrbitalTheme();
             });
         }
-
         const savedTheme = localStorage.getItem('themePreference');
         switch (savedTheme) {
             case 'orbital': els.orbitalBtn ? applyOrbitalTheme() : applyLightTheme(); break;
@@ -878,14 +912,23 @@ document.addEventListener('DOMContentLoaded', () => {
             default: applyLightTheme();
         }
 
+        // Botón Subir
         els.upBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
-
+        
+        // --- INICIO: MEJORA #10 (SCROLL DEBOUNCE) ---
+        // 1. Creamos la función que actualiza el botón
         const handleScroll = () => {
             els.upBtn.classList.toggle('show', window.scrollY > 300);
         };
-        const debouncedScroll = debounce(handleScroll, 150);
-        window.addEventListener('scroll', debouncedScroll);
 
+        // 2. Creamos una versión "debounced" de esa función
+        const debouncedScroll = debounce(handleScroll, 150);
+
+        // 3. Usamos la versión debounced en el listener
+        window.addEventListener('scroll', debouncedScroll);
+        // --- FIN: MEJORA #10 ---
+
+        // Menú lateral
         els.menuBtn.addEventListener('click', openSideMenu);
         els.menuCloseBtn.addEventListener('click', closeSideMenu);
         els.sideMenuOverlay.addEventListener('click', closeSideMenu);
@@ -893,41 +936,58 @@ document.addEventListener('DOMContentLoaded', () => {
             closeSideMenu();
             setTimeout(openGuideModal, 50);
         });
-
+        
+        // --- INICIO: CORRECCIÓN BUG ESCAPE (keydown) ---
         window.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
+                // Prioritiza cerrar la capa superior primero.
+                // Usamos "else if" para que solo cierre una cosa a la vez.
+                
                 if (els.sideMenu.classList.contains('open')) {
                     closeSideMenu();
                 } else if (els.guideModal.style.display === 'flex') {
                     closeGuideModal();
                 } else if (els.modal.style.display === 'flex') {
+                    // Esta es la línea que faltaba
                     closeModal();
                 }
             }
         });
+        // --- FIN: CORRECCIÓN BUG ESCAPE ---
 
+        // Clic en Tarjetas
+        // --- ELIMINADO: `els.results.addEventListener('click', handleCardClick);` (MEJORA DE RENDIMIENTO) ---
+
+        // === INICIO: MEJORA DE RENDIMIENTO (Event Delegation) ===
+        // Un solo listener en el contenedor de resultados para manejar clics en tarjetas Y favoritos
         els.results.addEventListener('click', (e) => {
             const favoriteButton = e.target.closest('.favorite-btn');
             const card = e.target.closest('.result-card');
+
             if (favoriteButton) {
-                e.stopPropagation();
-                toggleFavorite(favoriteButton);
+                // 1. Clic en el botón de favorito
+                e.stopPropagation(); // Prevenir que el clic se propague al 'card'
+                toggleFavorite(favoriteButton); // Pasamos el elemento de botón
             } else if (card) {
+                // 2. Clic en la tarjeta (pero no en el botón)
+                // Esta es la lógica de la antigua 'handleCardClick'
                 const itemId = card.dataset.id;
                 const itemData = appState.data.find(item => item._appId == itemId);
                 if (itemData) openModal(itemData);
             }
         });
-
+        // === FIN: MEJORA DE RENDIMIENTO ===
+        
+        // Filtros
         const debouncedFilter = debounce(filterData, 300);
-
+        
         els.filtroFavoritosBtn.addEventListener('click', () => {
             appState.isFavoritesMode = !appState.isFavoritesMode;
             els.filtroFavoritosBtn.classList.toggle('active', appState.isFavoritesMode);
             els.filtroFavoritosBtn.setAttribute('aria-pressed', appState.isFavoritesMode ? 'true' : 'false');
             filterData();
         });
-
+        
         els.historialBtn?.addEventListener('click', () => {
             const isActive = els.historialBtn.getAttribute('aria-pressed') === 'true';
             els.historialBtn.classList.toggle('active', !isActive);
@@ -935,7 +995,7 @@ document.addEventListener('DOMContentLoaded', () => {
             els.searchHistoryCard.style.display = !isActive ? 'block' : 'none';
             if (!isActive) els.searchHistoryCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         });
-
+        
         els.busqueda.addEventListener('input', (e) => {
             els.searchContainer.classList.toggle('active', e.target.value.trim() !== '');
             debouncedFilter();
@@ -944,12 +1004,12 @@ document.addEventListener('DOMContentLoaded', () => {
         [els.marca, els.modelo, els.anio, els.oem, els.fmsi, els.medidasAncho, els.medidasAlto].forEach(input =>
             input.addEventListener('input', debouncedFilter)
         );
-
+        
         [els.posDel, els.posTras].forEach(btn => btn.addEventListener('click', () => {
             btn.classList.toggle('active');
             filterData();
         }));
-
+        
         els.clearBtn.addEventListener('click', () => {
             if (els.clearBtn.disabled) return;
             els.clearBtn.disabled = true;
@@ -965,7 +1025,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 els.clearBtn.disabled = false;
             }, 900);
         });
-
+        
         function createSparks(button) {
             const NUM_SPARKS = 10;
             const SPARK_COLORS = ['#00ffff', '#ff00ff', '#00ff7f', '#ffc700', '#ff5722'];
@@ -986,7 +1046,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 spark.addEventListener('animationend', () => spark.remove(), { once: true });
             }
         }
-
+        
         if (els.brandTagsContainer) {
             els.brandTagsContainer.addEventListener('click', (e) => {
                 const tag = e.target.closest('.brand-tag');
@@ -995,7 +1055,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 filterData();
             });
         }
-
+        
         if (els.manufacturerTagsContainer) {
             els.manufacturerTagsContainer.addEventListener('click', (e) => {
                 const tag = e.target.closest('.brand-tag');
@@ -1015,7 +1075,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 filterData();
             });
         }
-
+        
         els.paginationContainer.addEventListener('click', (e) => {
             const btn = e.target.closest('.page-btn');
             if (!btn || btn.disabled || btn.classList.contains('active')) return;
@@ -1026,7 +1086,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 els.resultsHeaderCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }
         });
-
+        
         document.addEventListener('click', (e) => {
             const deleteBtn = e.target.closest('.delete-history-item');
             if (deleteBtn) {
@@ -1044,6 +1104,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
 
+        // Modales
         els.modalCloseBtn.addEventListener('click', closeModal);
         els.modal.addEventListener('click', (e) => { if (e.target === els.modal) closeModal(); });
         els.guideModalCloseBtn.addEventListener('click', closeGuideModal);
@@ -1053,12 +1114,12 @@ document.addEventListener('DOMContentLoaded', () => {
     // === Inicialización ===
     async function inicializarApp() {
         showSkeletonLoader();
+        // appState.loadFavorites(); // ELIMINADO (MEJORA #4) - La clase AppState lo hace
         renderSearchHistory();
         els.searchHistoryCard.style.display = 'none';
         try {
             const snapshot = await db.collection('pastillas').get();
             if (snapshot.empty) throw new Error("No se encontraron documentos en la colección 'pastillas'.");
-
             let data = [];
             snapshot.forEach(doc => data.push(doc.data()));
             data = data.map((item, index) => {
@@ -1080,7 +1141,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 const safeOems = Array.isArray(item.oem) ? item.oem.map(String) : [];
                 const safeFmsis = Array.isArray(item.fmsi) ? item.fmsi.map(String) : [];
                 const aplicaciones = Array.isArray(item.aplicaciones) ? item.aplicaciones : [];
-
                 return {
                     ...item,
                     aplicaciones,
@@ -1092,10 +1152,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     altoNum: partes[1] || 0
                 };
             });
-
             data.sort((a, b) => getSortableRefNumber(a.ref) - getSortableRefNumber(b.ref));
             appState.data = data;
-
             const getAllApplicationValues = (key) => {
                 const allValues = new Set();
                 appState.data.forEach(item => {
@@ -1106,25 +1164,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 return [...allValues].sort();
             };
-
             fillDatalist(els.datalistMarca, getAllApplicationValues('marca'));
             fillDatalist(els.datalistModelo, getAllApplicationValues('modelo'));
             fillDatalist(els.datalistAnio, getAllApplicationValues('año'));
-
             const allOems = [...new Set(appState.data.flatMap(i => i.oem || []))].filter(Boolean).sort();
             const allFmsis = [...new Set(appState.data.flatMap(i => i.fmsi || []))].filter(Boolean).sort();
             fillDatalist(els.datalistOem, allOems);
             fillDatalist(els.datalistFmsi, allFmsis);
-
+            
+            // ELIMINADO: Lógica de brandColorMap
+            
             applyFiltersFromURL();
             filterData();
             setupEventListeners();
         } catch (error) {
             console.error("Error al inicializar la app:", error);
+            // --- INICIO: MEJORA #5 (MANEJO DE ERRORES) ---
+            // Mostrar un error claro al usuario en lugar de solo en la consola
             showGlobalError(
                 'Error al cargar datos',
                 'No se pudo conectar con la base de datos. Por favor, revisa tu conexión a internet e inténtalo de nuevo.'
             );
+            // --- FIN: MEJORA #5 ---
         }
     }
 
