@@ -750,6 +750,9 @@ document.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
                 updateScrollIndicator();
                 els.modalDetailsContent.addEventListener('scroll', updateScrollIndicator);
+
+                // Setup gesture support for carousel
+                setupCarouselGestures(els.modalCarousel);
             }, 100);
         });
     }
@@ -767,6 +770,81 @@ document.addEventListener('DOMContentLoaded', () => {
         track.style.transform = `translateX(-${newIndex * 100}%)`;
         track.dataset.currentIndex = newIndex;
         if (counter) counter.textContent = `${newIndex + 1}/${totalImages}`;
+    }
+
+    // === Touch Gesture Support for Carousel ===
+    function setupCarouselGestures(carouselContainer) {
+        const track = carouselContainer.querySelector('.image-track');
+        if (!track) return;
+
+        let startX = 0;
+        let currentX = 0;
+        let isDragging = false;
+        let startTransform = 0;
+
+        const handleTouchStart = (e) => {
+            if (e.touches.length !== 1) return;
+            isDragging = true;
+            startX = e.touches[0].clientX;
+            currentX = startX;
+
+            // Get current transform value
+            const currentIndex = parseInt(track.dataset.currentIndex) || 0;
+            startTransform = -currentIndex * 100;
+
+            track.style.transition = 'none';
+            carouselContainer.style.cursor = 'grabbing';
+        };
+
+        const handleTouchMove = (e) => {
+            if (!isDragging) return;
+            e.preventDefault(); // Prevent scroll while swiping
+
+            currentX = e.touches[0].clientX;
+            const deltaX = currentX - startX;
+            const percentMove = (deltaX / carouselContainer.offsetWidth) * 100;
+
+            track.style.transform = `translateX(${startTransform + percentMove}%)`;
+        };
+
+        const handleTouchEnd = (e) => {
+            if (!isDragging) return;
+            isDragging = false;
+
+            track.style.transition = '';
+            carouselContainer.style.cursor = '';
+
+            const deltaX = currentX - startX;
+            const threshold = carouselContainer.offsetWidth * 0.25; // 25% threshold
+
+            if (Math.abs(deltaX) > threshold) {
+                // Swipe detected
+                const direction = deltaX > 0 ? -1 : 1;
+                navigateCarousel(carouselContainer, direction);
+            } else {
+                // Return to current position
+                const currentIndex = parseInt(track.dataset.currentIndex) || 0;
+                track.style.transform = `translateX(-${currentIndex * 100}%)`;
+            }
+        };
+
+        // Touch events
+        carouselContainer.addEventListener('touchstart', handleTouchStart, { passive: true });
+        carouselContainer.addEventListener('touchmove', handleTouchMove, { passive: false });
+        carouselContainer.addEventListener('touchend', handleTouchEnd);
+        carouselContainer.addEventListener('touchcancel', handleTouchEnd);
+
+        // Mouse events for desktop drag (optional)
+        carouselContainer.addEventListener('mousedown', (e) => {
+            handleTouchStart({ touches: [{ clientX: e.clientX }] });
+        });
+        carouselContainer.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                handleTouchMove({ touches: [{ clientX: e.clientX }], preventDefault: () => { } });
+            }
+        });
+        carouselContainer.addEventListener('mouseup', handleTouchEnd);
+        carouselContainer.addEventListener('mouseleave', handleTouchEnd);
     }
 
     function closeModal() {
@@ -855,6 +933,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const clearAllFilters = () => {
+        // Trigger animation
+        if (els.clearBtn) {
+            els.clearBtn.classList.add('animating');
+            setTimeout(() => {
+                els.clearBtn.classList.remove('animating');
+            }, 800); // Duration of animation
+        }
+
         [els.busqueda, els.marca, els.modelo, els.anio, els.oem, els.fmsi, els.medidasAncho, els.medidasAlto].forEach(input => input.value = '');
         els.posDel.classList.remove('active');
         els.posTras.classList.remove('active');
@@ -1068,16 +1154,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
         els.clearBtn.addEventListener('click', () => {
             if (els.clearBtn.disabled) return;
+
+            // Agregar clase animating que dispara todas las animaciones CSS
+            els.clearBtn.classList.add('animating');
             els.clearBtn.disabled = true;
-            const trashLid = els.clearBtn.querySelector('.trash-lid');
-            const trashBody = els.clearBtn.querySelector('.trash-body');
-            if (trashLid) trashLid.classList.add('animate-lid');
-            if (trashBody) trashBody.classList.add('animate-body');
+
+            // Crear sparkles effect
             createSparks(els.clearBtn);
+
+            // Limpiar filtros
             clearAllFilters();
+
+            // Remover clase y habilitar botón después de la animación
             setTimeout(() => {
-                if (trashLid) trashLid.classList.remove('animate-lid');
-                if (trashBody) trashBody.classList.remove('animate-body');
+                els.clearBtn.classList.remove('animating');
                 els.clearBtn.disabled = false;
             }, 900);
         });
