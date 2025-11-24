@@ -1303,19 +1303,24 @@ body.lp-dark #positionTrasera.active {
     stroke: #1d4ed8;
 }
 
-/* === 🔴 INICIO CORRECCIÓN BOTÓN HISTORIAL === */
+/* === History Button with Counter === */
 #historialBtn {
+    position: relative;
     width: auto;
-    display: flex;
+    display: none;
+    /* Hidden by default, shown via JavaScript when count > 0 */
     align-items: center;
     gap: 6px;
     padding: 6px 10px;
     font-size: 0.85rem;
     font-weight: 500;
     color: var(--text-color);
-    opacity: 0.8;
-    /* <-- MÁS OSCURO (de 0.6 a 0.8) */
-    transition: all 0.2s ease;
+    opacity: 0;
+    transform: scale(0.95);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.3s ease,
+        transform 0.3s ease,
+        box-shadow 0.3s ease;
 }
 
 #historialBtn svg {
@@ -1323,32 +1328,90 @@ body.lp-dark #positionTrasera.active {
     height: 18px;
     stroke: var(--text-color);
     opacity: 1;
-    /* <-- CORREGIDO (de 0.6 a 1, hereda opacidad del padre) */
-    transition: stroke 0.2s ease, opacity 0.2s ease;
+    transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55),
+        stroke 0.3s ease,
+        filter 0.3s ease;
 }
 
-/* === 🔴 FIN CORRECCIÓN BOTÓN HISTORIAL === */
-
 #historialBtn:hover {
-    background-color: var(--btn-google-hover-bg);
+    background: linear-gradient(135deg,
+            rgba(99, 102, 241, 0.06) 0%,
+            rgba(79, 70, 229, 0.08) 100%);
+    border-color: rgba(99, 102, 241, 0.25);
     opacity: 1;
+    transform: translateY(-2px) scale(1);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15),
+        0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 #historialBtn:hover svg {
     opacity: 1;
-    stroke: var(--text-color);
+    stroke: #6366f1;
+    transform: rotate(360deg);
+    filter: drop-shadow(0 2px 4px rgba(99, 102, 241, 0.3));
 }
 
 #historialBtn.active {
-    background-color: var(--input-bg);
-    border-color: var(--material-surface-border);
-    box-shadow: var(--elevation-1);
+    background: linear-gradient(135deg,
+            rgba(99, 102, 241, 0.1) 0%,
+            rgba(79, 70, 229, 0.12) 100%);
+    border-color: rgba(99, 102, 241, 0.35);
+    box-shadow: 0 2px 8px rgba(99, 102, 241, 0.25),
+        0 1px 3px rgba(0, 0, 0, 0.08);
     opacity: 1;
 }
 
 #historialBtn.active svg {
+    stroke: #6366f1;
     opacity: 1;
-    stroke: var(--text-color);
+}
+
+body.lp-dark #historialBtn:hover {
+    background: linear-gradient(135deg,
+            rgba(99, 102, 241, 0.1) 0%,
+            rgba(79, 70, 229, 0.12) 100%);
+    border-color: rgba(99, 102, 241, 0.3);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2),
+        0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+body.lp-dark #historialBtn:hover svg {
+    stroke: #818cf8;
+}
+
+body.lp-dark #historialBtn.active {
+    background: linear-gradient(135deg,
+            rgba(99, 102, 241, 0.15) 0%,
+            rgba(79, 70, 229, 0.18) 100%);
+    border-color: rgba(99, 102, 241, 0.4);
+}
+
+body.lp-dark #historialBtn.active svg {
+    stroke: #a5b4fc;
+}
+
+body.modo-orbital #historialBtn:hover {
+    background: linear-gradient(135deg,
+            rgba(99, 102, 241, 0.08) 0%,
+            rgba(79, 70, 229, 0.1) 100%);
+    border-color: rgba(99, 102, 241, 0.28);
+    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.18),
+        0 2px 4px rgba(0, 0, 0, 0.12);
+}
+
+body.modo-orbital #historialBtn:hover svg {
+    stroke: #6366f1;
+}
+
+body.modo-orbital #historialBtn.active {
+    background: linear-gradient(135deg,
+            rgba(99, 102, 241, 0.12) 0%,
+            rgba(79, 70, 229, 0.15) 100%);
+    border-color: rgba(99, 102, 241, 0.35);
+}
+
+body.modo-orbital #historialBtn.active svg {
+    stroke: #818cf8;
 }
 
 #historialBtn .btn-text {
@@ -1356,34 +1419,191 @@ body.lp-dark #positionTrasera.active {
     white-space: nowrap;
 }
 
+/* === History Counter Badge === */
+.history-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: linear-gradient(135deg, #818cf8 0%, #6366f1 100%);
+    color: #ffffff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 12px;
+    min-width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-shadow: 0 3px 8px rgba(99, 102, 241, 0.5),
+        0 0 0 2px var(--material-surface-light);
+    animation: scaleIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 10;
+    pointer-events: none;
+    transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+body.lp-dark .history-count {
+    box-shadow: 0 3px 8px rgba(99, 102, 241, 0.6),
+        0 0 0 2px #111111;
+}
+
+body.modo-orbital .history-count {
+    box-shadow: 0 3px 8px rgba(99, 102, 241, 0.5),
+        0 0 0 2px #1e293b;
+}
+
+#historialBtn:hover .history-count {
+    transform: scale(1.1);
+    animation: counterPulse 0.6s ease infinite;
+}
+
+/* Keyframe for counter pulse effect */
+@keyframes counterPulse {
+
+    0%,
+    100% {
+        transform: scale(1.1);
+    }
+
+    50% {
+        transform: scale(1.15);
+    }
+}
+
 /* === Favorites Button with Counter === */
 .favorites-btn {
     position: relative;
-    /* Para que el contador se posicione dentro */
-    width: auto !important;
-    min-width: 36px;
-    padding: 0 8px;
-    gap: 6px;
-    transition: all 0.2s ease;
+    width: 40px;
+    height: 40px;
+    display: none;
+    /* Hidden by default, shown via JavaScript when count > 0 */
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transform: scale(0.95);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.25s ease,
+        transform 0.25s ease;
 }
 
-/* === Favorites Counter Badge (Inside Heart) === */
+.favorites-btn .heart-icon {
+    width: 20px;
+    height: 20px;
+    fill: none;
+    stroke: var(--text-color);
+    stroke-width: 2;
+    opacity: 0.7;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.favorites-btn:hover {
+    background-color: var(--btn-google-hover-bg);
+    transform: translateY(-1px) scale(1);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.favorites-btn:hover .heart-icon {
+    opacity: 1;
+    transform: scale(1.1);
+}
+
+.favorites-btn.active {
+    background: linear-gradient(135deg,
+            rgba(239, 68, 68, 0.08) 0%,
+            rgba(220, 38, 38, 0.1) 100%);
+    border-color: rgba(239, 68, 68, 0.3);
+    box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
+}
+
+.favorites-btn.active .heart-icon {
+    fill: #ef4444;
+    stroke: #dc2626;
+    opacity: 1;
+    animation: heartBeat 0.6s ease;
+}
+
+body.lp-dark .favorites-btn.active {
+    background: linear-gradient(135deg,
+            rgba(239, 68, 68, 0.12) 0%,
+            rgba(220, 38, 38, 0.15) 100%);
+    border-color: rgba(239, 68, 68, 0.35);
+}
+
+body.lp-dark .favorites-btn.active .heart-icon {
+    fill: #f87171;
+    stroke: #ef4444;
+}
+
+body.modo-orbital .favorites-btn.active {
+    background: linear-gradient(135deg,
+            rgba(239, 68, 68, 0.1) 0%,
+            rgba(220, 38, 38, 0.12) 100%);
+    border-color: rgba(239, 68, 68, 0.32);
+}
+
+body.modo-orbital .favorites-btn.active .heart-icon {
+    fill: #ef4444;
+    stroke: #dc2626;
+}
+
+@keyframes heartBeat {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    25% {
+        transform: scale(1.2);
+    }
+
+    50% {
+        transform: scale(0.95);
+    }
+
+    75% {
+        transform: scale(1.1);
+    }
+}
+
+/* === Favorites Counter Badge (Outside, Top-Right) === */
 .favorites-count {
     position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 0.65rem;
-    font-weight: 700;
+    top: -8px;
+    right: -8px;
+    background: linear-gradient(135deg, #f87171 0%, #ef4444 100%);
     color: #ffffff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 12px;
+    min-width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-shadow: 0 3px 8px rgba(239, 68, 68, 0.5),
+        0 0 0 2px var(--material-surface-light);
+    animation: scaleIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 10;
     pointer-events: none;
-    z-index: 1;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-    /* Sombra para mejor legibilidad */
+}
+
+body.lp-dark .favorites-count {
+    box-shadow: 0 3px 8px rgba(239, 68, 68, 0.6),
+        0 0 0 2px #111111;
+}
+
+body.modo-orbital .favorites-count {
+    box-shadow: 0 3px 8px rgba(239, 68, 68, 0.5),
+        0 0 0 2px #1e293b;
 }
 
 .favorites-btn:hover .favorites-count {
-    transform: translate(-50%, -50%) scale(1.1);
+    transform: scale(1.05);
 }
 
 @keyframes fadeInUpCard {
@@ -2471,17 +2691,54 @@ body.lp-dark {
     --arrow-glow-animation: arrow-glow-dark;
 }
 
-@media (max-width: 767px) {
+@media (max-width: 768px) {
+
+    /* Layout */
     .main-layout {
         flex-direction: column;
-        gap: 1rem;
+        gap: 0.8rem;
         align-items: stretch;
-        padding-bottom: 80px;
+        padding: 0 0.4rem 80px;
     }
 
+    /* Header sticky on mobile */
+    header {
+        position: sticky;
+        top: 0;
+        z-index: 100;
+        margin-bottom: 0.8rem;
+        padding: 0.6rem 1rem;
+        backdrop-filter: blur(10px);
+        background: rgba(var(--material-surface-light-rgb), 0.95);
+    }
+
+    body.lp-dark header,
+    body.modo-orbital header {
+        background: rgba(var(--material-surface-light-rgb), 0.98);
+    }
+
+    header h1 {
+        font-size: 20px;
+        flex-wrap: wrap;
+    }
+
+    .header-subtitle {
+        font-size: 0.65rem;
+        width: 100%;
+        border-left: none;
+        padding-left: 0;
+        margin-left: 0;
+        margin-top: 2px;
+    }
+
+    /* Filters */
     .filters-column {
         flex-basis: auto;
         width: 100%;
+    }
+
+    .glass {
+        padding: 0.6rem 0.8rem;
     }
 
     .input-group-horizontal {
@@ -2489,17 +2746,62 @@ body.lp-dark {
         gap: 0.3rem;
     }
 
+    /* Results */
     .results-wrapper {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+        gap: 0.7rem;
     }
 
     .results-header-card {
-        margin-top: 1rem;
+        margin-top: 0;
+        padding: 0.4rem 0.8rem;
     }
 
-    /* Esta regla asegura que las etiquetas de fabricante también se centren */
-    .manufacturer-tags-container {
+    .result-count-container {
+        font-size: 0.8rem;
+    }
+
+    /* View buttons */
+    .view-toggle-buttons {
+        gap: 0.4rem;
+    }
+
+    .view-btn {
+        width: 36px;
+        height: 36px;
+    }
+
+    #historialBtn,
+    #compareBtn {
+        padding: 5px 8px;
+        font-size: 0.8rem;
+    }
+
+    /* Modals full screen on mobile */
+    .modal-content {
+        width: 100vw;
+        max-width: 100vw;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+        margin: 0;
+    }
+
+    /* Center manufacturer tags */
+    .manufacturer-tags-container,
+    .brand-tags-container {
         justify-content: center;
+    }
+
+    /* Pagination */
+    .pagination-container {
+        gap: 0.3rem;
+    }
+
+    .page-btn {
+        padding: 6px 8px;
+        font-size: 0.8rem;
+        min-width: 32px;
     }
 }
 
@@ -2513,19 +2815,82 @@ body.lp-dark {
 }
 
 @media (max-width: 480px) {
+
+    /* Base font size */
+    body {
+        font-size: 13px;
+    }
+
+    /* Header */
     header {
-        padding: 0.5rem 0.5rem;
+        padding: 0.6rem 0.8rem;
+    }
+
+    header h1 {
+        font-size: 18px;
+    }
+
+    .header-subtitle {
+        font-size: 0.6rem;
     }
 
     .header-menu-btn {
-        left: 0.5rem;
-        width: 36px;
-        height: 36px;
+        width: 34px;
+        height: 34px;
     }
 
     .header-menu-btn svg {
-        width: 18px;
-        height: 18px;
+        width: 16px;
+        height: 16px;
+    }
+
+    /* Position buttons stacked */
+    .position-container {
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+
+    .position-btn {
+        width: 100%;
+    }
+
+    /* Results grid single column */
+    .results-wrapper {
+        grid-template-columns: 1fr;
+    }
+
+    /* Compact cards */
+    .result-card {
+        padding: 0.5rem;
+    }
+
+    /* Smaller badges */
+    .ref-badge {
+        font-size: 0.65rem;
+        padding: 3px 6px;
+    }
+
+    .position-badge {
+        font-size: 0.7rem;
+        padding: 3px 8px;
+    }
+
+    /* Compact buttons */
+    .view-btn {
+        width: 34px;
+        height: 34px;
+    }
+
+    .view-btn svg {
+        width: 16px;
+        height: 16px;
+    }
+
+    /* Pagination ultra compact */
+    .page-btn {
+        padding: 5px 6px;
+        font-size: 0.75rem;
+        min-width: 28px;
     }
 
     .header-left-controls {
@@ -2862,3 +3227,689 @@ body.modo-orbital .view-btn#filtroFavoritosBtn:not(.active) .heart-icon {
 }
 
 /* --- 🔴 ESTILOS DE QR ELIMINADOS 🔴 --- */
+
+/* ============================================
+   COMPARADOR DE REFERENCIAS - ESTILOS
+   ============================================ */
+
+/* --- Botón de Comparar en Results Header --- */
+#compareBtn {
+    position: relative;
+    width: auto;
+    display: none;
+    /* Hidden by default, shown via JavaScript when count > 0 */
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-color);
+    opacity: 0;
+    transform: scale(0.95);
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+        opacity 0.25s ease,
+        transform 0.25s ease;
+}
+
+.compare-icon {
+    width: 18px;
+    height: 18px;
+    stroke: var(--text-color);
+    transition: stroke 0.3s ease;
+    flex-shrink: 0;
+}
+
+#compareBtn:hover {
+    background-color: var(--btn-google-hover-bg);
+    opacity: 1;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+#compareBtn:hover .compare-icon {
+    stroke: var(--text-color);
+}
+
+#compareBtn.has-selection {
+    background: linear-gradient(135deg,
+            rgba(59, 130, 246, 0.1) 0%,
+            rgba(37, 99, 235, 0.12) 100%);
+    border-color: rgba(59, 130, 246, 0.35);
+    opacity: 1;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+#compareBtn.has-selection .compare-icon {
+    stroke: #2563eb;
+}
+
+body.lp-dark #compareBtn.has-selection {
+    background: linear-gradient(135deg,
+            rgba(59, 130, 246, 0.15) 0%,
+            rgba(37, 99, 235, 0.18) 100%);
+    border-color: rgba(59, 130, 246, 0.4);
+}
+
+body.lp-dark #compareBtn.has-selection .compare-icon {
+    stroke: #60a5fa;
+}
+
+body.modo-orbital #compareBtn.has-selection {
+    background: linear-gradient(135deg,
+            rgba(59, 130, 246, 0.12) 0%,
+            rgba(37, 99, 235, 0.15) 100%);
+    border-color: rgba(59, 130, 246, 0.38);
+}
+
+body.modo-orbital #compareBtn.has-selection .compare-icon {
+    stroke: #3b82f6;
+}
+
+/* --- Badge Contador de Comparación --- */
+.compare-count {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+    color: #ffffff;
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 7px;
+    border-radius: 12px;
+    min-width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    box-shadow: 0 3px 8px rgba(59, 130, 246, 0.5),
+        0 0 0 2px var(--material-surface-light);
+    animation: scaleIn 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 10;
+}
+
+body.lp-dark .compare-count {
+    box-shadow: 0 3px 8px rgba(59, 130, 246, 0.6),
+        0 0 0 2px #111111;
+}
+
+body.modo-orbital .compare-count {
+    box-shadow: 0 3px 8px rgba(59, 130, 246, 0.5),
+        0 0 0 2px #1e293b;
+}
+
+@keyframes scaleIn {
+    0% {
+        transform: scale(0) rotate(-10deg);
+        opacity: 0;
+    }
+
+    50% {
+        transform: scale(1.15) rotate(5deg);
+    }
+
+    100% {
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+    }
+}
+
+/* --- Botón de Comparar en Tarjetas de Resultado --- */
+.compare-checkbox-btn {
+    position: absolute;
+    top: 10px;
+    right: 50px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: rgba(var(--material-surface-light-rgb), 0.95);
+    border: 2px solid var(--material-surface-border);
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.compare-checkbox-btn svg {
+    width: 18px;
+    height: 18px;
+    stroke: var(--text-color);
+    opacity: 0.6;
+    transition: all 0.3s ease;
+}
+
+.compare-checkbox-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border-color: rgba(59, 130, 246, 0.5);
+}
+
+.compare-checkbox-btn:hover svg {
+    opacity: 1;
+    stroke: #3b82f6;
+}
+
+.compare-checkbox-btn.selected {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    border-color: #2563eb;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.compare-checkbox-btn.selected svg {
+    stroke: #ffffff;
+    opacity: 1;
+}
+
+/* --- Modal de Comparación --- */
+.comparison-modal-content {
+    max-width: 95vw;
+    max-height: 90vh;
+    width: 1200px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.comparison-controls {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 1rem;
+    gap: 0.5rem;
+}
+
+.clear-comparison-btn {
+    padding: 8px 16px;
+    border-radius: 8px;
+    border: 1.5px solid var(--material-surface-border);
+    background: transparent;
+    color: var(--text-color);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.clear-comparison-btn svg {
+    width: 16px;
+    height: 16px;
+    stroke: currentColor;
+}
+
+.clear-comparison-btn:hover {
+    background-color: rgba(239, 68, 68, 0.1);
+    border-color: rgba(239, 68, 68, 0.4);
+    color: #ef4444;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(239, 68, 68, 0.2);
+}
+
+/* --- Wrapper de Tabla Comparativa --- */
+.comparison-table-wrapper {
+    flex: 1;
+    overflow-x: auto;
+    overflow-y: auto;
+    border: 1px solid var(--material-surface-border);
+    border-radius: 8px;
+    background-color: var(--input-bg);
+}
+
+.comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 600px;
+}
+
+.comparison-table th,
+.comparison-table td {
+    padding: 12px 16px;
+    text-align: left;
+    border-bottom: 1px solid var(--material-surface-border);
+    vertical-align: top;
+}
+
+.comparison-table th {
+    background-color: var(--material-surface-light);
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text-color);
+    opacity: 0.9;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.comparison-table td {
+    font-size: 0.9rem;
+    color: var(--text-color);
+}
+
+.comparison-table tr:last-child td {
+    border-bottom: none;
+}
+
+.comparison-table tr:hover td {
+    background-color: rgba(var(--material-surface-light-rgb), 0.5);
+}
+
+/* --- Columna de Etiquetas (Primera columna) --- */
+.comparison-table th:first-child,
+.comparison-table td:first-child {
+    font-weight: 600;
+    background-color: var(--material-surface-light);
+    position: sticky;
+    left: 0;
+    z-index: 5;
+    min-width: 140px;
+    box-shadow: 2px 0 4px rgba(0, 0, 0, 0.05);
+}
+
+.comparison-table th:first-child {
+    z-index: 15;
+}
+
+/* --- Contenido de Celdas --- */
+.comparison-cell-refs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+/* Difference Highlighting */
+.comparison-cell-diff {
+    background: linear-gradient(135deg,
+            rgba(255, 193, 7, 0.08) 0%,
+            rgba(255, 160, 0, 0.1) 100%);
+    border-left: 3px solid #ffc107 !important;
+    padding-left: 12px !important;
+    transition: all 0.3s ease;
+}
+
+.comparison-cell-match {
+    background: linear-gradient(135deg,
+            rgba(76, 175, 80, 0.06) 0%,
+            rgba(56, 142, 60, 0.08) 100%);
+    border-left: 3px solid #4caf50 !important;
+    padding-left: 12px !important;
+    transition: all 0.3s ease;
+}
+
+body.lp-dark .comparison-cell-diff {
+    background: linear-gradient(135deg,
+            rgba(255, 193, 7, 0.12) 0%,
+            rgba(255, 160, 0, 0.15) 100%);
+}
+
+body.lp-dark .comparison-cell-match {
+    background: linear-gradient(135deg,
+            rgba(76, 175, 80, 0.1) 0%,
+            rgba(56, 142, 60, 0.12) 100%);
+}
+
+/* Row stagger animation */
+@keyframes slideInRow {
+    from {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.comparison-table tbody tr {
+    animation: slideInRow 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.comparison-table tbody tr:nth-child(1) {
+    animation-delay: 0ms;
+}
+
+.comparison-table tbody tr:nth-child(2) {
+    animation-delay: 50ms;
+}
+
+.comparison-table tbody tr:nth-child(3) {
+    animation-delay: 100ms;
+}
+
+.comparison-table tbody tr:nth-child(4) {
+    animation-delay: 150ms;
+}
+
+.comparison-table tbody tr:nth-child(5) {
+    animation-delay: 200ms;
+}
+
+.comparison-table tbody tr:nth-child(6) {
+    animation-delay: 250ms;
+}
+
+.comparison-table tbody tr:nth-child(7) {
+    animation-delay: 300ms;
+}
+
+.comparison-table tbody tr:nth-child(8) {
+    animation-delay: 350ms;
+}
+
+.comparison-cell-refs .ref-badge {
+    font-size: 0.75rem;
+    padding: 4px 8px;
+}
+
+.comparison-cell-position .position-badge {
+    display: inline-block;
+}
+
+.comparison-cell-image {
+    text-align: center;
+}
+
+.comparison-cell-image img {
+    max-width: 150px;
+    height: auto;
+    border-radius: 6px;
+    border: 1px solid var(--material-surface-border);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+}
+
+.comparison-cell-image img:hover {
+    transform: scale(1.05);
+}
+
+.comparison-cell-apps {
+    max-height: 200px;
+    overflow-y: auto;
+    font-size: 0.85rem;
+    line-height: 1.5;
+}
+
+.comparison-cell-apps::-webkit-scrollbar {
+    width: 6px;
+}
+
+.comparison-cell-apps::-webkit-scrollbar-track {
+    background: var(--input-bg);
+    border-radius: 3px;
+}
+
+.comparison-cell-apps::-webkit-scrollbar-thumb {
+    background: var(--material-surface-border);
+    border-radius: 3px;
+}
+
+.comparison-cell-apps::-webkit-scrollbar-thumb:hover {
+    background: var(--input-focus-border);
+}
+
+.comparison-app-item {
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(var(--material-surface-light-rgb), 0.3);
+}
+
+.comparison-app-item:last-child {
+    border-bottom: none;
+}
+
+.comparison-remove-btn {
+    background: none;
+    border: none;
+    color: var(--text-color);
+    opacity: 0.6;
+    cursor: pointer;
+    font-size: 1.2rem;
+    padding: 4px 8px;
+    transition: all 0.2s ease;
+    line-height: 1;
+}
+
+.comparison-remove-btn:hover {
+    opacity: 1;
+    color: #ef4444;
+    transform: scale(1.1);
+}
+
+/* --- Estado Vacío --- */
+.comparison-empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: var(--text-color);
+    opacity: 0.7;
+}
+
+.comparison-empty-state svg {
+    width: 64px;
+    height: 64px;
+    stroke: currentColor;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.comparison-empty-state p {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+}
+
+.comparison-empty-state span {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+/* --- Responsive Design --- */
+/* Tablet Optimization (769px - 1024px) */
+@media (min-width: 769px) and (max-width: 1024px) {
+
+    /* Layout adjustments */
+    .main-layout {
+        gap: 0.8rem;
+    }
+
+    .filters-column {
+        flex: 0 0 240px;
+    }
+
+    /* Glass panels */
+    .glass {
+        padding: 0.65rem 0.85rem;
+    }
+
+    /* Typography scaling */
+    body {
+        font-size: 13.5px;
+    }
+
+    header h1 {
+        font-size: 22px;
+    }
+
+    .header-subtitle {
+        font-size: 0.68rem;
+    }
+
+    .filter-title {
+        font-size: 0.85rem;
+    }
+
+    .form-input {
+        font-size: 0.85rem;
+        padding: 5px 9px;
+    }
+
+    /* Results grid */
+    .results-wrapper {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 0.7rem;
+    }
+
+    /* Reduce button sizes slightly */
+    .view-btn {
+        width: 38px;
+        height: 38px;
+    }
+
+    .view-btn svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    /* Position buttons */
+    .position-btn {
+        font-size: 0.75rem;
+        padding: 7px 10px;
+    }
+
+    /* Brand tags */
+    .brand-tag {
+        font-size: 0.68rem;
+        padding: 4px 10px;
+    }
+
+    /* Pagination */
+    .page-btn {
+        padding: 6px 10px;
+        font-size: 0.8rem;
+    }
+}
+
+@media (max-width: 1024px) {
+    .comparison-modal-content {
+        width: 95vw;
+    }
+
+    .comparison-table th,
+    .comparison-table td {
+        padding: 10px 12px;
+        font-size: 0.85rem;
+    }
+
+    .comparison-cell-image img {
+        max-width: 120px;
+    }
+}
+
+@media (max-width: 767px) {
+    .comparison-modal-content {
+        width: 100vw;
+        max-width: 100vw;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+
+    .comparison-controls {
+        flex-direction: column;
+    }
+
+    .clear-comparison-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .comparison-table {
+        min-width: 100%;
+        display: block;
+    }
+
+    .comparison-table thead,
+    .comparison-table tbody,
+    .comparison-table tr {
+        display: block;
+    }
+
+    .comparison-table th {
+        position: static;
+        display: none;
+    }
+
+    .comparison-table tr {
+        margin-bottom: 1rem;
+        border: 1px solid var(--material-surface-border);
+        border-radius: 8px;
+        overflow: hidden;
+    }
+
+    .comparison-table td {
+        display: block;
+        position: relative;
+        padding-left: 50%;
+        text-align: left;
+        border: none;
+        border-bottom: 1px solid var(--material-surface-border);
+    }
+
+    .comparison-table td:last-child {
+        border-bottom: none;
+    }
+
+    .comparison-table td:before {
+        content: attr(data-label);
+        position: absolute;
+        left: 12px;
+        width: 45%;
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.75rem;
+        opacity: 0.8;
+    }
+
+    .comparison-table td:first-child {
+        position: static;
+        box-shadow: none;
+        background: var(--input-focus-border);
+        color: white;
+        font-weight: 700;
+        text-align: center;
+        padding: 12px;
+        font-size: 1rem;
+    }
+
+    .comparison-table td:first-child:before {
+        display: none;
+    }
+
+    .comparison-cell-image img {
+        max-width: 100%;
+    }
+
+    .compare-checkbox-btn {
+        width: 28px;
+        height: 28px;
+        right: 42px;
+    }
+
+    .compare-checkbox-btn svg {
+        width: 14px;
+        height: 14px;
+    }
+}
+
+/* --- Animaciones --- */
+@keyframes fadeInTable {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.comparison-table {
+    animation: fadeInTable 0.4s ease-out;
+}
