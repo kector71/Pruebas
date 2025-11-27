@@ -1089,6 +1089,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
                 </div>`;
         }).join('');
+
         els.results.querySelectorAll('.favorite-btn').forEach(btn => {
             btn.addEventListener('click', toggleFavorite);
         });
@@ -1146,14 +1147,14 @@ document.addEventListener('DOMContentLoaded', () => {
         let html = '';
         history.forEach((query, index) => {
             html += `
-                <div class="history-item" data-query="${query}">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <polyline points="9 11 12 14 22 4"></polyline>
-                        <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                <div class="search-history-item" data-query="${query}" role="button" tabindex="0">
+                    <svg class="history-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <polyline points="12 6 12 12 16 14"></polyline>
                     </svg>
-                    <span class="history-query">${query}</span>
-                    <button class="history-remove-btn" data-index="${index}" aria-label="Eliminar de historial">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <span class="history-text">${query}</span>
+                    <button class="history-remove-btn" data-index="${index}" aria-label="Eliminar ${query} del historial" title="Eliminar">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
                             <line x1="18" y1="6" x2="6" y2="18"></line>
                             <line x1="6" y1="6" x2="18" y2="18"></line>
                         </svg>
@@ -1163,10 +1164,13 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         els.searchHistoryContainer.innerHTML = html;
 
-        // Click en ítem del historial
-        els.searchHistoryContainer.querySelectorAll('.history-item .history-query').forEach(el => {
+        // Click en ítem del historial (delegación de eventos para el chip completo)
+        els.searchHistoryContainer.querySelectorAll('.search-history-item').forEach(el => {
             el.addEventListener('click', (e) => {
-                const query = e.target.closest('.history-item').dataset.query;
+                // Si el click fue en el botón de eliminar, no hacemos nada aquí (se maneja abajo)
+                if (e.target.closest('.history-remove-btn')) return;
+
+                const query = el.dataset.query;
                 els.busqueda.value = query;
                 els.historialBtn.click(); // Cerrar historial
                 filterData();
@@ -1176,14 +1180,13 @@ document.addEventListener('DOMContentLoaded', () => {
         // Botones de eliminar
         els.searchHistoryContainer.querySelectorAll('.history-remove-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                e.stopPropagation();
+                e.stopPropagation(); // Evitar que se dispare el click del chip
                 const index = parseInt(btn.dataset.index);
                 removeFromSearchHistory(index);
-                renderSearchHistory();
+                // No necesitamos llamar a renderSearchHistory aquí porque removeFromSearchHistory ya lo hace
             });
         });
     }
-
 
     function renderDynamicBrandTags(data, isFiltered) {
         if (!els.brandTagsContainer) return;
