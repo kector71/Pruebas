@@ -677,45 +677,7 @@ header:hover .header-x {
     }
 }
 
-.search-container.active .search-icon {
-    animation: magnify 0.6s ease-in-out infinite;
-    opacity: 0.8;
-}
 
-/* === HISTORIAL === */
-.search-history {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.4rem;
-    margin-top: 0.5rem;
-    min-height: 0;
-}
-
-.search-history-item {
-    padding: 5px 12px;
-    border-radius: 6px;
-    border: 1px solid var(--material-surface-border);
-    background-color: rgba(var(--material-surface-light-rgb), 0.08);
-    color: var(--text-color);
-    font-size: 0.7rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    padding-right: 28px;
-}
-
-.search-history-item:hover {
-    background-color: rgba(var(--material-surface-light-rgb), 0.15);
-    border-color: rgba(59, 130, 246, 0.3);
-    transform: translateY(-1px);
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
-}
-
-.position-container {
-    display: flex;
-    gap: 0.4rem;
-}
 
 .position-btn {
     flex: 1;
@@ -4053,12 +4015,6 @@ body.lp-dark .comparison-cell-match {
         max-width: 100%;
     }
 
-    .compare-checkbox-btn {
-        width: 28px;
-        height: 28px;
-        right: 42px;
-    }
-
     .compare-checkbox-btn svg {
         width: 14px;
         height: 14px;
@@ -4080,4 +4036,89 @@ body.lp-dark .comparison-cell-match {
 
 .comparison-table {
     animation: fadeInTable 0.4s ease-out;
+}
+
+/* --- Search History Redesign --- */
+.search-history {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 10px;
+    padding: 0 4px;
+}
+
+.search-history-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    background-color: rgba(var(--material-surface-light-rgb), 0.5);
+    border: 1px solid var(--material-surface-border);
+    color: var(--text-color);
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    user-select: none;
+}
+
+.search-history-item:hover {
+    background-color: rgba(var(--material-surface-light-rgb), 0.8);
+    border-color: var(--input-focus-border);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+}
+
+.history-icon {
+    width: 14px;
+    height: 14px;
+    opacity: 0.6;
+    flex-shrink: 0;
+}
+
+.history-remove-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: var(--text-color);
+    opacity: 0.4;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 2px;
+    transition: all 0.2s ease;
+}
+
+.history-remove-btn:hover {
+    background-color: rgba(0, 0, 0, 0.1);
+    opacity: 1;
+    color: #ef4444;
+}
+
+.history-remove-btn svg {
+    width: 12px;
+    height: 12px;
+    stroke-width: 2.5;
+}
+
+/* Dark Mode Adjustments */
+body.lp-dark .search-history-item,
+body.modo-orbital .search-history-item {
+    background-color: rgba(255, 255, 255, 0.05);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+body.lp-dark .search-history-item:hover,
+body.modo-orbital .search-history-item:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+body.lp-dark .history-remove-btn:hover,
+body.modo-orbital .history-remove-btn:hover {
+    background-color: rgba(255, 255, 255, 0.15);
 }
