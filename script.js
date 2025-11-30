@@ -1077,8 +1077,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             return `
                 <div class="result-card" data-id="${item._appId}" style="animation-delay: ${index * 50}ms" tabindex="0" role="button" aria-haspopup="dialog">
-                    ${favoriteBtnHTML}
-                    ${compareCheckboxHTML}
+                    <div class="card-actions-container">
+                        ${favoriteBtnHTML}
+                        ${compareCheckboxHTML}
+                    </div>
                     <div class="card-thumbnail"><img src="${firstImageSrc}" alt="Referencia ${primaryRefForData}" class="result-image" loading="lazy"></div>
                     <div class="card-content-wrapper">
                         <div class="card-details">
