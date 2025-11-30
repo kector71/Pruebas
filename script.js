@@ -1262,13 +1262,23 @@ document.addEventListener('DOMContentLoaded', () => {
         const imageTrackHTML = images.map((imgSrc, i) =>
             `<img src="${imgSrc}" alt="Referencia ${item.ref?.[0] || 'N/A'} Vista ${i + 1}" class="result-image">`
         ).join('');
+
+        // Generate progress dots for carousel
+        const dotsHTML = images.length > 1 ? `
+            <div class="carousel-dots">
+                ${images.map((_, i) => `<button class="carousel-dot ${i === 0 ? 'active' : ''}" data-index="${i}" aria-label="Ir a imagen ${i + 1}"></button>`).join('')}
+            </div>
+        ` : '';
+
         els.modalCarousel.innerHTML = `
             <div class="image-track" style="display:flex;" data-current-index="0">${imageTrackHTML}</div>
             ${images.length > 1 ? `
                 <button class="carousel-nav-btn" data-direction="-1" aria-label="Imagen anterior">‹</button>
                 <button class="carousel-nav-btn" data-direction="1" aria-label="Siguiente imagen">›</button>
             ` : ''}
+            ${dotsHTML}
         `;
+
         els.modalCarousel.querySelectorAll('.carousel-nav-btn').forEach(btn => {
             btn.onclick = (e) => {
                 e.stopPropagation();
@@ -1276,6 +1286,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 navigateCarousel(els.modalCarousel, direction);
             };
         });
+
+        // Add click handlers for dots
+        els.modalCarousel.querySelectorAll('.carousel-dot').forEach(dot => {
+            dot.onclick = (e) => {
+                e.stopPropagation();
+                const targetIndex = parseInt(dot.dataset.index);
+                const track = els.modalCarousel.querySelector('.image-track');
+                const currentIndex = parseInt(track.dataset.currentIndex) || 0;
+                const direction = targetIndex - currentIndex;
+
+                // Navigate directly to target index
+                track.style.transform = `translateX(-${targetIndex * 100}%)`;
+                track.dataset.currentIndex = targetIndex;
+
+                // Update dots
+                els.modalCarousel.querySelectorAll('.carousel-dot').forEach((d, i) => {
+                    d.classList.toggle('active', i === targetIndex);
+                });
+
+                // Update counter
+                const counter = els.modalCounterWrapper.querySelector('.carousel-counter');
+                if (counter) counter.textContent = `${targetIndex + 1}/${images.length}`;
+            };
+        });
+
         if (images.length > 1) {
             els.modalCounterWrapper.innerHTML = `<span class="carousel-counter">1/${images.length}</span>`;
         } else {
@@ -1307,15 +1342,26 @@ document.addEventListener('DOMContentLoaded', () => {
         const track = carouselContainer.querySelector('.image-track');
         const images = carouselContainer.querySelectorAll('.result-image');
         const counter = els.modalCounterWrapper.querySelector('.carousel-counter');
+        const dots = carouselContainer.querySelectorAll('.carousel-dot');
+
         if (!track || images.length <= 1) return;
+
         let currentIndex = parseInt(track.dataset.currentIndex) || 0;
         const totalImages = images.length;
         let newIndex = currentIndex + direction;
+
         if (newIndex >= totalImages) newIndex = 0;
         else if (newIndex < 0) newIndex = totalImages - 1;
+
         track.style.transform = `translateX(-${newIndex * 100}%)`;
         track.dataset.currentIndex = newIndex;
+
         if (counter) counter.textContent = `${newIndex + 1}/${totalImages}`;
+
+        // Update dots
+        dots.forEach((dot, i) => {
+            dot.classList.toggle('active', i === newIndex);
+        });
     }
 
     // === Touch Gesture Support for Carousel ===
