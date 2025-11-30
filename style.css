@@ -1778,8 +1778,11 @@ body.modo-orbital .favorites-count {
 .results-wrapper {
     display: grid;
     gap: 1rem;
+    row-gap: 3.5rem;
     grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
     transition: opacity var(--transition-base);
+    padding-top: 20px;
+    /* Space for floating buttons */
 }
 
 .results-wrapper.loading {
@@ -1793,17 +1796,17 @@ body.modo-orbital .favorites-count {
     background-color: var(--material-surface-light);
     border: 1px solid var(--material-surface-border);
     border-radius: 12px;
-    padding: 0.75rem;
+    padding: 0.6rem;
     box-shadow: var(--elevation-1);
     opacity: 0;
-    animation: fadeInUpCard 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-    overflow: hidden;
+    animation: fadeInUpCard 0.5s cubic-bezier(0.2, 0.5, 0.1, 1) forwards;
+    overflow: visible !important;
+    /* CRITICAL: Force visible overflow */
     position: relative;
     cursor: pointer;
-    transition: all var(--transition-slow);
-    width: 100%;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     transform-style: preserve-3d;
-    will-change: transform, box-shadow;
+    perspective: 1000px;
 }
 
 /* Stagger animation for cards */
@@ -2120,56 +2123,65 @@ body.modo-orbital .card-app-summary {
 
 .app-brand-header {
     font-weight: 700;
-    font-size: 0.75rem;
-    padding: 0.65rem 0;
-    margin-top: 1.25rem;
+    font-size: 0.8rem;
+    padding: 0.75rem 1rem;
+    margin-top: 1.5rem;
     margin-bottom: 0.75rem;
     color: var(--text-color);
-    opacity: 0.85;
-    background: transparent;
-    border-bottom: 1px solid var(--material-surface-border);
-    border-radius: 0;
+    background: rgba(var(--material-surface-light-rgb), 0.5);
+    border: 1px solid var(--material-surface-border);
+    border-radius: 8px;
     text-transform: uppercase;
-    letter-spacing: 1px;
-    transition: all 0.3s ease;
+    letter-spacing: 0.5px;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
+}
+
+body.lp-dark .app-brand-header,
+body.modo-orbital .app-brand-header {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: rgba(255, 255, 255, 0.08);
 }
 
 .modal-apps-specs .spec-details-grid {
     display: grid;
     grid-template-columns: 140px 1fr;
-    gap: 0.85rem 1.25rem;
-    align-items: baseline;
+    gap: 0;
+    align-items: stretch;
     padding: 0;
-    font-size: 0.85rem;
-    background: transparent;
-    border-radius: 0;
+    font-size: 0.9rem;
+    background: var(--material-surface-light);
+    border: 1px solid var(--material-surface-border);
+    border-radius: 12px;
     margin-top: 0.75rem;
-}
-
-.modal-apps-specs .spec-label {
-    font-weight: 600;
-    white-space: nowrap;
-    text-align: left;
-    padding-top: 0;
-    color: var(--text-color);
-    opacity: 0.65;
-    font-size: 0.8rem;
-    text-transform: none;
-    letter-spacing: 0;
-}
-
-.modal-apps-specs .spec-value {
-    text-align: left;
-    word-break: break-word;
-    font-weight: 500;
-    color: var(--text-color);
-    opacity: 0.95;
+    overflow: hidden;
 }
 
 .modal-apps-specs .spec-details-grid>div {
-    border-bottom: 1px solid rgba(var(--material-surface-light-rgb), 0.08);
-    padding-bottom: 0.85rem;
-    padding-top: 0;
+    padding: 0.85rem 1rem;
+    border-bottom: 1px solid var(--material-surface-border);
+    display: flex;
+    align-items: center;
+}
+
+.modal-apps-specs .spec-label {
+    background: rgba(var(--material-surface-light-rgb), 0.5);
+    font-weight: 600;
+    color: var(--text-color);
+    opacity: 0.8;
+    font-size: 0.8rem;
+    border-right: 1px solid var(--material-surface-border);
+}
+
+body.lp-dark .modal-apps-specs .spec-label,
+body.modo-orbital .modal-apps-specs .spec-label {
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.modal-apps-specs .spec-value {
+    font-weight: 500;
+    color: var(--text-color);
 }
 
 .modal-apps-specs .spec-details-grid>.spec-label:nth-last-of-type(2),
@@ -2182,20 +2194,39 @@ body.modo-orbital .card-app-summary {
     display: grid;
     grid-template-columns: 2fr 1fr 1fr;
     align-items: center;
-    gap: 0.75rem 1rem;
-    padding: 0.75rem 0;
-    border-bottom: 1px solid rgba(var(--material-surface-light-rgb), 0.06);
+    gap: 0.5rem 1rem;
+    padding: 0.6rem 1rem;
+    border-bottom: 1px solid var(--material-surface-border);
     color: var(--text-color);
-    opacity: 0.9;
-    transition: all 0.2s ease;
     font-size: 0.85rem;
-    border-radius: 0;
+    transition: all 0.2s ease;
+}
+
+.applications-list-container .app-detail-row:first-child {
+    border-top: 1px solid var(--material-surface-border);
+    border-top-left-radius: 8px;
+    border-top-right-radius: 8px;
+}
+
+.applications-list-container .app-detail-row:last-child {
+    border-bottom: none;
+    border-bottom-left-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+.applications-list-container .app-detail-row:nth-child(even) {
+    background-color: rgba(var(--material-surface-light-rgb), 0.4);
+}
+
+body.lp-dark .applications-list-container .app-detail-row:nth-child(even),
+body.modo-orbital .applications-list-container .app-detail-row:nth-child(even) {
+    background-color: rgba(255, 255, 255, 0.03);
 }
 
 .applications-list-container .app-detail-row:hover {
-    background: transparent;
-    opacity: 1;
-    transform: none;
+    background-color: rgba(var(--material-surface-light-rgb), 0.8);
+    transform: translateX(4px);
+    border-left: 3px solid var(--accent-blue);
 }
 
 .applications-list-container .app-detail-row:last-child {
@@ -2305,12 +2336,12 @@ body.modo-orbital .app-detail-row {
             var(--material-surface-light) 0%,
             rgba(var(--material-surface-light-rgb), 0.98) 100%);
     color: var(--text-color);
-    border-radius: 1.25rem;
-    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.6),
-        0 15px 30px rgba(0, 0, 0, 0.4),
-        inset 0 1px 0 rgba(255, 255, 255, 0.15),
+    border-radius: 1.5rem;
+    box-shadow: 0 25px 70px rgba(0, 0, 0, 0.5),
+        0 10px 30px rgba(0, 0, 0, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2),
         0 0 0 1px rgba(255, 255, 255, 0.05);
-    padding: 1.75rem;
+    padding: 2rem;
     width: 100%;
     max-width: 750px;
     max-height: 90vh;
@@ -2375,27 +2406,27 @@ body.modo-orbital .modal-content {
 
 .modal-close-btn {
     position: absolute;
-    top: 0.75rem;
-    right: 0.75rem;
-    background: rgba(var(--material-surface-light-rgb), 0.6);
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
+    top: 1rem;
+    right: 1rem;
+    background: rgba(var(--material-surface-light-rgb), 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
     border: 1px solid var(--material-surface-border);
-    border-radius: 50%;
-    width: 36px;
-    height: 36px;
+    border-radius: 12px;
+    width: 40px;
+    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 1.5rem;
     line-height: 1;
     color: var(--text-color);
-    opacity: 0.7;
+    opacity: 0.8;
     cursor: pointer;
     padding: 0;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     z-index: 10003;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .modal-close-btn:hover {
@@ -2412,7 +2443,7 @@ body.modo-orbital .modal-content {
 .modal-image-carousel {
     width: 100%;
     aspect-ratio: 4 / 3;
-    border-radius: 0.75rem;
+    border-radius: 1rem;
     overflow: hidden;
     position: relative;
     background-color: var(--skeleton-bg);
@@ -3505,19 +3536,86 @@ body.modo-orbital .ref-bex {
     z-index: 2;
 }
 
-.favorite-btn {
+/* ============================================
+   CARD ACTION BUTTONS - Ultra Premium Design
+   ============================================ */
+
+/* === FOLDER TAB DESIGN - Compact & Aligned === */
+.card-actions-container {
     position: absolute;
-    top: 0.5rem;
-    right: 0.5rem;
+    top: -1px;
+    left: 12px;
+    /* Aligned closer to the left edge */
+    z-index: 2;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    gap: 6px;
+    /* Tighter gap */
+    align-items: center;
+
+    /* Tab Shape & Material */
+    background: var(--material-surface-light);
+    border: 1px solid var(--material-surface-border);
+    border-bottom: 1px solid var(--material-surface-light);
+    border-radius: 6px 6px 0 0;
+    /* Smaller radius */
+    padding: 4px 8px 2px 8px;
+    /* Much more compact */
+
+    /* Initial State */
+    transform: translateY(0);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* Active State: Peeking Tab */
+.card-actions-container:has(.active),
+.card-actions-container:has(.selected) {
+    transform: translateY(-8px);
+    /* Subtle peek */
+    opacity: 1;
+    pointer-events: auto;
+    border-bottom-color: var(--material-surface-light);
+}
+
+/* Hover State: Full Reveal */
+.result-card:hover .card-actions-container {
+    transform: translateY(-100%);
+    opacity: 1;
+    pointer-events: auto;
     z-index: 10;
-    width: 36px;
-    height: 36px;
-    padding: 6px;
-    border-radius: 50%;
-    background-color: transparent;
+    border-bottom: 1px solid var(--material-surface-border);
+    padding-bottom: 4px;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* === INTEGRATED COLOR STATES === */
+/* Red Tint for Favorites */
+.card-actions-container:has(.favorite-btn.active) {
+    border-color: rgba(239, 68, 68, 0.3);
+    border-bottom-color: var(--material-surface-light);
+    background: linear-gradient(to bottom, rgba(239, 68, 68, 0.05), var(--material-surface-light));
+}
+
+/* Blue Tint for Compare */
+.card-actions-container:has(.compare-checkbox-btn.selected) {
+    border-color: rgba(59, 130, 246, 0.3);
+    border-bottom-color: var(--material-surface-light);
+    background: linear-gradient(to bottom, rgba(59, 130, 246, 0.05), var(--material-surface-light));
+}
+
+/* Button Styles inside Tab - Compact */
+.favorite-btn,
+.compare-checkbox-btn {
+    width: 20px;
+    /* Smaller buttons */
+    height: 20px;
+    padding: 0;
+    border-radius: 4px;
+    background: transparent;
     border: none;
-    color: var(--text-color);
-    opacity: 0.5;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -3525,52 +3623,376 @@ body.modo-orbital .ref-bex {
     transition: all 0.2s ease;
 }
 
-.favorite-btn:hover {
+.favorite-btn:hover,
+.compare-checkbox-btn:hover {
+    background: rgba(0, 0, 0, 0.05);
+    transform: scale(1.1);
+}
+
+/* Dark Mode Integration */
+body.lp-dark .card-actions-container,
+body.modo-orbital .card-actions-container {
+    border-bottom-color: var(--material-surface-light);
+}
+
+body.lp-dark .result-card:hover .card-actions-container,
+body.modo-orbital .result-card:hover .card-actions-container {
+    border-bottom-color: var(--material-surface-border);
+}
+
+/* Subtle glow effect */
+.favorite-btn::after,
+.compare-checkbox-btn::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 8px;
+    background: transparent;
+    opacity: 0;
+    transition: opacity var(--transition-base);
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* === FAVORITE BUTTON === */
+.favorite-btn {
+    position: relative;
+}
+
+/* Ripple effect on click */
+.favorite-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 7px;
+    background: radial-gradient(circle, rgba(239, 68, 68, 0.3) 0%, transparent 70%);
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.favorite-btn:active::before {
     opacity: 1;
-    transform: scale(1.15);
-    background-color: rgba(var(--material-surface-light-rgb), 0.5);
-    backdrop-filter: blur(2px);
+    transform: scale(1.2);
+    transition: all 0.1s ease-out;
 }
 
 .favorite-btn .heart-icon {
-    width: 22px;
-    height: 22px;
+    width: 16px;
+    height: 16px;
     fill: transparent;
     stroke: var(--text-color);
-    stroke-width: 2;
-    transition: all 0.2s ease;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    transition: all var(--transition-base);
+    filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.15));
 }
 
-.favorite-btn.active {
+.favorite-btn:hover {
+    transform: translateY(-2px) scale(1.08);
+    border-color: rgba(239, 68, 68, 0.4);
+    background: rgba(var(--material-surface-light-rgb), 0.95);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2),
+        0 2px 4px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.favorite-btn:hover::after {
     opacity: 1;
-    transform: scale(1.05);
+    background: radial-gradient(circle at center,
+            rgba(239, 68, 68, 0.15) 0%,
+            transparent 70%);
+}
+
+.favorite-btn:hover .heart-icon {
+    stroke: #ef4444;
+    transform: scale(1.15);
+    filter: drop-shadow(0 2px 4px rgba(239, 68, 68, 0.3));
+}
+
+/* Active state - Favorited */
+.favorite-btn.active {
+    background: linear-gradient(135deg,
+            rgba(239, 68, 68, 0.2) 0%,
+            rgba(220, 38, 38, 0.25) 100%);
+    border-color: rgba(239, 68, 68, 0.6);
+    box-shadow: 0 3px 10px rgba(239, 68, 68, 0.3),
+        0 2px 4px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.15);
+}
+
+.favorite-btn.active::after {
+    opacity: 1;
+    background: radial-gradient(circle at center,
+            rgba(239, 68, 68, 0.2) 0%,
+            transparent 70%);
 }
 
 .favorite-btn.active .heart-icon {
-    fill: #ff0000;
-    stroke: #ff0000;
-    filter: drop-shadow(0 1px 2px rgba(255, 0, 0, 0.5));
+    fill: #ef4444;
+    stroke: #dc2626;
+    filter: drop-shadow(0 2px 6px rgba(239, 68, 68, 0.5));
+    animation: heartBeatRefined 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-body.lp-dark .favorite-btn:not(.active),
-body.modo-orbital .favorite-btn:not(.active) {
-    opacity: 0.7;
+@keyframes heartBeatRefined {
+    0% {
+        transform: scale(1);
+    }
+
+    15% {
+        transform: scale(1.3);
+    }
+
+    30% {
+        transform: scale(0.95);
+    }
+
+    45% {
+        transform: scale(1.15);
+    }
+
+    60% {
+        transform: scale(1);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
 
-/* === 🔴 INICIO BLOQUE CORREGIDO CORAZONES === */
-
-/* --- 1. Corazón en la TARJETA de producto --- */
-body:not(.lp-dark):not(.modo-orbital) .favorite-btn:not(.active) .heart-icon {
-    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
+/* === COMPARE BUTTON === */
+.compare-checkbox-btn {
+    position: relative;
 }
 
-/* CORRECTO: Forzar a negro en dark/orbital para que contraste con imágenes claras */
-body.lp-dark .favorite-btn:not(.active) .heart-icon,
-body.modo-orbital .favorite-btn:not(.active) .heart-icon {
-    stroke: #000;
-    /* Forzado a negro para visibilidad en imágenes claras */
-    filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.3));
-    /* Sombra oscura */
+/* Ripple effect on click */
+.compare-checkbox-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 7px;
+    background: radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%);
+    opacity: 0;
+    transform: scale(0);
+    transition: all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.compare-checkbox-btn:active::before {
+    opacity: 1;
+    transform: scale(1.2);
+    transition: all 0.1s ease-out;
+}
+
+.compare-checkbox-btn svg {
+    width: 14px;
+    height: 14px;
+    stroke: var(--text-color);
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+    fill: none;
+    transition: all var(--transition-base);
+    opacity: 0.85;
+}
+
+.compare-checkbox-btn:hover {
+    transform: translateY(-2px) scale(1.08);
+    border-color: rgba(59, 130, 246, 0.5);
+    background: rgba(var(--material-surface-light-rgb), 0.95);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2),
+        0 2px 4px rgba(0, 0, 0, 0.08),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.compare-checkbox-btn:hover::after {
+    opacity: 1;
+    background: radial-gradient(circle at center,
+            rgba(59, 130, 246, 0.15) 0%,
+            transparent 70%);
+}
+
+.compare-checkbox-btn:hover svg {
+    stroke: var(--accent-blue);
+    opacity: 1;
+    transform: scale(1.15);
+    filter: drop-shadow(0 2px 4px rgba(59, 130, 246, 0.3));
+}
+
+/* Selected state */
+.compare-checkbox-btn.selected {
+    background: linear-gradient(135deg,
+            var(--accent-blue) 0%,
+            #2563eb 100%);
+    border-color: var(--accent-blue);
+    box-shadow: 0 3px 12px rgba(59, 130, 246, 0.4),
+        0 2px 4px rgba(0, 0, 0, 0.1),
+        inset 0 1px 0 rgba(255, 255, 255, 0.25);
+}
+
+.compare-checkbox-btn.selected::after {
+    opacity: 1;
+    background: radial-gradient(circle at center,
+            rgba(59, 130, 246, 0.3) 0%,
+            transparent 70%);
+}
+
+.compare-checkbox-btn.selected svg {
+    stroke: #ffffff;
+    opacity: 1;
+    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+    animation: checkPulseRefined 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes checkPulseRefined {
+    0% {
+        transform: scale(1) rotate(0deg);
+    }
+
+    25% {
+        transform: scale(1.25) rotate(5deg);
+    }
+
+    50% {
+        transform: scale(0.95) rotate(-3deg);
+    }
+
+    75% {
+        transform: scale(1.1) rotate(2deg);
+    }
+
+    100% {
+        transform: scale(1) rotate(0deg);
+    }
+}
+
+/* === DARK MODE - Clean & Professional === */
+body.lp-dark .favorite-btn,
+body.lp-dark .compare-checkbox-btn {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4),
+        0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+body.lp-dark .favorite-btn .heart-icon {
+    stroke: #1a202c;
+    filter: none;
+}
+
+body.lp-dark .favorite-btn:hover {
+    background: rgba(255, 255, 255, 1);
+    border-color: #ef4444;
+    box-shadow: 0 3px 8px rgba(239, 68, 68, 0.3);
+}
+
+body.lp-dark .favorite-btn:hover .heart-icon {
+    stroke: #ef4444;
+}
+
+body.lp-dark .favorite-btn.active {
+    background: #ef4444;
+    border-color: #dc2626;
+    box-shadow: 0 3px 8px rgba(239, 68, 68, 0.4);
+}
+
+body.lp-dark .favorite-btn.active .heart-icon {
+    fill: #ffffff;
+    stroke: #ffffff;
+    filter: none;
+}
+
+body.lp-dark .compare-checkbox-btn svg {
+    stroke: #1a202c;
+}
+
+body.lp-dark .compare-checkbox-btn:hover {
+    background: rgba(255, 255, 255, 1);
+    border-color: #3b82f6;
+    box-shadow: 0 3px 8px rgba(59, 130, 246, 0.3);
+}
+
+body.lp-dark .compare-checkbox-btn:hover svg {
+    stroke: #3b82f6;
+}
+
+body.lp-dark .compare-checkbox-btn.selected {
+    background: #3b82f6;
+    border-color: #2563eb;
+    box-shadow: 0 3px 8px rgba(59, 130, 246, 0.4);
+}
+
+body.lp-dark .compare-checkbox-btn.selected svg {
+    stroke: #ffffff;
+}
+
+/* === ORBITAL MODE - Clean & Professional === */
+body.modo-orbital .favorite-btn,
+body.modo-orbital .compare-checkbox-btn {
+    background: rgba(255, 255, 255, 0.95);
+    border-color: rgba(59, 130, 246, 0.3);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4),
+        0 3px 6px rgba(0, 0, 0, 0.3);
+}
+
+body.modo-orbital .favorite-btn .heart-icon {
+    stroke: #1e293b;
+    filter: none;
+}
+
+body.modo-orbital .favorite-btn:hover {
+    background: rgba(255, 255, 255, 1);
+    border-color: #ef4444;
+    box-shadow: 0 3px 8px rgba(239, 68, 68, 0.3);
+}
+
+body.modo-orbital .favorite-btn:hover::after {
+    opacity: 0;
+}
+
+body.modo-orbital .favorite-btn:hover .heart-icon {
+    stroke: #ef4444;
+}
+
+body.modo-orbital .favorite-btn.active {
+    background: #ef4444;
+    border-color: #dc2626;
+    box-shadow: 0 3px 8px rgba(239, 68, 68, 0.4);
+}
+
+body.modo-orbital .favorite-btn.active .heart-icon {
+    fill: #ffffff;
+    stroke: #ffffff;
+    filter: none;
+}
+
+body.modo-orbital .compare-checkbox-btn svg {
+    stroke: #1e293b;
+}
+
+body.modo-orbital .compare-checkbox-btn:hover {
+    background: rgba(255, 255, 255, 1);
+    border-color: #3b82f6;
+    box-shadow: 0 3px 8px rgba(59, 130, 246, 0.3);
+}
+
+body.modo-orbital .compare-checkbox-btn:hover::after {
+    opacity: 0;
+}
+
+body.modo-orbital .compare-checkbox-btn:hover svg {
+    stroke: #3b82f6;
+}
+
+body.modo-orbital .compare-checkbox-btn.selected {
+    background: #3b82f6;
+    border-color: #2563eb;
+    box-shadow: 0 3px 8px rgba(59, 130, 246, 0.4);
+}
+
+body.modo-orbital .compare-checkbox-btn.selected svg {
+    stroke: #ffffff;
 }
 
 
@@ -3854,56 +4276,6 @@ body.modo-orbital .compare-count {
         transform: scale(1) rotate(0deg);
         opacity: 1;
     }
-}
-
-/* --- Botón de Comparar en Tarjetas de Resultado --- */
-.compare-checkbox-btn {
-    position: absolute;
-    top: 10px;
-    right: 50px;
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
-    background-color: rgba(var(--material-surface-light-rgb), 0.95);
-    border: 2px solid var(--material-surface-border);
-    cursor: pointer;
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-.compare-checkbox-btn svg {
-    width: 18px;
-    height: 18px;
-    stroke: var(--text-color);
-    opacity: 0.6;
-    transition: all 0.3s ease;
-}
-
-.compare-checkbox-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-    border-color: rgba(59, 130, 246, 0.5);
-}
-
-.compare-checkbox-btn:hover svg {
-    opacity: 1;
-    stroke: #3b82f6;
-}
-
-.compare-checkbox-btn.selected {
-    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-    border-color: #2563eb;
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
-}
-
-.compare-checkbox-btn.selected svg {
-    stroke: #ffffff;
-    opacity: 1;
 }
 
 /* --- Modal de Comparación --- */
