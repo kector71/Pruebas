@@ -40,7 +40,6 @@
 - **Acciones Rápidas**:
   - ❤️ Favoritos (con persistencia en localStorage)
   - 🔄 Comparación (hasta 3 productos)
-- **SIN Precios ni Stock**: Enfoque exclusivo en información técnica
 
 ### 🔔 Sistema de Notificaciones
 - **Icono de Campana**: En el banner superior con badge de cantidad
@@ -51,7 +50,7 @@
   - Productos agregados a favoritos
 - **Estado de Lectura**: Diferenciación visual entre leídas/no leídas
 
-### 🌈 Personalización de Tema
+###  Personalización de Tema
 - **Cambio Instantáneo**: Los colores se aplican al hacer clic, sin botón "Guardar"
 - **4 Esquemas de Acento**:
   1. **Turquesa** (predeterminado): #14b8a6
@@ -74,19 +73,6 @@
   - Referencias equivalentes de otras marcas
   - Lista completa de vehículos compatibles
 - **Suscripción a Alertas**: Botón para recibir notificaciones sobre la referencia
-- **SIN Precios ni Stock**: Consistente con el enfoque técnico
-
-## 🗂️ Estructura de Archivos
-
-```
-brake-x-catalog/
-│
-├── index.html          # Estructura HTML principal
-├── styles.css          # Sistema de diseño completo
-├── script.js           # Lógica interactiva y manejo de estado
-├── logo.png            # Logo Brake X
-└── README.md           # Este archivo
-```
 
 ## 🚀 Cómo Usar
 
@@ -138,13 +124,6 @@ brake-x-catalog/
 - [ ] Compartir productos vía URL
 - [ ] Modo offline con Service Worker
 - [ ] Análisis de uso con métricas
-
-## 📊 Datos de Ejemplo
-
-El catálogo incluye 8 productos de ejemplo con:
-- **Marcas**: Bendix, Brembo, Akebono, Bosch, ATE, Pagid
-- **Posiciones**: Mixtas (delanteras y traseras)
-- **Vehículos**: Toyota, Honda, Mazda, Ford, Chevrolet, Nissan, Hyundai, Kia, VW, Audi, BMW, Mercedes, Subaru
 
 ## 🛠️ Tecnologías Utilizadas
 

@@ -198,18 +198,21 @@ body {
     gap: var(--spacing-md);
 }
 
-.logo {
-    height: 40px;
-    width: auto;
-    object-fit: contain;
-}
-
 .app-title {
-    font-family: var(--font-display);
+    font-family: 'Orbitron', sans-serif;
     font-size: 24px;
     font-weight: 700;
     color: var(--text-primary);
-    letter-spacing: -0.5px;
+    letter-spacing: 2px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.title-icon {
+    height: 22px;
+    width: auto;
+    filter: drop-shadow(0 0 5px rgba(20, 184, 166, 0.5));
 }
 
 .banner-right {
@@ -570,12 +573,12 @@ body {
 .clear-filters-btn {
     width: 100%;
     padding: 12px;
-    background-color: var(--bg-tertiary);
-    border: 1px solid var(--border-medium);
+    background-color: var(--status-error);
+    border: 1px solid var(--status-error);
     border-radius: var(--radius-md);
-    color: var(--text-secondary);
+    color: white;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
     display: flex;
     align-items: center;
@@ -586,10 +589,10 @@ body {
 }
 
 .clear-filters-btn:hover {
-    background-color: var(--status-error);
-    color: var(--text-inverse);
-    border-color: var(--status-error);
+    background-color: #dc2626;
+    border-color: #dc2626;
     transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
 /* Saved Filters */
@@ -627,6 +630,52 @@ body {
 .save-current-filters-btn:hover {
     background-color: var(--accent-primary);
     color: var(--text-inverse);
+}
+
+/* Filter Sections & New Layout */
+.filter-section {
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-md);
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.filter-section:last-of-type {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.filter-section-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
+}
+
+.filter-row {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.filter-row .filter-group {
+    flex: 1;
+    margin-bottom: 0;
+}
+
+.input-with-icon {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-icon {
+    position: absolute;
+    left: 12px;
+    color: var(--text-tertiary);
+    pointer-events: none;
+}
+
+.input-with-icon .filter-input {
+    padding-left: 36px;
 }
 
 /* === RESULTS AREA === */
@@ -1143,4 +1192,15 @@ body {
 
 .logo:hover {
     transform: scale(1.05);
+}
+
+/* Loader Animation */
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }

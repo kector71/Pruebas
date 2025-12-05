@@ -4,23 +4,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description"
-        content="Catálogo técnico de pastillas de freno Brake X - Consulta rápida de referencias, medidas y aplicaciones">
-    <title>Brake X - Catálogo de Pastillas de Freno</title>
+    <meta name="description" content="Catálogo técnico de pastillas de freno Brake X">
+    <title>Brake X - Catálogo</title>
     <link rel="stylesheet" href="style.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&family=Orbitron:wght@400;500;600;700&display=swap"
         rel="stylesheet">
+    <link rel="icon" href="favicon-x.svg" type="image/svg+xml">
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 </head>
 
 <body class="theme-dark">
     <!-- Fixed Top Banner -->
     <header class="top-banner" id="topBanner">
         <div class="banner-left">
-            <img src="logo.png" alt="Brake X Logo" class="logo" id="logo">
-            <h1 class="app-title">Brake X</h1>
+            <h1 class="app-title">BRAKE <img src="favicon-x.svg" alt="X" class="title-icon"></h1>
         </div>
 
         <div class="banner-right">
@@ -141,45 +143,40 @@
     <main class="main-container" id="mainContainer">
         <!-- Left Sidebar Filters -->
         <aside class="filters-sidebar" id="filtersSidebar">
-            <div class="filters-header">
-                <h2>Filtros de Búsqueda</h2>
-            </div>
-
-            <!-- Quick Search within catalog -->
+            <!-- Quick Search -->
             <div class="filter-group">
                 <label for="quickSearch" class="filter-label">Búsqueda Rápida</label>
-                <input type="text" id="quickSearch" class="filter-input" placeholder="Buscar...">
+                <div class="input-with-icon">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        class="input-icon">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                    <input type="text" id="quickSearch" class="filter-input" placeholder="Marca, Serie, Ref, OEM...">
+                </div>
             </div>
 
-            <!-- Brand Filter -->
-            <div class="filter-group">
-                <label for="brandFilter" class="filter-label">Marca</label>
-                <select id="brandFilter" class="filter-input">
-                    <option value="">Todas las marcas</option>
-                    <option value="bendix">Bendix</option>
-                    <option value="brembo">Brembo</option>
-                    <option value="akebono">Akebono</option>
-                    <option value="bosch">Bosch</option>
-                    <option value="ate">ATE</option>
-                    <option value="pagid">Pagid</option>
-                </select>
+            <!-- Vehicle Details Group -->
+            <div class="filter-section">
+                <h3 class="filter-section-title">Detalles del Vehículo</h3>
+                <div class="filter-group">
+                    <input type="text" id="brandFilter" list="brandList" class="filter-input" placeholder="Marca">
+                    <datalist id="brandList">
+                        <!-- Options populated by JS -->
+                    </datalist>
+                </div>
+                <div class="filter-group">
+                    <input type="text" id="modelFilter" class="filter-input" placeholder="Modelo/Serie">
+                </div>
+                <div class="filter-group">
+                    <input type="number" id="yearFilter" class="filter-input" placeholder="Año" min="1980" max="2030">
+                </div>
             </div>
 
-            <!-- Model Filter -->
-            <div class="filter-group">
-                <label for="modelFilter" class="filter-label">Modelo</label>
-                <input type="text" id="modelFilter" class="filter-input" placeholder="Modelo del vehículo">
-            </div>
-
-            <!-- Year Filter -->
-            <div class="filter-group">
-                <label for="yearFilter" class="filter-label">Año</label>
-                <input type="number" id="yearFilter" class="filter-input" placeholder="2024" min="1980" max="2030">
-            </div>
-
-            <!-- Position Filter (Fixed Colors) -->
-            <div class="filter-group">
-                <label class="filter-label">Posición</label>
+            <!-- Position -->
+            <div class="filter-section">
+                <h3 class="filter-section-title">Posición</h3>
                 <div class="position-buttons">
                     <button class="position-btn position-front" id="positionFront" data-position="delantera">
                         <span>Delantera</span>
@@ -190,37 +187,40 @@
                 </div>
             </div>
 
-            <!-- Measurements -->
-            <div class="filter-group">
-                <label for="widthFilter" class="filter-label">Ancho (mm)</label>
-                <input type="number" id="widthFilter" class="filter-input" placeholder="120">
+            <!-- References Group -->
+            <div class="filter-section">
+                <h3 class="filter-section-title">Referencias</h3>
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <input type="text" id="referenceFilter" class="filter-input" placeholder="OEM">
+                    </div>
+                    <div class="filter-group">
+                        <input type="text" id="fmsiFilter" class="filter-input" placeholder="Platina FMSI">
+                    </div>
+                </div>
             </div>
 
-            <div class="filter-group">
-                <label for="heightFilter" class="filter-label">Altura (mm)</label>
-                <input type="number" id="heightFilter" class="filter-input" placeholder="52">
+            <!-- Measurements Group -->
+            <div class="filter-section">
+                <h3 class="filter-section-title">Medidas (mm)</h3>
+                <div class="filter-row">
+                    <div class="filter-group">
+                        <input type="number" id="widthFilter" class="filter-input" placeholder="Ancho">
+                    </div>
+                    <div class="filter-group">
+                        <input type="number" id="heightFilter" class="filter-input" placeholder="Alto">
+                    </div>
+                </div>
             </div>
 
-            <!-- Reference Filter -->
-            <div class="filter-group">
-                <label for="referenceFilter" class="filter-label">Referencia</label>
-                <input type="text" id="referenceFilter" class="filter-input" placeholder="BX-1234">
-            </div>
-
-            <!-- FMSI Code -->
-            <div class="filter-group">
-                <label for="fmsiFilter" class="filter-label">Código FMSI</label>
-                <input type="text" id="fmsiFilter" class="filter-input" placeholder="D1234">
-            </div>
-
-            <!-- Clear All Filters Button -->
+            <!-- Clear Button -->
             <button class="clear-filters-btn" id="clearFiltersBtn">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="3 6 5 6 21 6"></polyline>
-                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2-2v2"></path>
                 </svg>
-                <span>Borrar Todos los Filtros</span>
+                <span>Borrar Filtros</span>
             </button>
 
             <!-- Saved Filters -->

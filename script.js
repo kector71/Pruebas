@@ -3,104 +3,23 @@
 // ============================================
 
 // Sample Data (Mock Catalog)
-const catalogData = [
-    {
-        id: 1,
-        reference: 'BX-1234',
-        position: 'delantera',
-        brand: 'Bendix',
-        width: 120,
-        height: 52,
-        fmsi: 'D1234',
-        vehicles: ['Toyota Corolla 2018-2023', 'Honda Civic 2019-2024', 'Mazda 3 2020-2024'],
-        image: 'https://via.placeholder.com/300x200/14b8a6/ffffff?text=BX-1234',
-        equivalences: ['ATE-4561', 'Brembo-P83042', 'Bosch-BP1234']
-    },
-    {
-        id: 2,
-        reference: 'BX-5678',
-        position: 'trasera',
-        brand: 'Brembo',
-        width: 95,
-        height: 41,
-        fmsi: 'D5678',
-        vehicles: ['Ford Focus 2017-2022', 'Chevrolet Cruze 2016-2021'],
-        image: 'https://via.placeholder.com/300x200/ef4444/ffffff?text=BX-5678',
-        equivalences: ['Bendix-DB2345', 'ATE-1362', 'Pagid-T1234']
-    },
-    {
-        id: 3,
-        reference: 'BX-9012',
-        position: 'delantera',
-        brand: 'Akebono',
-        width: 135,
-        height: 58,
-        fmsi: 'D9012',
-        vehicles: ['Nissan Altima 2019-2024', 'Hyundai Sonata 2020-2024', 'Kia Optima 2018-2023'],
-        image: 'https://via.placeholder.com/300x200/38bdf8/ffffff?text=BX-9012',
-        equivalences: ['Bosch-BP9012', 'Brembo-P28042', 'ATE-9123']
-    },
-    {
-        id: 4,
-        reference: 'BX-3456',
-        position: 'trasera',
-        brand: 'Bosch',
-        width: 88,
-        height: 38,
-        fmsi: 'D3456',
-        vehicles: ['Volkswagen Jetta 2015-2021', 'Audi A3 2017-2023'],
-        image: 'https://via.placeholder.com/300x200/dc2626/ffffff?text=BX-3456',
-        equivalences: ['ATE-3421', 'Bendix-DB3456', 'Pagid-T5123']
-    },
-    {
-        id: 5,
-        reference: 'BX-7890',
-        position: 'delantera',
-        brand: 'ATE',
-        width: 145,
-        height: 61,
-        fmsi: 'D7890',
-        vehicles: ['BMW 3 Series 2018-2024', 'Mercedes C-Class 2019-2024'],
-        image: 'https://via.placeholder.com/300x200/14b8a6/ffffff?text=BX-7890',
-        equivalences: ['Brembo-P06042', 'Pagid-T4321', 'Bosch-BP7890']
-    },
-    {
-        id: 6,
-        reference: 'BX-2468',
-        position: 'delantera',
-        brand: 'Pagid',
-        width: 128,
-        height: 55,
-        fmsi: 'D2468',
-        vehicles: ['Subaru WRX 2020-2024', 'Mazda CX-5 2019-2024'],
-        image: 'https://via.placeholder.com/300x200/38bdf8/ffffff?text=BX-2468',
-        equivalences: ['Bendix-DB2468', 'ATE-2457', 'Bosch-BP2468']
-    },
-    {
-        id: 7,
-        reference: 'BX-1357',
-        position: 'trasera',
-        brand: 'Bendix',
-        width: 92,
-        height: 42,
-        fmsi: 'D1357',
-        vehicles: ['Toyota RAV4 2016-2023', 'Honda CR-V 2017-2023'],
-        image: 'https://via.placeholder.com/300x200/ef4444/ffffff?text=BX-1357',
-        equivalences: ['Brembo-P28058', 'ATE-1358', 'Bosch-BP1357']
-    },
-    {
-        id: 8,
-        reference: 'BX-8024',
-        position: 'delantera',
-        brand: 'Brembo',
-        width: 151,
-        height: 64,
-        fmsi: 'D8024',
-        vehicles: ['Ford F-150 2018-2024', 'Chevrolet Silverado 2019-2024'],
-        image: 'https://via.placeholder.com/300x200/14b8a6/ffffff?text=BX-8024',
-        equivalences: ['Bosch-BP8024', 'ATE-8025', 'Pagid-T8024']
-    }
-];
+// Firebase Configuration
+// IMPORTANTE: Reemplaza estos valores con tu configuración de Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyCha4S_wLxI_CZY1Tc9FOJNA3cUTggISpU",
+    authDomain: "brakexadmin.firebaseapp.com",
+    projectId: "brakexadmin",
+    storageBucket: "brakexadmin.firebasestorage.app",
+    messagingSenderId: "799264562947",
+    appId: "1:799264562947:web:52d860ae41a5c4b8f75336"
+};
+
+// Initialize Firebase
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// Data Storage
+let catalogData = [];
 
 // State Management
 let state = {
@@ -143,6 +62,7 @@ const elements = {
     // Filters
     quickSearch: document.getElementById('quickSearch'),
     brandFilter: document.getElementById('brandFilter'),
+    brandList: document.getElementById('brandList'),
     modelFilter: document.getElementById('modelFilter'),
     yearFilter: document.getElementById('yearFilter'),
     positionFront: document.getElementById('positionFront'),
@@ -171,14 +91,178 @@ const elements = {
 };
 
 // ============================================
+// DATA FETCHING
+// ============================================
+function fetchData() {
+    // Show loading state initially
+    if (catalogData.length === 0) {
+        elements.productGrid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px;">
+                <div class="loader" style="margin: 0 auto 20px; border: 4px solid var(--surface-tertiary); border-top: 4px solid var(--accent-primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite;"></div>
+                <h3 style="color: var(--text-primary);">Cargando catálogo...</h3>
+            </div>
+        `;
+    }
+
+    // Listen for real-time updates
+    db.collection('pastillas').onSnapshot((snapshot) => {
+        let changes = snapshot.docChanges();
+        let isInitialLoad = catalogData.length === 0;
+
+        // Process changes for notifications
+        if (!isInitialLoad) {
+            changes.forEach(change => {
+                const data = change.doc.data();
+                const refName = Array.isArray(data.ref) ? data.ref[0] : (data.ref || 'Referencia');
+
+                if (change.type === 'added') {
+                    addNotification('Nueva Referencia', `Se ha agregado ${refName} al catálogo.`);
+                }
+                if (change.type === 'modified') {
+                    addNotification('Actualización', `La referencia ${refName} ha sido actualizada.`);
+                }
+            });
+        }
+
+        // Update catalog data
+        const products = [];
+        snapshot.forEach(doc => {
+            products.push(mapProductData(doc.id, doc.data()));
+        });
+
+        catalogData = products;
+
+        // Re-apply filters and render
+        applyFilters();
+        updateStats();
+        populateBrandFilter();
+
+    }, (error) => {
+        console.error("Error fetching data:", error);
+        elements.productGrid.innerHTML = `
+            <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px;">
+                <h3 style="color: var(--status-error);">Error al cargar datos</h3>
+                <p style="color: var(--text-secondary);">Por favor verifica tu conexión o configuración.</p>
+                <p style="font-size: 12px; color: var(--text-tertiary); margin-top: 10px;">${error.message}</p>
+            </div>
+        `;
+    });
+}
+
+function addNotification(title, message) {
+    const list = document.querySelector('.notification-list');
+    const badge = document.getElementById('notificationBadge');
+
+    if (!list || !badge) return;
+
+    const item = document.createElement('div');
+    item.className = 'notification-item unread';
+    item.innerHTML = `
+        <div class="notification-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2v20M2 12h20"></path>
+            </svg>
+        </div>
+        <div class="notification-content">
+            <p class="notification-text"><strong>${title}</strong>: ${message}</p>
+            <span class="notification-time">Justo ahora</span>
+        </div>
+    `;
+
+    // Add to top
+    list.insertBefore(item, list.firstChild);
+
+    // Update badge
+    let count = parseInt(badge.textContent) || 0;
+    badge.textContent = count + 1;
+    badge.style.display = 'flex';
+
+    // Optional: Show toast or visual cue
+    const btn = document.getElementById('notificationBtn');
+    btn.classList.add('shake-animation');
+    setTimeout(() => btn.classList.remove('shake-animation'), 500);
+}
+
+function mapProductData(id, data) {
+    // Helper to extract width/height from "medidas" string (e.g., "104.4 x 56.3")
+    let width = 0;
+    let height = 0;
+
+    if (data.medidas) {
+        let medidasStr = Array.isArray(data.medidas) ? data.medidas[0] : data.medidas;
+        if (medidasStr) {
+            const parts = medidasStr.toLowerCase().split('x').map(s => parseFloat(s.trim()));
+            if (parts.length >= 2) {
+                width = parts[0] || 0;
+                height = parts[1] || 0;
+            }
+        }
+    }
+
+    // Map vehicles from aplicaciones array
+    const vehicles = data.aplicaciones ? data.aplicaciones.map(app => {
+        return `${app.marca} ${app.serie} ${app.año}`;
+    }) : [];
+
+    // Extract unique vehicle brands
+    const vehicleBrands = data.aplicaciones ? [...new Set(data.aplicaciones.map(app => app.marca))] : [];
+
+    // Determine brand (using first application brand as fallback or generic)
+    // In the original mock data, 'brand' was the part manufacturer. 
+    // Here we might not have it, so we'll use a placeholder or derive it.
+    // For now, let's use "Brake X" as the brand if not specified.
+    const brand = "Brake X";
+
+    return {
+        id: id, // Firestore Doc ID
+        reference: Array.isArray(data.ref) ? data.ref.join(' / ') : (data.ref || 'N/A'),
+        position: (data.posición || 'Desconocida').toLowerCase(),
+        brand: brand,
+        vehicleBrands: vehicleBrands,
+        width: width,
+        height: height,
+        fmsi: Array.isArray(data.fmsi) ? data.fmsi.join(', ') : (data.fmsi || ''),
+        vehicles: vehicles,
+        image: (data.imagenes && data.imagenes.length > 0) ? data.imagenes[0] : 'https://via.placeholder.com/300x200/333333/ffffff?text=Sin+Imagen',
+        equivalences: data.oem || []
+    };
+}
+
+function populateBrandFilter() {
+    // Extract all unique brands from catalogData
+    const allBrands = new Set();
+    catalogData.forEach(product => {
+        if (product.vehicleBrands) {
+            product.vehicleBrands.forEach(brand => allBrands.add(brand));
+        }
+    });
+
+    // Sort brands alphabetically
+    const sortedBrands = Array.from(allBrands).sort();
+
+    // Populate datalist element
+    const brandList = elements.brandList;
+    if (!brandList) return;
+
+    brandList.innerHTML = '';
+
+    sortedBrands.forEach(brand => {
+        const option = document.createElement('option');
+        option.value = brand;
+        brandList.appendChild(option);
+    });
+}
+
+// ============================================
 // INITIALIZATION
 // ============================================
 function init() {
     setupEventListeners();
     applyTheme();
-    renderProducts();
-    updateStats();
     loadFromLocalStorage();
+
+    // Start fetching data
+    fetchData();
 }
 
 // ============================================
@@ -207,7 +291,7 @@ function setupEventListeners() {
 
     // Filters
     elements.quickSearch.addEventListener('input', debounce(handleQuickSearch, 300));
-    elements.brandFilter.addEventListener('change', handleFilterChange);
+    elements.brandFilter.addEventListener('input', debounce(handleFilterChange, 300));
     elements.modelFilter.addEventListener('input', debounce(handleFilterChange, 300));
     elements.yearFilter.addEventListener('input', debounce(handleFilterChange, 300));
     elements.positionFront.addEventListener('click', () => togglePosition('delantera'));
@@ -336,9 +420,12 @@ function applyFilters() {
             if (!matchesSearch) return false;
         }
 
-        // Brand
-        if (state.filters.brand && product.brand.toLowerCase() !== state.filters.brand.toLowerCase()) {
-            return false;
+        // Brand (Vehicle Brand)
+        if (state.filters.brand) {
+            // Check if the product has this brand in its applications
+            if (!product.vehicleBrands.some(b => b.toLowerCase() === state.filters.brand.toLowerCase())) {
+                return false;
+            }
         }
 
         // Model
