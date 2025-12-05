@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description"
+        content="Catálogo técnico de pastillas de freno Brake X - Consulta rápida de referencias, medidas y aplicaciones">
+    <title>Brake X - Catálogo de Pastillas de Freno</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700&display=swap"
+        rel="stylesheet">
+</head>
+
+<body class="theme-dark">
+    <!-- Fixed Top Banner -->
+    <header class="top-banner" id="topBanner">
+        <div class="banner-left">
+            <img src="logo.png" alt="Brake X Logo" class="logo" id="logo">
+            <h1 class="app-title">Brake X</h1>
+        </div>
+
+        <div class="banner-right">
+            <!-- Global Search -->
+            <div class="search-container" id="searchContainer">
+                <button class="search-icon-btn" id="searchIconBtn" aria-label="Buscar">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <path d="m21 21-4.35-4.35"></path>
+                    </svg>
+                </button>
+                <input type="text" class="search-input" id="globalSearch" placeholder="Buscar en catálogo..."
+                    aria-label="Búsqueda global">
+            </div>
+
+            <!-- Notifications -->
+            <div class="notification-container">
+                <button class="notification-btn" id="notificationBtn" aria-label="Notificaciones">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                        <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                    </svg>
+                    <span class="notification-badge" id="notificationBadge">3</span>
+                </button>
+
+                <!-- Notification Dropdown -->
+                <div class="notification-dropdown" id="notificationDropdown">
+                    <div class="notification-header">
+                        <h3>Notificaciones</h3>
+                    </div>
+                    <div class="notification-list">
+                        <div class="notification-item unread">
+                            <div class="notification-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M12 2v20M2 12h20"></path>
+                                </svg>
+                            </div>
+                            <div class="notification-content">
+                                <p class="notification-text">Nueva referencia disponible: BX-4892</p>
+                                <span class="notification-time">Hace 2 horas</span>
+                            </div>
+                        </div>
+                        <div class="notification-item unread">
+                            <div class="notification-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                                </svg>
+                            </div>
+                            <div class="notification-content">
+                                <p class="notification-text">Actualización de medidas técnicas</p>
+                                <span class="notification-time">Hace 5 horas</span>
+                            </div>
+                        </div>
+                        <div class="notification-item">
+                            <div class="notification-icon">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24"
+                                    fill="none" stroke="currentColor" stroke-width="2">
+                                    <path
+                                        d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                                    </path>
+                                </svg>
+                            </div>
+                            <div class="notification-content">
+                                <p class="notification-text">Nueva pastilla agregada a favoritos</p>
+                                <span class="notification-time">Hace 1 día</span>
+                            </div>
+                        </div>
+                    </div>
+                    <a href="#" class="notification-view-all" id="viewAllNotifications">Ver todas las notificaciones</a>
+                </div>
+            </div>
+
+            <!-- Theme Controls -->
+            <div class="theme-controls">
+                <button class="theme-palette-btn" id="themePaletteBtn" aria-label="Cambiar esquema de colores"
+                    title="Esquema de colores">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="13.5" cy="6.5" r=".5"></circle>
+                        <circle cx="17.5" cy="10.5" r=".5"></circle>
+                        <circle cx="8.5" cy="7.5" r=".5"></circle>
+                        <circle cx="6.5" cy="12.5" r=".5"></circle>
+                        <path
+                            d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z">
+                        </path>
+                    </svg>
+                </button>
+                <button class="theme-toggle-btn" id="themeToggle" aria-label="Cambiar modo claro/oscuro">
+                    <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="5"></circle>
+                        <line x1="12" y1="1" x2="12" y2="3"></line>
+                        <line x1="12" y1="21" x2="12" y2="23"></line>
+                        <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                        <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                        <line x1="1" y1="12" x2="3" y2="12"></line>
+                        <line x1="21" y1="12" x2="23" y2="12"></line>
+                        <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                        <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                    </svg>
+                    <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24"
+                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                        stroke-linejoin="round">
+                        <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="main-container" id="mainContainer">
+        <!-- Left Sidebar Filters -->
+        <aside class="filters-sidebar" id="filtersSidebar">
+            <div class="filters-header">
+                <h2>Filtros de Búsqueda</h2>
+            </div>
+
+            <!-- Quick Search within catalog -->
+            <div class="filter-group">
+                <label for="quickSearch" class="filter-label">Búsqueda Rápida</label>
+                <input type="text" id="quickSearch" class="filter-input" placeholder="Buscar...">
+            </div>
+
+            <!-- Brand Filter -->
+            <div class="filter-group">
+                <label for="brandFilter" class="filter-label">Marca</label>
+                <select id="brandFilter" class="filter-input">
+                    <option value="">Todas las marcas</option>
+                    <option value="bendix">Bendix</option>
+                    <option value="brembo">Brembo</option>
+                    <option value="akebono">Akebono</option>
+                    <option value="bosch">Bosch</option>
+                    <option value="ate">ATE</option>
+                    <option value="pagid">Pagid</option>
+                </select>
+            </div>
+
+            <!-- Model Filter -->
+            <div class="filter-group">
+                <label for="modelFilter" class="filter-label">Modelo</label>
+                <input type="text" id="modelFilter" class="filter-input" placeholder="Modelo del vehículo">
+            </div>
+
+            <!-- Year Filter -->
+            <div class="filter-group">
+                <label for="yearFilter" class="filter-label">Año</label>
+                <input type="number" id="yearFilter" class="filter-input" placeholder="2024" min="1980" max="2030">
+            </div>
+
+            <!-- Position Filter (Fixed Colors) -->
+            <div class="filter-group">
+                <label class="filter-label">Posición</label>
+                <div class="position-buttons">
+                    <button class="position-btn position-front" id="positionFront" data-position="delantera">
+                        <span>Delantera</span>
+                    </button>
+                    <button class="position-btn position-rear" id="positionRear" data-position="trasera">
+                        <span>Trasera</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Measurements -->
+            <div class="filter-group">
+                <label for="widthFilter" class="filter-label">Ancho (mm)</label>
+                <input type="number" id="widthFilter" class="filter-input" placeholder="120">
+            </div>
+
+            <div class="filter-group">
+                <label for="heightFilter" class="filter-label">Altura (mm)</label>
+                <input type="number" id="heightFilter" class="filter-input" placeholder="52">
+            </div>
+
+            <!-- Reference Filter -->
+            <div class="filter-group">
+                <label for="referenceFilter" class="filter-label">Referencia</label>
+                <input type="text" id="referenceFilter" class="filter-input" placeholder="BX-1234">
+            </div>
+
+            <!-- FMSI Code -->
+            <div class="filter-group">
+                <label for="fmsiFilter" class="filter-label">Código FMSI</label>
+                <input type="text" id="fmsiFilter" class="filter-input" placeholder="D1234">
+            </div>
+
+            <!-- Clear All Filters Button -->
+            <button class="clear-filters-btn" id="clearFiltersBtn">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                <span>Borrar Todos los Filtros</span>
+            </button>
+
+            <!-- Saved Filters -->
+            <div class="saved-filters">
+                <h3 class="saved-filters-title">Filtros Guardados</h3>
+                <button class="save-current-filters-btn" id="saveFiltersBtn">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                        <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
+                    <span>Guardar Filtros Actuales</span>
+                </button>
+                <select id="savedFiltersSelect" class="filter-input">
+                    <option value="">Mis Filtros Guardados</option>
+                    <option value="saved1">Toyota Delantera 2020+</option>
+                    <option value="saved2">Honda Trasera</option>
+                    <option value="saved3">Brembo Alto Rendimiento</option>
+                </select>
+            </div>
+        </aside>
+
+        <!-- Central Results Area -->
+        <section class="results-area" id="resultsArea">
+            <!-- Results Header -->
+            <div class="results-header">
+                <div class="results-stats">
+                    <span class="stat-item">
+                        <strong id="totalReferences">248</strong> Referencias
+                    </span>
+                    <span class="stat-separator">•</span>
+                    <span class="stat-item">
+                        <strong id="totalApplications">1,523</strong> Aplicaciones
+                    </span>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="quick-actions">
+                    <button class="action-btn" id="historyBtn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <circle cx="12" cy="12" r="10"></circle>
+                            <polyline points="12 6 12 12 16 14"></polyline>
+                        </svg>
+                        <span>Historial</span>
+                    </button>
+                    <button class="action-btn" id="favoritesBtn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path
+                                d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z">
+                            </path>
+                        </svg>
+                        <span>Favoritos</span>
+                    </button>
+                    <button class="action-btn" id="compareBtn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                            stroke="currentColor" stroke-width="2">
+                            <path d="M20 7h-9M14 17H5"></path>
+                            <circle cx="6" cy="7" r="2"></circle>
+                            <circle cx="18" cy="17" r="2"></circle>
+                        </svg>
+                        <span>Comparar (<span id="compareCount">0</span>)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Product Cards Grid -->
+            <div class="product-grid" id="productGrid">
+                <!-- Cards will be generated dynamically -->
+            </div>
+        </section>
+    </main>
+
+    <!-- Detail Modal -->
+    <div class="modal-overlay" id="detailModal">
+        <div class="modal-content">
+            <button class="modal-close-btn" id="closeDetailModal" aria-label="Cerrar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+
+            <div class="modal-body" id="modalBody">
+                <!-- Content loaded dynamically -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Theme Palette Modal -->
+    <div class="modal-overlay" id="themeModal">
+        <div class="modal-content modal-small">
+            <button class="modal-close-btn" id="closeThemeModal" aria-label="Cerrar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+                    stroke="currentColor" stroke-width="2">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </button>
+
+            <div class="modal-header">
+                <h2>Esquema de Colores (Acentos)</h2>
+            </div>
+
+            <div class="theme-palette-grid">
+                <button class="palette-option" data-accent="turquoise" aria-label="Turquesa">
+                    <span class="palette-color" style="background: linear-gradient(135deg, #14b8a6, #06b6d4);"></span>
+                    <span class="palette-name">Turquesa</span>
+                </button>
+                <button class="palette-option" data-accent="blue" aria-label="Azul">
+                    <span class="palette-color" style="background: linear-gradient(135deg, #3b82f6, #2563eb);"></span>
+                    <span class="palette-name">Azul</span>
+                </button>
+                <button class="palette-option" data-accent="purple" aria-label="Morado">
+                    <span class="palette-color" style="background: linear-gradient(135deg, #a855f7, #9333ea);"></span>
+                    <span class="palette-name">Morado</span>
+                </button>
+                <button class="palette-option" data-accent="orange" aria-label="Naranja">
+                    <span class="palette-color" style="background: linear-gradient(135deg, #f97316, #ea580c);"></span>
+                    <span class="palette-name">Naranja</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
